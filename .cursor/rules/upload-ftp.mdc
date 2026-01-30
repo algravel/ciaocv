@@ -1,0 +1,35 @@
+---
+description: Quand l'utilisateur dit "upload", transférer les fichiers modifiés sur le serveur FTP via curl
+alwaysApply: true
+---
+
+# Upload FTP
+
+Quand l'utilisateur dit **« upload »** (ou demande un upload), l’agent doit :
+
+1. **Identifier les fichiers modifiés** (git status, ou fichiers récemment édités dans la session).
+2. **Transférer ces fichiers sur le serveur FTP** en utilisant **curl**.
+
+## Configuration FTP
+
+Les identifiants sont dans `.env` :
+
+- `FTP_HOST`
+- `FTP_USER`
+- `FTP_PASS`
+
+Utiliser ces variables (depuis l’environnement ou en les chargeant depuis `.env`) pour construire la commande curl. Ne jamais hardcoder les identifiants dans le code ou les règles.
+
+## Exemple curl (upload d’un fichier)
+
+```bash
+curl -T <fichier_local> --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/<chemin_remote>"
+```
+
+Adapter `<chemin_remote>` au répertoire cible sur le serveur (structure du projet, dossier web, etc.).
+
+## Comportement attendu
+
+- Transférer **uniquement les fichiers modifiés** (pas tout le projet).
+- Conserver la structure des dossiers sur le serveur si nécessaire.
+- Utiliser **curl** pour le transfert FTP (pas d’autre outil sauf demande explicite).
