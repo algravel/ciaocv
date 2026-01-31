@@ -5,7 +5,7 @@ Ce document définit les normes visuelles et ergonomiques pour l'application Cia
 ## 1. Global / Design System
 
 ### Palette de Couleurs
-- **Primaire (Bleu Royal)** : `#2563EB` (Utilisé pour : Header, Boutons principaux, Icônes actives).
+- **Primaire (Bleu Royal)** : `#2563EB` (Utilisé pour : Header, Boutons principaux, Icônes actives)..
 - **Secondaire (Violet/Gradient)** : `#7C3AED` (Utilisé pour : Accents, Barres de progression, Gradients).
 - **Arrière-plan (App)** : `#F3F4F6` (Gris très clair, pour faire ressortir les cartes).
 - **Surface (Cartes)** : `#FFFFFF` (Blanc pur).
