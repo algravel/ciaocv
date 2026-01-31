@@ -432,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <div class="container">
         <div class="header">
             <div class="logo">CiaoCV</div>
-            <a href="index2.php" class="back-link">← Retour</a>
+            <a href="index.php" class="back-link">← Retour</a>
         </div>
 
         <div class="settings-panel" id="settingsPanel">
@@ -497,6 +497,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         <div id="debug-log">
             <div class="log-entry">--- DEBUG LOGS ---</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #6b7280;">
+            <a href="https://www.ciaocv.com" style="color: #6b7280; text-decoration: none;">Retour au site principal</a>
         </div>
     </div>
 

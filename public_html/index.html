@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CiaoCV - Le recrutement par vidéo</title>
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-dark: #1E40AF;
+            --secondary: #7C3AED;
+            --bg: #F3F4F6;
+            --surface: #FFFFFF;
+            --text-main: #111827;
+            --text-sec: #6B7280;
+            --radius-card: 24px;
+            --radius-btn: 50px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* HERO HEADER - Forme arrondie signature */
+        .hero {
+            background-color: var(--primary);
+            color: white;
+            padding: 2rem 1.5rem 6rem;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-nav {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: var(--radius-btn);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            transition: background 0.2s;
+        }
+
+        .btn-nav:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border-radius: var(--radius-btn);
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+        }
+
+        .btn-white {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-outline {
+            border: 2px solid rgba(255,255,255,0.8);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* SECTIONS */
+        .container {
+            max-width: 1200px;
+            margin: -3rem auto 0;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: #EFF6FF;
+            color: var(--primary);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .card p {
+            color: var(--text-sec);
+            font-size: 0.95rem;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #EEF2FF;
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .stats-section {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .section-title h2 {
+            font-size: 2rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-sec);
+            font-size: 0.9rem;
+        }
+
+        /* Mockup Phone */
+        .phone-mockup {
+            background: #111;
+            border-radius: 40px;
+            border: 8px solid #333;
+            width: 280px;
+            height: 560px;
+            margin: 2rem auto 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: none; /* Hidden on mobile initially */
+        }
+
+        @media (min-width: 768px) {
+            h1 { font-size: 3.5rem; }
+            .hero { padding-bottom: 8rem; }
+            .phone-mockup { display: block; position: absolute; right: 10%; bottom: -100px; transform: rotate(-5deg); }
+            .hero-content { text-align: left; margin: 0; max-width: 600px; }
+            .cta-group { justify-content: flex-start; }
+            .nav { padding: 0 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="hero">
+        <nav class="nav">
+            <div class="logo">CiaoCV</div>
+            <a href="https://app.ciaocv.com" class="btn-nav">Connexion</a>
+        </nav>
+
+        <div class="hero-content">
+            <h1>Le recrutement<br>en 60 secondes.</h1>
+            <p class="hero-subtitle">
+                Oubliez les CV papier. Découvrez la personnalité de vos futurs talents ou présentez-vous en vidéo. Rapide, humain, efficace.
+            </p>
+            <div class="cta-group">
+                <a href="app/" class="btn btn-white">Je cherche un job</a>
+                <a href="#" class="btn btn-outline">Je recrute</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Cards -->
+        <div class="grid">
+            <!-- Card Candidat -->
+            <div class="card">
+                <span class="tag">Candidats</span>
+                <div class="card-icon">👋</div>
+                <h3>Pitch Vidéo</h3>
+                <p>Enregistrez une vidéo de 60 secondes pour présenter votre parcours et votre motivation. Soyez vous-même.</p>
+            </div>
+
+            <!-- Card Employeur -->
+            <div class="card">
+                <span class="tag">Employeurs</span>
+                <div class="card-icon">👁️</div>
+                <h3>Tri Rapide</h3>
+                <p>Visualisez les candidatures en un coup d'œil. Filtrez par personnalité et soft skills avant même de lire un CV.</p>
+            </div>
+
+            <!-- Card Matching -->
+            <div class="card">
+                <span class="tag">Matching</span>
+                <div class="card-icon">🚀</div>
+                <h3>Connexion Directe</h3>
+                <p>Un profil vous plaît ? Entrez en contact direct. Simplifiez le processus d'embauche.</p>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <h2>Prêt à changer la donne ?</h2>
+            <p style="color: var(--text-sec);">Rejoignez la plateforme qui humanise le recrutement.</p>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 4rem;">
+            <a href="https://app.ciaocv.com" class="btn" style="background: var(--primary); color: white;">Commencer l'expérience</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 CiaoCV. Tous droits réservés.</p>
+    </footer>
+
+</body>
+</html>

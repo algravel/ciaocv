@@ -28,6 +28,20 @@ CiaoCV révolutionne le marché de l'emploi en remplaçant les descriptions text
 - **Stockage** : FTP / Cloud pour les vidéos.
 - **Sécurité** : Chiffrement des données personnelles (AES-256).
 
+## Architecture et Domaines
+
+- **Site Principal (Vitrine)** : `www.ciaocv.com`
+  - Dossier sur le serveur : `/public_html`
+  - Contient : Landing page (`index.html`), assets publics.
+
+- **Application (Candidat/Employeur)** : `app.ciaocv.com`
+  - Dossier sur le serveur : `/app` (Racine FTP, hors de public_html pour sécurité, pointé par sous-domaine).
+  - Contient : Logique métier PHP (`index.php`, `record.php`, `view.php`).
+
+- **Documentation** :
+  - Dossier local : `.documentation/` (ne pas uploader).
+  - Contient : `design.md`, `projet.md`, etc.
+
 ## Prochaines Étapes
 1. Design de la Landing Page (Page d'attente).
 2. Maquettage des flux vidéo.

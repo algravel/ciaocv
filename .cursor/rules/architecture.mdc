@@ -1,0 +1,31 @@
+---
+description: Architecture du projet, domaines et documentation
+alwaysApply: true
+---
+
+# Architecture du Projet CiaoCV
+
+Cette règle doit être appliquée à chaque interaction.
+
+## Structure des Dossiers
+
+| Dossier Local | Sur Serveur (FTP) | URL / Domaine | Description |
+| :--- | :--- | :--- | :--- |
+| `public_html/` | `/public_html/` | `ciaocv.com` | Site vitrine (Landing page). |
+| `app/` | `/app/` | `app.ciaocv.com` | Application web (PHP). Situé à la racine FTP. |
+| `.documentation/` | (Non uploadé) | - | Documentation technique et design. À consulter pour contexte. |
+
+## Règles Importantes
+
+1. **Upload** :
+   - `public_html/` va dans `public_html/`.
+   - `app/` va dans `/app/` (racine FTP).
+   - Ne jamais uploader `.env` dans `public_html` (rester à la racine).
+
+2. **Documentation** :
+   - Consulter `.documentation/design.md` pour les styles (Bleu Royal, arrondis).
+   - Consulter `.documentation/projet.md` pour les fonctionnalités.
+
+3. **Navigation** :
+   - Liens "Connexion" du site -> `https://app.ciaocv.com`.
+   - Liens "Retour" de l'app -> `https://www.ciaocv.com`.

@@ -363,7 +363,7 @@ function formatDate($timestamp) {
     <div class="container">
         <div class="header">
             <div class="logo">CiaoCV</div>
-            <a href="index2.php" class="back-link">← Retour</a>
+            <a href="index.php" class="back-link">← Retour</a>
         </div>
 
         <h1>📹 Mes vidéos</h1>
@@ -424,6 +424,10 @@ function formatDate($timestamp) {
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
+
+        <div style="text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #6b7280;">
+            <a href="https://www.ciaocv.com" style="color: #6b7280; text-decoration: none;">Retour au site principal</a>
+        </div>
     </div>
 </body>
 </html>

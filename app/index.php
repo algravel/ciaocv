@@ -1,17 +1,111 @@
+<?php
+// Charger les variables d'environnement
+$envFile = dirname(__DIR__) . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($key, $value) = explode('=', $line, 2);
+            $value = trim($value, '"\'');
+            $_ENV[trim($key)] = $value;
+        }
+    }
+}
+
+/**
+ * Envoie un email via ZeptoMail
+ * 
+ * @param string|array $to Email destinataire (string ou array ['address'=>, 'name'=>])
+ * @param string $subject Sujet
+ * @param string $htmlbody Corps HTML
+ * @return array|false Réponse API ou false si erreur
+ */
+function send_zepto($to, $subject, $htmlbody) {
+    $apiUrl = $_ENV['ZEPTO_API_URL'] ?? '';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $fromAddress = $_ENV['ZEPTO_FROM_ADDRESS'] ?? '';
+    $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'CiaoCV';
+
+    if (!$apiUrl || !$token) {
+        error_log("ZeptoMail: Configuration manquante");
+        return false;
+    }
+
+    // Formatage destinataire
+    $toRecipient = [];
+    if (is_array($to)) {
+        $toRecipient[] = [
+            "email_address" => [
+                "address" => $to['address'],
+                "name" => $to['name'] ?? ''
+            ]
+        ];
+    } else {
+        $toRecipient[] = [
+            "email_address" => [
+                "address" => $to,
+                "name" => ""
+            ]
+        ];
+    }
+
+    $postData = [
+        "from" => [
+            "address" => $fromAddress,
+            "name" => $fromName
+        ],
+        "to" => $toRecipient,
+        "subject" => $subject,
+        "htmlbody" => $htmlbody
+    ];
+
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => $apiUrl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => json_encode($postData),
+        CURLOPT_HTTPHEADER => [
+            "accept: application/json",
+            "authorization: " . $token,
+            "cache-control: no-cache",
+            "content-type: application/json",
+        ],
+    ]);
+
+    $response = curl_exec($curl);
+    $err = curl_error($curl);
+    curl_close($curl);
+
+    if ($err) {
+        error_log("ZeptoMail Error: " . $err);
+        return false;
+    }
+
+    return json_decode($response, true);
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - CiaoCV</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CiaoCV - Vidéo</title>
     <style>
         :root {
             --primary: #2563eb;
             --primary-dark: #1e40af;
-            --bg: #f3f4f6;
+            --bg: #111827;
+            --card-bg: #1f2937;
             --white: #ffffff;
-            --text: #1f2937;
-            --text-light: #6b7280;
+            --text: #f9fafb;
+            --text-light: #9ca3af;
+            --border: #374151;
         }
 
         * {
@@ -23,123 +117,154 @@
 
         body {
             background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            color: var(--text);
         }
 
-        .login-container {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        .container {
             width: 100%;
             max-width: 400px;
+            padding: 2rem;
+            text-align: center;
         }
 
         .logo {
-            text-align: center;
-            font-size: 1.5rem;
+            font-size: 2.5rem;
             font-weight: 800;
             color: var(--primary);
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: -1px;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: 1.5rem;
-            color: var(--text);
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
             margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
+            letter-spacing: -2px;
+        }
+
+        .tagline {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--card-bg);
+            padding: 1.25rem 1.5rem;
+            border-radius: 1rem;
+            text-decoration: none;
             color: var(--text);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
         }
 
-        input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-
-        input:focus {
-            outline: none;
+        .menu-item:hover {
+            background: var(--primary);
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            transform: translateY(-2px);
         }
 
-        button {
-            width: 100%;
-            background-color: var(--primary);
-            color: white;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 1rem;
+        .menu-item:active {
+            transform: translateY(0);
+        }
+
+        .menu-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(37, 99, 235, 0.2);
+            border-radius: 0.75rem;
+        }
+
+        .menu-item:hover .menu-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .menu-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .menu-title {
+            font-size: 1.125rem;
             font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            margin-bottom: 0.25rem;
         }
 
-        button:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .footer-links {
-            margin-top: 1.5rem;
-            text-align: center;
+        .menu-desc {
             font-size: 0.875rem;
             color: var(--text-light);
         }
 
-        .footer-links a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
+        .menu-item:hover .menu-desc {
+            color: rgba(255, 255, 255, 0.8);
         }
 
-        .footer-links a:hover {
-            text-decoration: underline;
+        .menu-arrow {
+            font-size: 1.25rem;
+            color: var(--text-light);
+        }
+
+        .menu-item:hover .menu-arrow {
+            color: white;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            color: var(--text-light);
+            font-size: 0.75rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* iPhone safe area */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .container {
+                padding-top: calc(2rem + env(safe-area-inset-top));
+                padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="container">
         <div class="logo">CiaoCV</div>
-        <h2>Bienvenue</h2>
-        
-        <form action="#" method="POST">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required placeholder="vous@exemple.com">
-            </div>
+        <p class="tagline">Votre CV vidéo en 60 secondes</p>
 
-            <div class="form-group">
-                <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" required placeholder="••••••••">
-            </div>
+        <nav class="menu">
+            <a href="record.php" class="menu-item">
+                <div class="menu-icon">🎬</div>
+                <div class="menu-text">
+                    <div class="menu-title">Enregistrer</div>
+                    <div class="menu-desc">Créer une nouvelle vidéo</div>
+                </div>
+                <span class="menu-arrow">→</span>
+            </a>
 
-            <button type="submit">Se connecter</button>
-        </form>
+            <a href="view.php" class="menu-item">
+                <div class="menu-icon">📹</div>
+                <div class="menu-text">
+                    <div class="menu-title">Mes vidéos</div>
+                    <div class="menu-desc">Voir les enregistrements</div>
+                </div>
+                <span class="menu-arrow">→</span>
+            </a>
+        </nav>
 
-        <div class="footer-links">
-            <p><a href="#">Mot de passe oublié ?</a></p>
-            <p style="margin-top: 0.5rem;">Pas encore de compte ? <a href="#">S'inscrire</a></p>
+        <div class="footer">
+            <p>© 2026 CiaoCV — <a href="https://www.ciaocv.com">Retour au site</a></p>
         </div>
     </div>
 </body>
