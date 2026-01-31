@@ -21,6 +21,53 @@ $b2KeyId = $_ENV['B2_KEY_ID'] ?? '';
 $b2AppKey = $_ENV['B2_APPLICATION_KEY'] ?? '';
 $b2BucketId = $_ENV['B2_BUCKET_ID'] ?? '';
 
+// Traitement de la suppression
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_video') {
+    $fileId = $_POST['fileId'] ?? '';
+    $fileName = $_POST['fileName'] ?? '';
+    
+    if ($fileId && $fileName) {
+        try {
+            // Auth B2
+            $authUrl = 'https://api.backblazeb2.com/b2api/v2/b2_authorize_account';
+            $credentials = base64_encode($b2KeyId . ':' . $b2AppKey);
+            
+            $ch = curl_init($authUrl);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Basic ' . $credentials]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $authResponse = json_decode(curl_exec($ch), true);
+            curl_close($ch);
+            
+            if (isset($authResponse['authorizationToken'])) {
+                $apiUrl = $authResponse['apiUrl'];
+                $authToken = $authResponse['authorizationToken'];
+                
+                // Delete
+                $deleteUrl = $apiUrl . '/b2api/v2/b2_delete_file_version';
+                $ch = curl_init($deleteUrl);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: ' . $authToken,
+                    'Content-Type: application/json'
+                ]);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                    'fileName' => $fileName,
+                    'fileId' => $fileId
+                ]));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                $response = json_decode(curl_exec($ch), true);
+                curl_close($ch);
+                
+                // Redirection pour éviter re-submit
+                header('Location: view.php');
+                exit;
+            }
+        } catch (Exception $e) {
+            $error = "Erreur suppression: " . $e->getMessage();
+        }
+    }
+}
+
 $videos = [];
 $error = null;
 $downloadAuth = null;
@@ -262,6 +309,33 @@ function formatDate($timestamp) {
             background: var(--primary-dark);
         }
 
+        .btn-delete {
+            background: transparent;
+            color: #ef4444;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: background 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .video-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+        }
+
         .error {
             background: #7f1d1d;
             color: #fecaca;
@@ -334,6 +408,16 @@ function formatDate($timestamp) {
                             <div class="video-meta">
                                 <span><?= formatSize($video['size']) ?></span>
                                 <span><?= formatDate($video['uploaded']) ?></span>
+                            </div>
+                            <div class="video-footer">
+                                <form method="POST" onsubmit="return confirm('Supprimer définitivement cette vidéo ?');">
+                                    <input type="hidden" name="action" value="delete_video">
+                                    <input type="hidden" name="fileId" value="<?= htmlspecialchars($video['id']) ?>">
+                                    <input type="hidden" name="fileName" value="<?= htmlspecialchars($video['name']) ?>">
+                                    <button type="submit" class="btn-delete">
+                                        🗑️ Supprimer
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

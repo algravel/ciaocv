@@ -70,6 +70,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         ]);
         exit;
     }
+
+    if ($_POST['action'] === 'delete_file') {
+        $fileId = $_POST['fileId'] ?? '';
+        $fileName = $_POST['fileName'] ?? '';
+
+        if (!$fileId || !$fileName) {
+            echo json_encode(['error' => 'Paramètres manquants']);
+            exit;
+        }
+
+        // Auth B2
+        $authUrl = 'https://api.backblazeb2.com/b2api/v2/b2_authorize_account';
+        $credentials = base64_encode($b2KeyId . ':' . $b2AppKey);
+        
+        $ch = curl_init($authUrl);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Basic ' . $credentials]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $authResponse = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+
+        if (!isset($authResponse['authorizationToken'])) {
+            echo json_encode(['error' => 'Échec auth B2']);
+            exit;
+        }
+
+        $apiUrl = $authResponse['apiUrl'];
+        $authToken = $authResponse['authorizationToken'];
+
+        // Delete file
+        $deleteUrl = $apiUrl . '/b2api/v2/b2_delete_file_version';
+        $ch = curl_init($deleteUrl);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: ' . $authToken,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'fileName' => $fileName,
+            'fileId' => $fileId
+        ]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+
+        echo json_encode(['success' => true, 'deleted' => $response]);
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -77,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="data:,">
     <title>Enregistrer - CiaoCV</title>
     <style>
         :root {
@@ -133,7 +181,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             font-size: 0.875rem;
         }
 
-        /* Settings area */
         .settings-panel {
             background: rgba(31, 41, 55, 0.5);
             border: 1px solid var(--border);
@@ -167,10 +214,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             font-size: 0.875rem;
         }
 
+        .questions-panel {
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid var(--primary);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .questions-panel h3 {
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .questions-panel ul {
+            list-style-type: none;
+            padding-left: 0.5rem;
+        }
+
+        .questions-panel li {
+            font-size: 0.9rem;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .questions-panel li::before {
+            content: "•";
+            color: var(--primary);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
         .video-container {
             position: relative;
             width: 100%;
-            /* Auto aspect ratio based on stream, but constrained height */
             height: 60vh;
             background: #000;
             border-radius: 1rem;
@@ -184,14 +265,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         #videoPreview, #videoPlayback {
             max-width: 100%;
             max-height: 100%;
-            /* Change cover to contain to avoid zooming/cropping */
             object-fit: contain; 
             width: auto;
             height: auto;
-        }
-
-        #videoPlayback {
-            display: none;
         }
 
         .timer {
@@ -291,7 +367,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             display: none !important;
         }
 
-        /* Debug Log Styles */
+        .transfer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            color: white;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #374151;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         #debug-log {
             margin-top: 2rem;
             background: #000;
@@ -315,7 +420,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             margin-right: 5px;
         }
 
-        /* iPhone notch safe area */
         @supports (padding-top: env(safe-area-inset-top)) {
             .container {
                 padding-top: calc(1rem + env(safe-area-inset-top));
@@ -342,61 +446,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             </div>
         </div>
 
+        <div class="questions-panel">
+            <h3>💡 Questions guides</h3>
+            <ul>
+                <li>Qui êtes-vous ? (Parcours, études)</li>
+                <li>Quelles sont vos compétences clés ?</li>
+                <li>Que recherchez-vous comme opportunité ?</li>
+                <li>Pourquoi vous et pas un autre ?</li>
+            </ul>
+        </div>
+
         <div class="video-container">
             <video id="videoPreview" autoplay playsinline muted></video>
-            <video id="videoPlayback" playsinline controls></video>
+            <video id="videoPlayback" class="hidden" playsinline controls></video>
             <div class="timer" id="timer">01:00</div>
             <div class="progress-bar" id="progressBar"></div>
+            
+            <div id="transferOverlay" class="transfer-overlay hidden">
+                <div class="spinner"></div>
+                <div style="margin-bottom: 10px;">Transfert en cours...</div>
+                <div style="width: 80%; background: #374151; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div id="uploadProgressBar" style="width: 0%; height: 100%; background: var(--success); transition: width 0.2s;"></div>
+                </div>
+                <div id="uploadPercent" style="margin-top: 5px; font-size: 0.9rem;">0%</div>
+            </div>
         </div>
 
         <div class="controls">
-            <!-- État initial -->
             <button id="btnStart" class="btn btn-primary">
                 <span>🎬</span> Démarrer l'enregistrement
             </button>
 
-            <!-- Pendant l'enregistrement -->
             <button id="btnStop" class="btn btn-danger hidden">
                 <span>⏹️</span> Arrêter
             </button>
 
-            <!-- Après l'enregistrement -->
-            <button id="btnSave" class="btn btn-success hidden">
-                <span>💾</span> Sauvegarder la vidéo
-            </button>
-            <button id="btnRetry" class="btn btn-secondary hidden">
-                <span>🔄</span> Recommencer
-            </button>
+            <div id="validationControls" class="hidden" style="display: flex; gap: 10px;">
+                <button id="btnAccept" class="btn btn-success">
+                    <span>✅</span> Accepter
+                </button>
+                <button id="btnDelete" class="btn btn-danger">
+                    <span>🗑️</span> Supprimer
+                </button>
+            </div>
         </div>
 
         <div id="status" class="status">
             Appuyez sur démarrer pour enregistrer (max 60 secondes)
         </div>
 
-        <!-- Debug Log Area -->
         <div id="debug-log">
             <div class="log-entry">--- DEBUG LOGS ---</div>
         </div>
     </div>
 
     <script>
-        const MAX_DURATION = 60; // secondes
+        const MAX_DURATION = 60;
         let mediaRecorder;
         let recordedChunks = [];
         let stream;
         let timerInterval;
         let startTime;
         let recordedBlob;
+        let uploadedFileId = null;
+        let uploadedFileName = null;
 
-        // Éléments DOM
         const videoPreview = document.getElementById('videoPreview');
         const videoPlayback = document.getElementById('videoPlayback');
         const timer = document.getElementById('timer');
         const progressBar = document.getElementById('progressBar');
         const btnStart = document.getElementById('btnStart');
         const btnStop = document.getElementById('btnStop');
-        const btnSave = document.getElementById('btnSave');
-        const btnRetry = document.getElementById('btnRetry');
+        const btnAccept = document.getElementById('btnAccept');
+        const btnDelete = document.getElementById('btnDelete');
+        const validationControls = document.getElementById('validationControls');
+        const transferOverlay = document.getElementById('transferOverlay');
+        const uploadProgressBar = document.getElementById('uploadProgressBar');
+        const uploadPercent = document.getElementById('uploadPercent');
         const status = document.getElementById('status');
         const debugLog = document.getElementById('debug-log');
         const cameraSelect = document.getElementById('cameraSelect');
@@ -407,80 +533,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             const time = new Date().toISOString().split('T')[1].split('.')[0];
             const entry = document.createElement('div');
             entry.className = 'log-entry';
-            
-            let logText = `<span class="log-time">[${time}]</span> ${msg}`;
+            let logText = '<span class="log-time">[' + time + ']</span> ' + msg;
             if (data) {
                 try {
                     logText += ' ' + (typeof data === 'object' ? JSON.stringify(data) : data);
                 } catch(e) {
-                    logText += ' [Circular/Unserializable]';
+                    logText += ' [Unserializable]';
                 }
             }
-            
             entry.innerHTML = logText;
             debugLog.appendChild(entry);
             debugLog.scrollTop = debugLog.scrollHeight;
-            console.log(`[${time}] ${msg}`, data || '');
+            console.log('[' + time + '] ' + msg, data || '');
         }
 
-        // Remplir les listes de périphériques
         async function getDevices() {
             try {
-                // Demander la permission d'abord pour avoir les labels
-                if (!stream) {
-                    await initCamera();
-                }
-
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 
-                // Vider les listes
                 cameraSelect.innerHTML = '';
                 micSelect.innerHTML = '';
 
                 const cameras = devices.filter(d => d.kind === 'videoinput');
                 const mics = devices.filter(d => d.kind === 'audioinput');
 
-                cameras.forEach(camera => {
+                cameras.forEach((camera, i) => {
                     const option = document.createElement('option');
                     option.value = camera.deviceId;
-                    option.text = camera.label || `Caméra ${cameraSelect.length + 1}`;
+                    option.text = camera.label || 'Caméra ' + (i + 1);
                     cameraSelect.appendChild(option);
                 });
 
-                mics.forEach(mic => {
+                mics.forEach((mic, i) => {
                     const option = document.createElement('option');
                     option.value = mic.deviceId;
-                    option.text = mic.label || `Micro ${micSelect.length + 1}`;
+                    option.text = mic.label || 'Micro ' + (i + 1);
                     micSelect.appendChild(option);
                 });
 
-                // Sélectionner le périphérique actuel si possible
-                const currentVideoTrack = stream.getVideoTracks()[0];
-                const currentAudioTrack = stream.getAudioTracks()[0];
-
-                if (currentVideoTrack) {
-                    const settings = currentVideoTrack.getSettings();
-                    if (settings.deviceId) cameraSelect.value = settings.deviceId;
-                }
-                if (currentAudioTrack) {
-                    const settings = currentAudioTrack.getSettings();
-                    if (settings.deviceId) micSelect.value = settings.deviceId;
+                if (stream) {
+                    const vt = stream.getVideoTracks()[0];
+                    const at = stream.getAudioTracks()[0];
+                    if (vt) {
+                        const s = vt.getSettings();
+                        if (s.deviceId) cameraSelect.value = s.deviceId;
+                    }
+                    if (at) {
+                        const s = at.getSettings();
+                        if (s.deviceId) micSelect.value = s.deviceId;
+                    }
                 }
 
                 log('Périphériques listés', { cameras: cameras.length, mics: mics.length });
-
             } catch (err) {
                 log('Erreur enumerateDevices', err.message);
             }
         }
 
-        // Changement de périphérique
         cameraSelect.onchange = initCamera;
         micSelect.onchange = initCamera;
 
-        // Initialisation de la caméra
         async function initCamera() {
-            // Arrêter le flux existant
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
@@ -493,7 +606,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 const constraints = {
                     video: { 
                         deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
-                        width: { ideal: 1280 }, // Landscape preference usually better for monitors
+                        width: { ideal: 1280 },
                         height: { ideal: 720 }
                     },
                     audio: {
@@ -501,28 +614,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     }
                 };
 
-                // Si pas de sélection (premier lancement), on laisse le navigateur choisir (ou facingMode user)
                 if (!videoDeviceId) {
-                     delete constraints.video.deviceId;
-                     constraints.video.facingMode = 'user';
+                    delete constraints.video.deviceId;
+                    constraints.video.facingMode = 'user';
                 }
 
-                log('Contraintes demandées:', constraints);
+                log('Contraintes:', constraints);
 
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 log('Flux obtenu', stream.id);
                 
                 videoPreview.srcObject = stream;
-                
-                // Log track info
+
                 stream.getVideoTracks().forEach(track => {
-                    log('Piste vidéo:', track.label + ' ' + JSON.stringify(track.getSettings()));
+                    log('Piste vidéo:', track.label);
                 });
 
                 status.textContent = 'Caméra prête. Appuyez sur démarrer.';
                 btnStart.disabled = false;
 
-                // Rafraichir la liste des devices une fois qu'on a la permission (si vide)
                 if (cameraSelect.options.length === 0) {
                     getDevices();
                 }
@@ -532,30 +642,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 status.textContent = 'Erreur: Impossible d\'accéder à la caméra';
                 status.classList.add('error');
                 btnStart.disabled = true;
-                console.error('Erreur caméra:', err);
             }
         }
 
-        // Démarrer l'enregistrement
         function startRecording() {
-            log('Démarrage enregistrement demandé');
+            log('Démarrage enregistrement');
             recordedChunks = [];
-            
-            // Masquer les réglages pendant l'enregistrement
             settingsPanel.classList.add('hidden');
             
-            // Déterminer le format supporté
             let mimeType = 'video/webm;codecs=vp9';
             if (!MediaRecorder.isTypeSupported(mimeType)) {
-                log('VP9 non supporté, essai VP8');
                 mimeType = 'video/webm;codecs=vp8';
             }
             if (!MediaRecorder.isTypeSupported(mimeType)) {
-                log('VP8 non supporté, essai video/webm');
                 mimeType = 'video/webm';
             }
             if (!MediaRecorder.isTypeSupported(mimeType)) {
-                log('video/webm non supporté, essai mp4');
                 mimeType = 'video/mp4';
             }
             log('Format choisi:', mimeType);
@@ -563,10 +665,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             try {
                 mediaRecorder = new MediaRecorder(stream, { 
                     mimeType,
-                    videoBitsPerSecond: 1000000 // 1 Mbps limit
+                    videoBitsPerSecond: 1000000
                 });
             } catch (e) {
-                log('Erreur création MediaRecorder avec options, essai sans options', e.message);
+                log('Erreur MediaRecorder, essai sans options', e.message);
                 mediaRecorder = new MediaRecorder(stream);
             }
 
@@ -574,8 +676,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 if (e.data.size > 0) {
                     recordedChunks.push(e.data);
                     log('Chunk reçu, taille:', e.data.size);
-                } else {
-                    log('Chunk vide reçu');
                 }
             };
 
@@ -585,21 +685,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 log('Blob créé, taille totale:', recordedBlob.size);
                 
                 videoPlayback.src = URL.createObjectURL(recordedBlob);
-                showPlaybackMode();
+                
+                uploadToB2();
             };
 
             mediaRecorder.start(100);
-            log('MediaRecorder démarré (state: ' + mediaRecorder.state + ')');
+            log('MediaRecorder démarré');
             
             startTime = Date.now();
-            
-            // Timer et progress bar
             timerInterval = setInterval(updateTimer, 100);
             
-            // Auto-stop après 60 secondes
             setTimeout(() => {
                 if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    log('Auto-stop timer atteint');
+                    log('Auto-stop 60s atteint');
                     stopRecording();
                 }
             }, MAX_DURATION * 1000);
@@ -607,41 +705,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             showRecordingMode();
         }
 
-        // Arrêter l'enregistrement
         function stopRecording() {
             log('Arrêt demandé');
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
                 log('MediaRecorder.stop() appelé');
                 clearInterval(timerInterval);
-            } else {
-                log('Stop ignoré: pas en cours d\'enregistrement');
             }
         }
 
-        // Mettre à jour le timer
         function updateTimer() {
             const elapsed = (Date.now() - startTime) / 1000;
             const remaining = Math.max(0, MAX_DURATION - elapsed);
             const mins = Math.floor(remaining / 60);
             const secs = Math.floor(remaining % 60);
-            timer.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            progressBar.style.width = `${(elapsed / MAX_DURATION) * 100}%`;
+            timer.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+            progressBar.style.width = (elapsed / MAX_DURATION) * 100 + '%';
         }
 
-        // Upload vers B2
         async function uploadToB2() {
-            log('Début procédure upload');
-            status.textContent = 'Préparation de l\'upload...';
-            btnSave.disabled = true;
-            btnRetry.disabled = true;
-
+            log('Début procédure upload automatique');
+            showTransferMode();
+            
             try {
                 if (!recordedBlob || recordedBlob.size === 0) {
                     throw new Error('Aucune vidéo enregistrée (taille 0)');
                 }
 
-                // Obtenir l'URL d'upload
                 const formData = new FormData();
                 formData.append('action', 'get_upload_url');
                 
@@ -651,117 +741,169 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     body: formData
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP Error ${response.status} fetching upload URL`);
-                }
-
+                if (!response.ok) throw new Error('Erreur réseau get_upload_url');
                 const uploadInfo = await response.json();
-                
-                if (uploadInfo.error) {
-                    throw new Error(uploadInfo.error);
-                }
+                if (uploadInfo.error) throw new Error(uploadInfo.error);
 
-                status.textContent = 'Upload en cours...';
-
-                // Calculer le SHA1
                 const arrayBuffer = await recordedBlob.arrayBuffer();
                 const hashBuffer = await crypto.subtle.digest('SHA-1', arrayBuffer);
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                 const sha1 = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-                // Upload vers B2
-                log('Envoi vers B2 URL:', uploadInfo.uploadUrl);
-                const uploadResponse = await fetch(uploadInfo.uploadUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': uploadInfo.authToken,
-                        'X-Bz-File-Name': encodeURIComponent(uploadInfo.fileName),
-                        'Content-Type': 'video/webm',
-                        'X-Bz-Content-Sha1': sha1
-                    },
-                    body: recordedBlob
+                log('Envoi vers B2...');
+                
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', uploadInfo.uploadUrl, true);
+                    
+                    xhr.setRequestHeader('Authorization', uploadInfo.authToken);
+                    xhr.setRequestHeader('X-Bz-File-Name', encodeURIComponent(uploadInfo.fileName));
+                    xhr.setRequestHeader('Content-Type', 'video/webm');
+                    xhr.setRequestHeader('X-Bz-Content-Sha1', sha1);
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percentComplete = Math.round((e.loaded / e.total) * 100);
+                            uploadProgressBar.style.width = percentComplete + '%';
+                            uploadPercent.textContent = percentComplete + '%';
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            const result = JSON.parse(xhr.responseText);
+                            log('Succès upload B2', result);
+                            uploadedFileId = result.fileId;
+                            uploadedFileName = result.fileName;
+                            resolve(result);
+                        } else {
+                            reject(new Error('Échec upload B2: ' + xhr.status));
+                        }
+                    };
+
+                    xhr.onerror = () => reject(new Error('Erreur réseau XHR'));
+
+                    xhr.send(recordedBlob);
                 });
 
-                if (!uploadResponse.ok) {
-                    throw new Error('Échec upload: ' + uploadResponse.status);
-                }
-
-                const result = await uploadResponse.json();
-                log('Succès upload B2', result);
-                
-                status.textContent = '✅ Vidéo sauvegardée avec succès!';
-                status.classList.remove('error');
-                status.classList.add('success');
-                
-                // Proposer de voir les vidéos
-                setTimeout(() => {
-                    btnSave.textContent = '📹 Voir mes vidéos';
-                    btnSave.disabled = false;
-                    btnSave.onclick = () => window.location.href = 'view.php';
-                }, 1500);
+                showValidationMode();
 
             } catch (err) {
                 log('EXCEPTION:', err.message);
                 status.textContent = '❌ Erreur: ' + err.message;
                 status.classList.add('error');
-                btnSave.disabled = false;
-                btnRetry.disabled = false;
+                transferOverlay.classList.add('hidden');
+                showInitialMode();
             }
         }
 
-        // Modes d'affichage
+        async function deleteVideo() {
+            if (!uploadedFileId || !uploadedFileName) {
+                showInitialMode();
+                return;
+            }
+             
+            if (!confirm('Voulez-vous vraiment supprimer cette vidéo ?')) return;
+
+            log('Suppression demandée...');
+            status.textContent = 'Suppression en cours...';
+             
+            try {
+                const formData = new FormData();
+                formData.append('action', 'delete_file');
+                formData.append('fileId', uploadedFileId);
+                formData.append('fileName', uploadedFileName);
+                 
+                const response = await fetch('record.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                 
+                const res = await response.json();
+                if (res.success) {
+                    log('Vidéo supprimée');
+                    showInitialMode();
+                } else {
+                    throw new Error(res.error || 'Erreur suppression');
+                }
+            } catch(e) {
+                log('Erreur suppression', e.message);
+                alert('Erreur lors de la suppression: ' + e.message);
+            }
+        }
+
         function showRecordingMode() {
             btnStart.classList.add('hidden');
             btnStop.classList.remove('hidden');
-            btnSave.classList.add('hidden');
-            btnRetry.classList.add('hidden');
+            validationControls.classList.add('hidden');
             timer.classList.add('recording');
             videoPreview.classList.remove('hidden');
             videoPlayback.classList.add('hidden');
+            settingsPanel.classList.add('hidden');
+            transferOverlay.classList.add('hidden');
             status.textContent = 'Enregistrement en cours...';
             status.classList.remove('error', 'success');
         }
 
-        function showPlaybackMode() {
+        function showTransferMode() {
             btnStart.classList.add('hidden');
             btnStop.classList.add('hidden');
-            btnSave.classList.remove('hidden');
-            btnRetry.classList.remove('hidden');
+            validationControls.classList.add('hidden');
             timer.classList.remove('recording');
+            
+            videoPreview.classList.add('hidden');
+            videoPlayback.classList.add('hidden'); 
+            
+            settingsPanel.classList.add('hidden');
+            transferOverlay.classList.remove('hidden');
+            
+            uploadProgressBar.style.width = '0%';
+            uploadPercent.textContent = '0%';
+            
+            status.textContent = 'Envoi vers le serveur...';
+        }
+
+        function showValidationMode() {
+            btnStart.classList.add('hidden');
+            btnStop.classList.add('hidden');
+            validationControls.classList.remove('hidden');
+            validationControls.style.display = 'flex';
+            timer.classList.remove('recording');
+            
             videoPreview.classList.add('hidden');
             videoPlayback.classList.remove('hidden');
-            settingsPanel.classList.remove('hidden'); // Réafficher les réglages
-            status.textContent = 'Prévisualisez votre vidéo, puis sauvegardez ou recommencez.';
+            
+            settingsPanel.classList.add('hidden');
+            transferOverlay.classList.add('hidden');
+            status.textContent = 'Vérifiez la vidéo. Accepter pour garder, Supprimer pour recommencer.';
         }
 
         function showInitialMode() {
             btnStart.classList.remove('hidden');
             btnStop.classList.add('hidden');
-            btnSave.classList.add('hidden');
-            btnRetry.classList.add('hidden');
+            validationControls.classList.add('hidden');
             timer.classList.remove('recording');
             timer.textContent = '01:00';
             progressBar.style.width = '0%';
             videoPreview.classList.remove('hidden');
             videoPlayback.classList.add('hidden');
-            settingsPanel.classList.remove('hidden'); // Réafficher les réglages
+            settingsPanel.classList.remove('hidden');
+            transferOverlay.classList.add('hidden');
             status.textContent = 'Appuyez sur démarrer pour enregistrer (max 60 secondes)';
             status.classList.remove('error', 'success');
+            
+            uploadedFileId = null;
+            uploadedFileName = null;
         }
 
-        // Event listeners
         btnStart.addEventListener('click', startRecording);
         btnStop.addEventListener('click', stopRecording);
-        btnSave.addEventListener('click', uploadToB2);
-        btnRetry.addEventListener('click', () => {
-            log('Recommencer cliqué');
-            recordedChunks = [];
-            recordedBlob = null;
-            showInitialMode();
+        btnAccept.addEventListener('click', () => {
+            window.location.href = 'view.php';
         });
-
-        // Initialisation
-        initCamera(); // Lance la cam, demande permissions, puis getDevices() sera appelé à la fin de initCamera
+        btnDelete.addEventListener('click', deleteVideo);
+        
+        initCamera();
     </script>
 </body>
 </html>
