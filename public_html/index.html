@@ -19,19 +19,41 @@
             --radius-lg: 28px;
             --radius-xl: 36px;
             --border-dark: #334155;
+            --bg-gradient: radial-gradient(ellipse 80% 50% at 70% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+                           radial-gradient(ellipse 60% 40% at 20% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
+                           radial-gradient(ellipse at 50% 0%, rgba(15, 23, 42, 0.95) 0%, #0a0f1a 60%);
+            --shadow-card: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        [data-theme="light"] {
+            --primary: #0ea5e9;
+            --primary-hover: #0284c7;
+            --accent-violet: #8b5cf6;
+            --text-white: #0f172a; /* Texte sombre pour fond clair */
+            --text-gray: #475569;
+            --bg-dark: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --glass: rgba(255, 255, 255, 0.6);
+            --glass-border: rgba(0,0,0,0.1);
+            --border-dark: #e2e8f0;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #e0f2fe 0%, #f8fafc 100%);
+            --shadow-card: 0 10px 30px rgba(0,0,0,0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background: #0a0f1a;
-            background-image: radial-gradient(ellipse 80% 50% at 70% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
-                              radial-gradient(ellipse 60% 40% at 20% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
-                              radial-gradient(ellipse at 50% 0%, rgba(15, 23, 42, 0.95) 0%, #0a0f1a 60%);
+            background: var(--bg-dark);
+            background-image: var(--bg-gradient);
             color: var(--text-white);
             line-height: 1.5;
             min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
         }
 
         .container { max-width: 1200px; margin: 0 auto; padding: 0 5%; }
@@ -732,6 +754,21 @@
             .pricing-grid { grid-template-columns: 1fr; }
             .footer-inner { grid-template-columns: 1fr; }
         }
+        .btn-theme-toggle {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-white);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+        .btn-theme-toggle:hover { background: var(--glass-border); transform: rotate(15deg); }
     </style>
 </head>
 <body>
@@ -746,9 +783,11 @@
             <a href="#publier">Publier un poste</a>
             <a href="#comment">Comment ça marche</a>
             <a href="tarifs.html">Tarifs</a>
-            <a href="#">Blog</a>
         </nav>
         <div class="nav-actions">
+            <button class="btn-theme-toggle" id="themeToggle" title="Changer de thème" aria-label="Changer de thème">
+                <!-- Icon will be injected by JS -->
+            </button>
             <a href="https://app.ciaocv.com" class="btn-login">Connexion</a>
         </div>
     </header>
@@ -759,7 +798,7 @@
             <h1>Trouve un emploi<br><span class="highlight">sans CV.</span></h1>
             <p class="subtitle">Crée un profil numérique, réponds à 3 questions en vidéo, et laisse les employeurs découvrir qui tu es — pas juste ton papier.</p>
             <div class="hero-ctas">
-                <a href="https://app.ciaocv.com" class="btn-primary">Je cherche un emploi</a>
+                <a href="emplois.html" class="btn-primary">Je cherche un emploi</a>
                 <a href="#publier" class="btn-secondary">Je recrute <span aria-hidden="true">→</span></a>
             </div>
         </div>
@@ -806,36 +845,7 @@
         </div>
     </section>
 
-    <!-- BARRE RECHERCHE -->
-    <section class="search-section" id="recherche">
-        <div class="search-wrapper">
-            <div class="search-bar">
-                <div class="input-wrap">
-                    <span>🔍</span>
-                    <input type="text" placeholder="Poste ou mot-clé">
-                </div>
-                <div class="input-wrap">
-                    <span>📍</span>
-                    <input type="text" placeholder="Ville / Télétravail">
-                </div>
-                <div class="input-wrap">
-                    <select>
-                        <option value="">Type</option>
-                        <option>Temps plein</option>
-                        <option>Partiel</option>
-                        <option>Quart</option>
-                        <option>Stage</option>
-                    </select>
-                </div>
-                <button type="button" class="btn-search-hero">Voir les opportunités</button>
-            </div>
-            <div class="quick-filters">
-                <button type="button" class="pill"><span class="plus">+</span> Sans expérience</button>
-                <button type="button" class="pill"><span class="plus">+</span> Entrée rapide</button>
-                <button type="button" class="pill"><span class="plus">+</span> Télétravail</button>
-            </div>
-        </div>
-    </section>
+
 
 
     <!-- 3 BÉNÉFICES -->
@@ -898,11 +908,7 @@
             <p>Dashboard employeur : shortlist en un clin d’œil</p>
         </div>
         <div class="preview-header">
-            <div class="preview-tabs">
-                <a href="#" class="preview-tab active">👤 Candidats</a>
-                <a href="#" class="preview-tab">📅 Entrevues à venir</a>
-                <a href="#" class="preview-tab">❤️ Favoris</a>
-            </div>
+            <div class="preview-tabs" style="display: none;"></div>
             <a href="tarifs.html" class="preview-forfaits">Voir tous les forfaits →</a>
         </div>
         <div class="preview-dashboard">
@@ -976,7 +982,7 @@
             <div class="footer-links">
                 <h4>Candidat</h4>
                 <ul>
-                    <li><a href="#recherche">Trouver un emploi</a></li>
+                    <li><a href="emplois.html">Trouver un emploi</a></li>
                     <li><a href="#">Opportunités</a></li>
                     <li><a href="#">Conseils</a></li>
                     <li><a href="#comment">Comment ça marche</a></li>
@@ -987,13 +993,42 @@
             <p>© 3.0.24 CiaoCV</p>
             <div class="footer-legal">
                 <a href="#">A propos</a>
-                <a href="#">Blog</a>
                 <a href="#">Contact</a>
                 <a href="#">Conditions</a>
                 <a href="#">Confidentialité</a>
             </div>
         </div>
     </footer>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Icons
+        const iconMoon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+        const iconSun = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+
+        // Set Icon function
+        const setIcon = (theme) => {
+            themeToggle.innerHTML = theme === 'light' ? iconSun : iconMoon;
+        };
+
+        // Check saved preference
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            html.setAttribute('data-theme', 'light');
+        }
+        setIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            setIcon(newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
 
 </body>
 </html>

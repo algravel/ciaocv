@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offres d'emploi - CiaoCV</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00D4FF;
+            --primary-hover: #00B8E6;
+            --accent-violet: #A78BFA;
+            --text-white: #FFFFFF;
+            --text-gray: #94A3B8;
+            --bg-dark: #0a0f1a;
+            --bg-card: rgba(30, 41, 59, 0.6);
+            --glass: rgba(30, 41, 59, 0.4);
+            --glass-border: rgba(255,255,255,0.08);
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --border-dark: #334155;
+            --bg-gradient: radial-gradient(ellipse 80% 50% at 70% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+                           radial-gradient(ellipse 60% 40% at 20% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
+                           radial-gradient(ellipse at 50% 0%, rgba(15, 23, 42, 0.95) 0%, #0a0f1a 60%);
+        }
+
+        [data-theme="light"] {
+            --primary: #0ea5e9;
+            --primary-hover: #0284c7;
+            --accent-violet: #8b5cf6;
+            --text-white: #0f172a;
+            --text-gray: #475569;
+            --bg-dark: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --glass: rgba(255, 255, 255, 0.6);
+            --glass-border: rgba(0,0,0,0.1);
+            --border-dark: #e2e8f0;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #e0f2fe 0%, #f8fafc 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            background-image: var(--bg-gradient);
+            color: var(--text-white);
+            line-height: 1.5;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 5%; }
+
+        /* HEADER */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-white);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-white);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            position: relative;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 1px;
+        }
+
+        .nav-actions { display: flex; align-items: center; gap: 1rem; }
+        .btn-login {
+            background: linear-gradient(135deg, #1e3a5f, #2563eb);
+            color: var(--text-white);
+            padding: 0.65rem 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+        .btn-login:hover { background: linear-gradient(135deg, #2563eb, #3b82f6); opacity: 0.95; }
+
+        .btn-theme-toggle {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-white);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+        .btn-theme-toggle:hover { background: var(--glass-border); transform: rotate(15deg); }
+
+        /* SEARCH SECTION */
+        .search-page-header {
+            padding: 6rem 5% 2rem;
+            text-align: center;
+        }
+        .search-page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .search-section { padding: 0 5% 4rem; }
+        .search-wrapper {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.25rem;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .search-bar .input-wrap {
+            flex: 1;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            border: 1px solid var(--border-dark);
+        }
+        .search-bar .input-wrap input,
+        .search-bar .input-wrap select {
+            border: none;
+            background: transparent;
+            color: var(--text-white);
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+        }
+        .search-bar .input-wrap select option { background: #1E293B; color: #fff; }
+        .search-bar .input-wrap::placeholder { color: var(--text-gray); }
+        .btn-search-hero {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: var(--text-white);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-search-hero:hover { opacity: 0.95; }
+        .quick-filters {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .pill {
+            padding: 0.45rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: transparent;
+            color: var(--text-white);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .pill:hover { background: var(--glass); }
+        .pill .plus { color: var(--primary); font-weight: 700; }
+
+        /* JOBS GRID */
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 3rem auto 0;
+        }
+        .job-card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .job-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+        .job-header { display: flex; justify-content: space-between; align-items: start; }
+        .job-title { font-weight: 700; font-size: 1.1rem; color: var(--text-white); }
+        .job-company { color: var(--primary); font-size: 0.9rem; font-weight: 600; }
+        .job-details { display: flex; gap: 0.8rem; font-size: 0.85rem; color: var(--text-gray); flex-wrap: wrap; }
+        .job-tag { background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 6px; }
+        .btn-apply { 
+            margin-top: auto; 
+            background: rgba(255,255,255,0.1); 
+            text-align: center; 
+            padding: 0.6rem; 
+            border-radius: 10px; 
+            color: var(--text-white); 
+            text-decoration: none; 
+            font-weight: 600; 
+            transition: background 0.2s;
+        }
+        .btn-apply:hover { background: var(--primary); color: #000; }
+
+        /* FOOTER */
+        footer {
+            margin-top: 5rem;
+            padding: 3rem 5%;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(10, 15, 26, 0.5);
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            align-items: start;
+        }
+        .footer-links h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-gray);
+            margin-bottom: 1rem;
+        }
+        .footer-links ul { list-style: none; }
+        .footer-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: var(--primary); }
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .footer-bottom p { color: var(--text-gray); font-size: 0.85rem; }
+        .footer-legal { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+        .footer-legal a { color: var(--text-gray); text-decoration: none; font-size: 0.85rem; }
+        .footer-legal a:hover { color: var(--primary); }
+
+        @media (max-width: 900px) {
+            .nav-links { display: none; }
+            .search-bar { flex-direction: column; }
+            .search-bar .input-wrap { width: 100%; }
+            .footer-inner { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <img src="assets/logo.svg" alt="CiaoCV Logo" style="height: 40px;">
+        </a>
+        <nav class="nav-links">
+            <a href="emplois.html" class="active">Trouver un emploi</a>
+            <a href="index.html#publier">Publier un poste</a>
+            <a href="index.html#comment">Comment ça marche</a>
+            <a href="tarifs.html">Tarifs</a>
+        </nav>
+        <div class="nav-actions">
+            <button class="btn-theme-toggle" id="themeToggle" title="Changer de thème" aria-label="Changer de thème">
+                <!-- Icon will be injected by JS -->
+            </button>
+            <a href="https://app.ciaocv.com" class="btn-login">Connexion</a>
+        </div>
+    </header>
+
+    <div class="search-page-header">
+        <h1>Trouvez votre prochain job</h1>
+        <p>Plus de 500 entreprises recrutent sur CiaoCV</p>
+    </div>
+
+    <section class="search-section">
+        <div class="search-wrapper">
+            <form id="searchForm" class="search-bar" onsubmit="event.preventDefault(); searchJobs();">
+                <div class="input-wrap">
+                    <span>🔍</span>
+                    <input type="text" id="q" placeholder="Poste ou mot-clé">
+                </div>
+                <div class="input-wrap">
+                    <span>📍</span>
+                    <input type="text" id="location" placeholder="Ville / Télétravail">
+                </div>
+                <div class="input-wrap">
+                    <select id="type">
+                        <option value="">Type</option>
+                        <option value="Temps plein">Temps plein</option>
+                        <option value="Temps partiel">Temps partiel</option>
+                        <option value="Stage">Stage</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-search-hero">Rechercher</button>
+            </form>
+            <div class="quick-filters">
+                <button type="button" class="pill" onclick="setSearch('Sans expérience')"><span class="plus">+</span> Sans expérience</button>
+                <button type="button" class="pill" onclick="setSearch('Entrée rapide')"><span class="plus">+</span> Entrée rapide</button>
+                <button type="button" class="pill" onclick="setSearch('Télétravail')"><span class="plus">+</span> Télétravail</button>
+            </div>
+        </div>
+        
+        <!-- RESULTATS RECHERCHE -->
+        <div id="searchResults" class="jobs-grid">
+            <p style="text-align:center; grid-column:1/-1;">Chargement...</p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-links">
+                <h4>Entreprise</h4>
+                <ul>
+                    <li><a href="index.html#publier">Publier un poste</a></li>
+                    <li><a href="tarifs.html">Tarifs</a></li>
+                    <li><a href="#">Packs d'entreprise</a></li>
+                    <li><a href="index.html#comment">Comment ça marche</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Candidat</h4>
+                <ul>
+                    <li><a href="#">Conditions d’utilisation</a></li>
+                    <li><a href="#">Confidentialité</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Candidat</h4>
+                <ul>
+                    <li><a href="emplois.html">Trouver un emploi</a></li>
+                    <li><a href="#">Opportunités</a></li>
+                    <li><a href="#">Conseils</a></li>
+                    <li><a href="index.html#comment">Comment ça marche</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 3.0.24 CiaoCV</p>
+            <div class="footer-legal">
+                <a href="#">A propos</a>
+                <a href="#">Contact</a>
+                <a href="#">Conditions</a>
+                <a href="#">Confidentialité</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // THEME TOGGLE
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        const iconMoon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+        const iconSun = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+
+        const setIcon = (theme) => {
+            themeToggle.innerHTML = theme === 'light' ? iconSun : iconMoon;
+        };
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            html.setAttribute('data-theme', 'light');
+        }
+        setIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            setIcon(newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // SEARCH LOGIC
+        function setSearch(term) {
+            document.getElementById('q').value = term;
+            searchJobs();
+        }
+
+        async function searchJobs() {
+            const q = document.getElementById('q').value;
+            const location = document.getElementById('location').value;
+            const type = document.getElementById('type').value;
+            const container = document.getElementById('searchResults');
+            
+            container.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Recherche en cours...</p>';
+
+            try {
+                // Update URL params without reloading (optional but good for sharing)
+                const url = new URL(window.location);
+                url.searchParams.set('q', q);
+                if(location) url.searchParams.set('location', location);
+                if(type) url.searchParams.set('type', type);
+                window.history.pushState({}, '', url);
+
+                const response = await fetch(`app/api/search.php?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}&type=${encodeURIComponent(type)}`);
+                const jobs = await response.json();
+
+                container.innerHTML = '';
+
+                if (jobs.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Aucune offre trouvée.</p>';
+                    return;
+                }
+
+                jobs.forEach(job => {
+                    const card = document.createElement('div');
+                    card.className = 'job-card';
+                    card.innerHTML = `
+                        <div class="job-header">
+                            <div>
+                                <div class="job-title">${job.title}</div>
+                                <div class="job-company">${job.company}</div>
+                            </div>
+                            <div class="job-type job-tag">${job.type}</div>
+                        </div>
+                        <div class="job-details">
+                            <span>📍 ${job.location}</span>
+                            <span>💰 ${job.salary || 'À discuter'}</span>
+                        </div>
+                        <p style="font-size:0.9rem; color:var(--text-gray); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${job.description}</p>
+                        <a href="#" class="btn-apply">Postuler en vidéo</a>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Erreur lors du chargement des offres.</p>';
+            }
+        }
+
+        // Init search from URL params
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('q')) document.getElementById('q').value = params.get('q');
+            if (params.has('location')) document.getElementById('location').value = params.get('location');
+            if (params.has('type')) document.getElementById('type').value = params.get('type');
+            
+            searchJobs(); // Auto search
+        });
+    </script>
+
+</body>
+</html>
