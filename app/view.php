@@ -80,6 +80,7 @@ try {
     $listResponse = json_decode(curl_exec($ch), true);
     curl_close($ch);
     
+    $totalSize = 0;
     if (isset($listResponse['files'])) {
         foreach ($listResponse['files'] as $file) {
             // Filtrer pour n'afficher que les vidéos
@@ -92,6 +93,7 @@ try {
                     'uploaded' => $file['uploadTimestamp'],
                     'type' => $file['contentType']
                 ];
+                $totalSize += $file['contentLength'];
             }
         }
     }
@@ -308,7 +310,10 @@ function formatDate($timestamp) {
                 <a href="record.php" class="btn">🎬 Enregistrer ma première vidéo</a>
             </div>
         <?php else: ?>
-            <p class="video-count"><?= count($videos) ?> vidéo<?= count($videos) > 1 ? 's' : '' ?></p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <p class="video-count"><?= count($videos) ?> vidéo<?= count($videos) > 1 ? 's' : '' ?></p>
+                <p class="video-count">Espace utilisé: <strong><?= formatSize($totalSize) ?></strong></p>
+            </div>
             
             <div class="video-grid">
                 <?php foreach ($videos as $video): ?>
