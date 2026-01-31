@@ -22,10 +22,13 @@ Cette règle doit être appliquée à chaque interaction.
    - `app/` va dans `/app/` (racine FTP).
    - Ne jamais uploader `.env` dans `public_html` (rester à la racine).
 
-2. **Documentation** :
+2. **Fichier `.env`** :
+   - Ne jamais placer de fichier `index` (index.php, index.html, etc.) au même niveau que `.env` (racine FTP).
+
+3. **Documentation** :
    - Consulter `.documentation/design.md` pour les styles (Bleu Royal, arrondis).
    - Consulter `.documentation/projet.md` pour les fonctionnalités.
 
-3. **Navigation** :
+4. **Navigation** :
    - Liens "Connexion" du site -> `https://app.ciaocv.com`.
    - Liens "Retour" de l'app -> `https://www.ciaocv.com`.
