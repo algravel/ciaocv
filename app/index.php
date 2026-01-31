@@ -244,20 +244,20 @@ function send_zepto($to, $subject, $htmlbody) {
         <p class="tagline">Votre CV vidéo en 60 secondes</p>
 
         <nav class="menu">
-            <a href="record.php" class="menu-item">
-                <div class="menu-icon">🎬</div>
+            <a href="candidate.php" class="menu-item">
+                <div class="menu-icon">👤</div>
                 <div class="menu-text">
-                    <div class="menu-title">Enregistrer</div>
-                    <div class="menu-desc">Créer une nouvelle vidéo</div>
+                    <div class="menu-title">Espace candidats</div>
+                    <div class="menu-desc">Enregistrer mon CV vidéo, mes candidatures</div>
                 </div>
                 <span class="menu-arrow">→</span>
             </a>
 
-            <a href="view.php" class="menu-item">
-                <div class="menu-icon">📹</div>
+            <a href="employer.php" class="menu-item">
+                <div class="menu-icon">🏢</div>
                 <div class="menu-text">
-                    <div class="menu-title">Mes vidéos</div>
-                    <div class="menu-desc">Voir les enregistrements</div>
+                    <div class="menu-title">Espace employeur</div>
+                    <div class="menu-desc">Gérer mes postes et candidats</div>
                 </div>
                 <span class="menu-arrow">→</span>
             </a>

@@ -432,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <div class="container">
         <div class="header">
             <div class="logo">CiaoCV</div>
-            <a href="index.php" class="back-link">← Retour</a>
+            <a href="candidate.php" class="back-link">← Espace candidat</a>
         </div>
 
         <div class="settings-panel" id="settingsPanel">
