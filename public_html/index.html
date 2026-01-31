@@ -6,9 +6,10 @@
     <title>CiaoCV - Le recrutement par vidéo</title>
     <style>
         :root {
-            --primary: #2563EB;
-            --primary-dark: #1E40AF;
-            --secondary: #7C3AED;
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --secondary: #EC4899;
+            --primary-light: #EEF2FF;
             --bg: #F3F4F6;
             --surface: #FFFFFF;
             --text-main: #111827;
@@ -32,7 +33,7 @@
 
         /* HERO HEADER - Forme arrondie signature */
         .hero {
-            background-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
             padding: 2rem 1.5rem 6rem;
             border-bottom-left-radius: 40px;
@@ -179,7 +180,7 @@
 
         .tag {
             display: inline-block;
-            background: #EEF2FF;
+            background: var(--primary-light);
             color: var(--primary);
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
