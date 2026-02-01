@@ -11,6 +11,10 @@ if (!isset($sidebarActive)) {
 <aside class="app-sidebar">
     <a href="employer.php" class="app-sidebar-logo">CiaoCV</a>
     <nav class="app-sidebar-nav">
+        <a href="employer-profile.php" class="app-sidebar-link <?= $sidebarActive === 'profile' ? 'active' : '' ?>">
+            <span class="app-sidebar-link-icon">🏢</span>
+            <span>Mon entreprise</span>
+        </a>
         <a href="employer.php" class="app-sidebar-link <?= $sidebarActive === 'list' ? 'active' : '' ?>">
             <span class="app-sidebar-link-icon">📋</span>
             <span>Mes postes</span>
@@ -18,10 +22,6 @@ if (!isset($sidebarActive)) {
         <a href="employer-job-create.php" class="app-sidebar-link <?= $sidebarActive === 'create' ? 'active' : '' ?>">
             <span class="app-sidebar-link-icon">➕</span>
             <span>Créer un poste</span>
-        </a>
-        <a href="employer-profile.php" class="app-sidebar-link <?= $sidebarActive === 'profile' ? 'active' : '' ?>">
-            <span class="app-sidebar-link-icon">🏢</span>
-            <span>Mon entreprise</span>
         </a>
     </nav>
     <div class="app-sidebar-footer">

@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS users (
     company_description_visible TINYINT(1) DEFAULT 1,
     company_video_url VARCHAR(500) DEFAULT NULL,
     company_logo_url VARCHAR(500) DEFAULT NULL,
+    company_website_url VARCHAR(500) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

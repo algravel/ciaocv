@@ -1792,6 +1792,9 @@ a:hover {
 .form-group-checkbox label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
 .form-group-checkbox input[type="checkbox"] { width: auto; }
 .employer-logo-preview { margin: 0.5rem 0 1rem; }
+.employer-logo-block { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.employer-logo-block .employer-logo-preview { margin: 0; }
+.employer-logo-placeholder { color: var(--text-muted); font-size: 0.9rem; }
 .form-inline-video .form-group { margin-bottom: 0.75rem; }
 .form-inline-video .btn { margin-top: 0; }
 
