@@ -21,9 +21,14 @@ if (isset($_SESSION['user_id'], $db)) {
         <input type="search" class="app-header-search" placeholder="Rechercher…" aria-label="Recherche">
     </div>
     <div class="app-header-right">
-        <a href="candidate-jobs.php" class="app-header-switch" aria-label="Espace candidat" title="Espace candidat">
-            <svg class="app-header-switch-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </a>
+        <div class="app-header-switch-group" role="group" aria-label="Espace actif">
+            <span class="app-header-switch app-header-switch-active" aria-label="Espace employeur (actif)" title="Espace employeur (actif)">
+                <svg class="app-header-switch-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </span>
+            <a href="candidate-jobs.php" class="app-header-switch" aria-label="Espace candidat" title="Espace candidat">
+                <svg class="app-header-switch-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </a>
+        </div>
         <a href="index.php?logout=1" class="app-header-logout" aria-label="Déconnexion" title="Déconnexion">
             <svg class="app-header-logout-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </a>

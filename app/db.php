@@ -23,9 +23,15 @@ if (file_exists($envFile)) {
 }
 
 // Version des assets pour cache busting (CSS, etc.)
+// Optionnel : définir ASSET_VERSION dans .env pour forcer une version (ex. après déploiement)
 if (!defined('ASSET_VERSION')) {
-    $cssPath = __DIR__ . '/assets/css/design-system.css';
-    define('ASSET_VERSION', file_exists($cssPath) ? (string) filemtime($cssPath) : (string) time());
+    $v = $_ENV['ASSET_VERSION'] ?? null;
+    if ($v !== null && $v !== '') {
+        define('ASSET_VERSION', (string) $v);
+    } else {
+        $cssPath = __DIR__ . '/assets/css/design-system.css';
+        define('ASSET_VERSION', file_exists($cssPath) ? (string) filemtime($cssPath) : (string) time());
+    }
 }
 
 $db = null;
