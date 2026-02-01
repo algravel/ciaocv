@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $latitude = isset($_POST['latitude']) && $_POST['latitude'] !== '' ? (float)$_POST['latitude'] : null;
     $longitude = isset($_POST['longitude']) && $_POST['longitude'] !== '' ? (float)$_POST['longitude'] : null;
     $location_name = trim($_POST['location_name'] ?? '') ?: null;
+    $showOnJobMarket = isset($_POST['show_on_jobmarket']) && $_POST['show_on_jobmarket'] === '1' ? 1 : 0;
     $postId = (int)($_POST['id'] ?? 0);
 
     if (strlen($title) < 2) {
@@ -54,8 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!in_array('status', $cols)) {
                 $db->exec("ALTER TABLE jobs ADD COLUMN status ENUM('draft','active','closed') DEFAULT 'active' AFTER description");
             }
+            if (in_array('show_on_esplanade', $cols) && !in_array('show_on_jobmarket', $cols)) {
+                try { $db->exec("ALTER TABLE jobs CHANGE COLUMN show_on_esplanade show_on_jobmarket TINYINT(1) DEFAULT 1"); } catch (PDOException $e) {}
+                $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
+            }
+            if (!in_array('show_on_jobmarket', $cols)) {
+                try { $db->exec("ALTER TABLE jobs ADD COLUMN show_on_jobmarket TINYINT(1) DEFAULT 1 AFTER status"); } catch (PDOException $e) {}
+                $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
+            }
             if (!in_array('latitude', $cols)) {
-                $db->exec("ALTER TABLE jobs ADD COLUMN latitude DECIMAL(10,8) DEFAULT NULL AFTER show_on_esplanade");
+                $db->exec("ALTER TABLE jobs ADD COLUMN latitude DECIMAL(10,8) DEFAULT NULL AFTER show_on_jobmarket");
             }
             if (!in_array('longitude', $cols)) {
                 $db->exec("ALTER TABLE jobs ADD COLUMN longitude DECIMAL(11,8) DEFAULT NULL AFTER latitude");
@@ -66,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($postId) {
                 // Mise à jour
-                $stmt = $db->prepare('UPDATE jobs SET title = ?, description = ?, latitude = ?, longitude = ?, location_name = ? WHERE id = ?');
-                $stmt->execute([$title, $description, $latitude, $longitude, $location_name, $postId]);
+                $stmt = $db->prepare('UPDATE jobs SET title = ?, description = ?, show_on_jobmarket = ?, latitude = ?, longitude = ?, location_name = ? WHERE id = ?');
+                $stmt->execute([$title, $description, $showOnJobMarket, $latitude, $longitude, $location_name, $postId]);
                 $jobId = $postId;
                 $db->prepare('DELETE FROM job_questions WHERE job_id = ?')->execute([$jobId]);
                 foreach ($questions as $i => $q) {
@@ -80,8 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 // Création
-                $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status, latitude, longitude, location_name) VALUES (1, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$title, $description, 'draft', $latitude, $longitude, $location_name]);
+                $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status, show_on_jobmarket, latitude, longitude, location_name) VALUES (1, ?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$title, $description, 'draft', $showOnJobMarket, $latitude, $longitude, $location_name]);
                 $jobId = $db->lastInsertId();
                 foreach ($questions as $i => $q) {
                     if ($q !== '') {
@@ -108,6 +117,7 @@ $formDescription = isset($_POST['description']) ? (string)$_POST['description'] 
 $formLat = isset($_POST['latitude']) ? (string)$_POST['latitude'] : (isset($job['latitude']) ? (string)$job['latitude'] : '');
 $formLng = isset($_POST['longitude']) ? (string)$_POST['longitude'] : (isset($job['longitude']) ? (string)$job['longitude'] : '');
 $formLocationName = isset($_POST['location_name']) ? (string)$_POST['location_name'] : ($job['location_name'] ?? '');
+$formShowOnJobMarket = isset($_POST['show_on_jobmarket']) ? (int)$_POST['show_on_jobmarket'] : (isset($job['show_on_jobmarket']) ? (int)$job['show_on_jobmarket'] : 1);
 $formQuestions = [];
 for ($i = 0; $i < 5; $i++) {
     $formQuestions[$i] = isset($_POST['questions'][$i]) ? (string)$_POST['questions'][$i] : (isset($job['questions'][$i]) ? (string)$job['questions'][$i] : '');
@@ -146,6 +156,19 @@ for ($i = 0; $i < 5; $i++) {
             <div class="form-group">
                 <label for="description">Description</label>
                 <textarea id="description" name="description" placeholder="Décrivez le poste, les responsabilités..."><?= htmlspecialchars($formDescription) ?></textarea>
+            </div>
+
+            <div class="form-group" style="padding:1rem 1.25rem;background:var(--bg-alt, #f1f5f9);border-radius:var(--radius);">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                    <div>
+                        <span style="font-weight:600;color:var(--text);">Afficher sur le JobMarket</span>
+                        <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.25rem;">Visible par les candidats inscrits</p>
+                    </div>
+                    <input type="hidden" name="show_on_jobmarket" id="jobmarketHidden" value="<?= $formShowOnJobMarket ?>">
+                    <button type="button" id="jobmarketToggleCreate" role="switch" aria-checked="<?= $formShowOnJobMarket ? 'true' : 'false' ?>" aria-label="Afficher sur le JobMarket" style="position:relative;width:52px;height:28px;border-radius:50px;border:2px solid #e5e7eb;background:<?= $formShowOnJobMarket ? 'var(--primary)' : '#e5e7eb' ?>;cursor:pointer;transition:background 0.2s,border-color 0.2s;flex-shrink:0;">
+                        <span style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:transform 0.2s;transform:translateX(<?= $formShowOnJobMarket ? '22px' : '0' ?>);"></span>
+                    </button>
+                </div>
             </div>
 
             <div class="form-group">
@@ -369,6 +392,24 @@ for ($i = 0; $i < 5; $i++) {
 
             getDevices().then(() => initCamera());
         })();
+    </script>
+    <script>
+    (function() {
+        var toggle = document.getElementById('jobmarketToggleCreate');
+        var hidden = document.getElementById('jobmarketHidden');
+        if (toggle && hidden) {
+            toggle.addEventListener('click', function() {
+                var on = hidden.value === '1';
+                on = !on;
+                hidden.value = on ? '1' : '0';
+                toggle.setAttribute('aria-checked', on ? 'true' : 'false');
+                toggle.style.background = on ? 'var(--primary)' : '#e5e7eb';
+                toggle.style.borderColor = on ? 'var(--primary)' : '#e5e7eb';
+                var knob = toggle.querySelector('span');
+                if (knob) knob.style.transform = on ? 'translateX(22px)' : 'translateX(0)';
+            });
+        }
+    })();
     </script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>

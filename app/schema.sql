@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     status ENUM('draft','active','closed') DEFAULT 'active',
-    show_on_esplanade TINYINT(1) DEFAULT 1,
+    show_on_jobmarket TINYINT(1) DEFAULT 1,
     latitude DECIMAL(10, 8) DEFAULT NULL,
     longitude DECIMAL(11, 8) DEFAULT NULL,
     location_name VARCHAR(255) DEFAULT NULL,

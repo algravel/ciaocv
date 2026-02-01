@@ -1,6 +1,6 @@
 <?php
 /**
- * Espace Candidats - Redirection vers la page par défaut (Esplanade / candidate-jobs.php)
+ * Espace Candidats - Redirection vers la page par défaut (JobMarket / candidate-jobs.php)
  */
 session_start();
 

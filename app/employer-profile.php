@@ -118,6 +118,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         exit;
     }
+    if ($_POST['action'] === 'get_upload_url_video') {
+        header('Content-Type: application/json');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['error' => 'Non autorisé']);
+            exit;
+        }
+        if (!$b2KeyId || !$b2AppKey || !$b2BucketId) {
+            echo json_encode(['error' => 'Config B2 manquante']);
+            exit;
+        }
+        $ext = preg_replace('/[^a-z0-9]/i', '', $_POST['ext'] ?? 'webm');
+        if ($ext === '') $ext = 'webm';
+        $authUrl = 'https://api.backblazeb2.com/b2api/v2/b2_authorize_account';
+        $credentials = base64_encode($b2KeyId . ':' . $b2AppKey);
+        $ch = curl_init($authUrl);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Basic ' . $credentials]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $authResponse = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+        if (!isset($authResponse['authorizationToken'])) {
+            echo json_encode(['error' => 'Échec auth B2']);
+            exit;
+        }
+        $getUploadUrl = $authResponse['apiUrl'] . '/b2api/v2/b2_get_upload_url';
+        $ch = curl_init($getUploadUrl);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: ' . $authResponse['authorizationToken'],
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['bucketId' => $b2BucketId]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $uploadUrlResponse = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+        $fileName = 'video_employer_' . $userId . '_' . date('Y-m-d_H-i-s') . '.' . $ext;
+        echo json_encode([
+            'uploadUrl' => $uploadUrlResponse['uploadUrl'],
+            'authToken' => $uploadUrlResponse['authorizationToken'],
+            'fileName' => $fileName,
+            'downloadUrl' => $authResponse['downloadUrl']
+        ]);
+        exit;
+    }
+    if ($_POST['action'] === 'save_video') {
+        header('Content-Type: application/json');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['error' => 'Non autorisé']);
+            exit;
+        }
+        $videoUrl = trim($_POST['video_url'] ?? '');
+        if ($db) {
+            $db->prepare('UPDATE users SET company_video_url = ? WHERE id = ?')->execute([$videoUrl ?: null, $userId]);
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['error' => 'Erreur base de données']);
+        }
+        exit;
+    }
 }
 
 // Traitement du formulaire
@@ -125,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $companyName = trim($_POST['company_name'] ?? '');
     $companyDescription = trim($_POST['company_description'] ?? '');
     $companyDescriptionVisible = isset($_POST['company_description_visible']) && $_POST['company_description_visible'] === '1';
-    $companyVideoUrl = trim($_POST['company_video_url'] ?? '');
+    $companyVideoUrl = trim($_POST['company_video_url'] ?? $user['company_video_url'] ?? '');
     $companyLogoUrl = trim($_POST['company_logo_url'] ?? $user['company_logo_url'] ?? '');
     $companyWebsiteUrl = trim($_POST['company_website_url'] ?? '');
 
@@ -248,9 +306,9 @@ $companyWebsiteUrl = trim($user['company_website_url'] ?? '');
         <!-- Vidéo corporative -->
         <div class="section">
             <h2>Vidéo corporative</h2>
-            <div class="video-preview">
+            <div class="video-preview" id="employerVideoPreview">
                 <?php if ($companyVideoUrl): ?>
-                    <video controls src="<?= htmlspecialchars($companyVideoUrl) ?>"></video>
+                    <video controls src="<?= htmlspecialchars($companyVideoUrl) ?>" id="employerVideoEl"></video>
                 <?php else: ?>
                     <div class="no-video">
                         <span>🎬</span>
@@ -258,19 +316,7 @@ $companyWebsiteUrl = trim($user['company_website_url'] ?? '');
                     </div>
                 <?php endif; ?>
             </div>
-            <form method="POST" class="form-inline-video">
-                <input type="hidden" name="action" value="update_employer_profile">
-                <input type="hidden" name="company_name" value="<?= htmlspecialchars($companyName) ?>">
-                <input type="hidden" name="company_description" value="<?= htmlspecialchars($companyDescription) ?>">
-                <input type="hidden" name="company_description_visible" value="<?= $companyDescriptionVisible ? '1' : '0' ?>">
-                <input type="hidden" name="company_logo_url" value="<?= htmlspecialchars($companyLogoUrl) ?>">
-                <input type="hidden" name="company_website_url" value="<?= htmlspecialchars($companyWebsiteUrl) ?>">
-                <div class="form-group">
-                    <label for="company_video_url">URL de la vidéo</label>
-                    <input type="url" id="company_video_url" name="company_video_url" value="<?= htmlspecialchars($companyVideoUrl) ?>" placeholder="https://…">
-                </div>
-                <button type="submit" class="btn btn-primary">Sauvegarder la vidéo</button>
-            </form>
+            <button type="button" class="btn btn-primary" id="employerVideoChangeBtn"><?= $companyVideoUrl ? 'Changer la vidéo' : 'Téléverser une vidéo' ?></button>
         </div>
 
         </div>
@@ -317,6 +363,36 @@ $companyWebsiteUrl = trim($user['company_website_url'] ?? '');
         </div>
     </div>
     <canvas id="logoModalCanvas"></canvas>
+
+    <!-- Modal upload vidéo corporative -->
+    <div class="photo-modal" id="videoModal" role="dialog" aria-labelledby="videoModalTitle" aria-modal="true">
+        <div class="photo-modal-backdrop" id="videoModalBackdrop"></div>
+        <div class="photo-modal-content">
+            <div class="photo-modal-header">
+                <h2 id="videoModalTitle">Téléverser la vidéo corporative</h2>
+                <button type="button" class="photo-modal-close" id="videoModalClose" aria-label="Fermer">&times;</button>
+            </div>
+            <div class="photo-modal-body">
+                <div class="form-group">
+                    <label class="photo-option" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;padding:1rem;border:2px dashed var(--border);border-radius:8px;">
+                        <span class="icon">🎬</span>
+                        <span>Choisir un fichier vidéo (MP4, WebM, etc.)</span>
+                        <input type="file" id="videoModalFile" accept="video/*" style="display:none;">
+                    </label>
+                </div>
+                <div id="videoModalPreviewWrap" class="hidden" style="margin-top:1rem;">
+                    <video id="videoModalPreview" controls style="max-width:100%;max-height:200px;"></video>
+                    <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                        <button type="button" class="btn btn-secondary" id="videoModalCancel">Annuler</button>
+                        <button type="button" class="btn" id="videoModalUpload">Téléverser</button>
+                    </div>
+                </div>
+                <div id="videoModalProgress" class="hidden" style="margin-top:1rem;">
+                    <p style="font-size:0.9rem;color:var(--text-secondary);">Envoi en cours…</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
 (function() {
@@ -524,6 +600,114 @@ $companyWebsiteUrl = trim($user['company_website_url'] ?? '');
         }
         confirmBtn.disabled = false;
         confirmBtn.textContent = 'Remplacer';
+    });
+})();
+
+    // Modal vidéo corporative
+(function() {
+    const videoModal = document.getElementById('videoModal');
+    const videoBackdrop = document.getElementById('videoModalBackdrop');
+    const videoCloseBtn = document.getElementById('videoModalClose');
+    const videoOpenBtn = document.getElementById('employerVideoChangeBtn');
+    const videoFileInput = document.getElementById('videoModalFile');
+    const videoPreviewWrap = document.getElementById('videoModalPreviewWrap');
+    const videoPreviewEl = document.getElementById('videoModalPreview');
+    const videoCancelBtn = document.getElementById('videoModalCancel');
+    const videoUploadBtn = document.getElementById('videoModalUpload');
+    const videoProgressWrap = document.getElementById('videoModalProgress');
+    const employerVideoPreview = document.getElementById('employerVideoPreview');
+    const employerVideoEl = document.getElementById('employerVideoEl');
+
+    let videoBlob = null;
+
+    function openVideoModal() {
+        videoModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        videoBlob = null;
+        videoFileInput.value = '';
+        videoPreviewWrap.classList.add('hidden');
+        videoProgressWrap.classList.add('hidden');
+    }
+    function closeVideoModal() {
+        videoModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (videoOpenBtn) videoOpenBtn.addEventListener('click', openVideoModal);
+    if (videoCloseBtn) videoCloseBtn.addEventListener('click', closeVideoModal);
+    if (videoBackdrop) videoBackdrop.addEventListener('click', closeVideoModal);
+
+    if (videoFileInput) videoFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        videoBlob = file;
+        videoPreviewEl.src = URL.createObjectURL(file);
+        videoPreviewWrap.classList.remove('hidden');
+    });
+
+    if (videoCancelBtn) videoCancelBtn.addEventListener('click', function() {
+        videoBlob = null;
+        videoFileInput.value = '';
+        videoPreviewWrap.classList.add('hidden');
+    });
+
+    if (videoUploadBtn) videoUploadBtn.addEventListener('click', async function() {
+        if (!videoBlob) return;
+        videoUploadBtn.disabled = true;
+        videoProgressWrap.classList.remove('hidden');
+        try {
+            const ext = (videoBlob.name.split('.').pop() || 'webm').toLowerCase().replace(/[^a-z0-9]/g, '') || 'webm';
+            const formData = new FormData();
+            formData.append('action', 'get_upload_url_video');
+            formData.append('ext', ext);
+            const response = await fetch('employer-profile.php', { method: 'POST', body: formData });
+            const uploadInfo = await response.json();
+            if (uploadInfo.error) throw new Error(uploadInfo.error);
+
+            const arrayBuffer = await videoBlob.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest('SHA-1', arrayBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const sha1 = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            const contentType = videoBlob.type || 'video/mp4';
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', uploadInfo.uploadUrl, true);
+            xhr.setRequestHeader('Authorization', uploadInfo.authToken);
+            xhr.setRequestHeader('X-Bz-File-Name', encodeURIComponent(uploadInfo.fileName));
+            xhr.setRequestHeader('Content-Type', contentType);
+            xhr.setRequestHeader('X-Bz-Content-Sha1', sha1);
+            xhr.onload = async function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const result = JSON.parse(xhr.responseText);
+                    const bucketName = 'ciaocv';
+                    const videoUrl = uploadInfo.downloadUrl + '/file/' + bucketName + '/' + result.fileName;
+                    const saveData = new FormData();
+                    saveData.append('action', 'save_video');
+                    saveData.append('video_url', videoUrl);
+                    const saveRes = await fetch('employer-profile.php', { method: 'POST', body: saveData });
+                    const saveJson = await saveRes.json();
+                    if (saveJson.success) {
+                        if (employerVideoPreview.querySelector('.no-video')) {
+                            employerVideoPreview.innerHTML = '<video controls src="' + videoUrl + '" id="employerVideoEl"></video>';
+                        } else if (employerVideoEl) {
+                            employerVideoEl.src = videoUrl;
+                        }
+                        if (videoOpenBtn) videoOpenBtn.textContent = 'Changer la vidéo';
+                        closeVideoModal();
+                    } else {
+                        throw new Error(saveJson.error || 'Erreur');
+                    }
+                } else {
+                    throw new Error('Échec upload');
+                }
+            };
+            xhr.onerror = function() { throw new Error('Erreur réseau'); };
+            xhr.send(videoBlob);
+        } catch (err) {
+            alert('Erreur: ' + err.message);
+        }
+        videoUploadBtn.disabled = false;
+        videoProgressWrap.classList.add('hidden');
     });
 })();
     </script>

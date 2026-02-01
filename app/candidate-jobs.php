@@ -12,7 +12,7 @@ if ($db) {
         $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
         $hasStatus = in_array('status', $cols);
         $hasDeletedAt = in_array('deleted_at', $cols);
-        $hasEsplanade = in_array('show_on_esplanade', $cols);
+        $hasJobMarket = in_array('show_on_jobmarket', $cols);
         $sql = 'SELECT j.*, 
             (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
             FROM jobs j WHERE 1=1';
@@ -22,8 +22,8 @@ if ($db) {
         if ($hasDeletedAt) {
             $sql .= " AND j.deleted_at IS NULL";
         }
-        if ($hasEsplanade) {
-            $sql .= " AND j.show_on_esplanade = 1";
+        if ($hasJobMarket) {
+            $sql .= " AND j.show_on_jobmarket = 1";
         }
         $sql .= ' ORDER BY j.created_at DESC';
         $stmt = $db->query($sql);
@@ -38,7 +38,7 @@ if ($db) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Esplanade - CiaoCV</title>
+    <title>JobMarket - CiaoCV</title>
     <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body>
@@ -48,7 +48,7 @@ if ($db) {
         <?php include __DIR__ . '/includes/candidate-header.php'; ?>
         <div class="app-main-content layout-app">
 
-        <h2 style="margin-bottom:1.5rem;font-size:1.25rem;">Esplanade</h2>
+        <h2 style="margin-bottom:1.5rem;font-size:1.25rem;">JobMarket</h2>
         <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem;">Les offres d'emploi affichées par les employeurs.</p>
 
         <?php if (empty($jobs)): ?>

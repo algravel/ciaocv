@@ -17,7 +17,7 @@ if (!isset($sidebarActive)) {
         </a>
         <a href="employer.php" class="app-sidebar-link <?= $sidebarActive === 'list' ? 'active' : '' ?>">
             <span class="app-sidebar-link-icon">📋</span>
-            <span>Mes postes</span>
+            <span>Mes affichages</span>
         </a>
         <a href="employer-job-create.php" class="app-sidebar-link <?= $sidebarActive === 'create' ? 'active' : '' ?>">
             <span class="app-sidebar-link-icon">➕</span>

@@ -40,7 +40,7 @@ $profilePercent = $profilePercent ?? 0;
         </a>
         <a href="candidate-jobs.php" class="app-sidebar-link <?= $sidebarActive === 'jobs' ? 'active' : '' ?>">
             <span class="app-sidebar-link-icon">💼</span>
-            <span>Esplanade</span>
+            <span>JobMarket</span>
         </a>
     </nav>
     <div class="app-sidebar-footer">

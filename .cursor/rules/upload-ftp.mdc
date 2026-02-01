@@ -33,3 +33,7 @@ Adapter `<chemin_remote>` au répertoire cible sur le serveur (structure du proj
 - Transférer **uniquement les fichiers modifiés** (pas tout le projet).
 - Conserver la structure des dossiers sur le serveur si nécessaire.
 - Utiliser **curl** pour le transfert FTP (pas d’autre outil sauf demande explicite).
+- **Après chaque upload** : exécuter `CHMOD 644` sur le fichier pour éviter les 403 Forbidden (les fichiers uploadés peuvent avoir des permissions incorrectes pour le serveur web). Commande :
+  ```bash
+  curl -Q "CWD /chemin/vers/dossier" -Q "SITE CHMOD 644 nomfichier" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/"
+  ```

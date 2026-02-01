@@ -47,6 +47,7 @@ body {
   background-color: var(--bg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 a {
@@ -84,6 +85,15 @@ a:hover {
   text-align: center;
 }
 
+/* Sur mobile : masquer la zone visuelle décorative pour éviter le chevauchement */
+@media (max-width: 767px) {
+  .layout-auth-visual,
+  [class*="auth-visual"],
+  [class*="illustration"] {
+    display: none !important;
+  }
+}
+
 @media (min-width: 768px) {
   .layout-auth {
     display: grid;
@@ -112,6 +122,7 @@ a:hover {
   max-width: 500px;
   margin: 0 auto;
   padding: 1rem;
+  position: relative;
 }
 
 @media (min-width: 640px) {
@@ -132,6 +143,7 @@ a:hover {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .app-sidebar {
@@ -247,6 +259,23 @@ a:hover {
 }
 
 @media (max-width: 1023px) {
+  /* Sur mobile : empêcher chevauchement par éléments décoratifs */
+  .app-shell { overflow-x: hidden; }
+  .app-main { width: 100%; max-width: 100%; }
+  .app-main-content { width: 100%; max-width: 100%; min-width: 0; }
+  .layout-auth-visual { display: none !important; }
+
+  /* Avatar header : éviter débordement de la photo profil */
+  .app-header-avatar-wrap .avatar {
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .app-header-avatar-wrap .avatar .avatar-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+  }
+
   .app-header {
     display: flex;
     align-items: center;
@@ -295,10 +324,15 @@ a:hover {
 .app-main {
   flex: 1;
   padding: 1rem;
+  min-width: 0;
+  position: relative;
 }
 
 .app-main-content {
   flex: 1;
+  position: relative;
+  z-index: 1;
+  width: 100%;
 }
 
 @media (min-width: 640px) {
@@ -1708,9 +1742,18 @@ a:hover {
   .profile-header .profile-photo {
     width: 56px;
     height: 56px;
+    flex-shrink: 0;
+    overflow: hidden;
+    max-width: 56px;
   }
   .profile-header {
     gap: 0.75rem;
+    flex-wrap: wrap;
+    overflow: hidden;
+  }
+  .profile-info {
+    min-width: 0;
+    flex: 1;
   }
   .profile-info h3 { font-size: 1.1rem; }
   .profile-info p { font-size: 0.8rem; }
@@ -1720,6 +1763,7 @@ a:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .profile-name { font-weight: 600; font-size: 1.1rem; }

@@ -377,6 +377,12 @@ if ($db) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         resetModalState();
+        // Afficher la photo actuelle si elle existe
+        if (profileImg && profileImg.src) {
+            previewEl.src = profileImg.src;
+            previewEl.classList.remove('hidden');
+            placeholderEl.classList.add('hidden');
+        }
     }
     function closeModal() {
         modal.classList.remove('active');

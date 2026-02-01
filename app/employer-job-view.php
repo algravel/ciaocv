@@ -12,11 +12,14 @@ $emailSent = null;
 // Créer les colonnes manquantes si besoin
 if ($db) {
     $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
-    if (!in_array('show_on_esplanade', $cols)) {
-        try { $db->exec("ALTER TABLE jobs ADD COLUMN show_on_esplanade TINYINT(1) DEFAULT 1 AFTER status"); } catch (PDOException $e) {}
+    if (in_array('show_on_esplanade', $cols) && !in_array('show_on_jobmarket', $cols)) {
+        try { $db->exec("ALTER TABLE jobs CHANGE COLUMN show_on_esplanade show_on_jobmarket TINYINT(1) DEFAULT 1"); } catch (PDOException $e) {}
+    } elseif (!in_array('show_on_jobmarket', $cols)) {
+        try { $db->exec("ALTER TABLE jobs ADD COLUMN show_on_jobmarket TINYINT(1) DEFAULT 1 AFTER status"); } catch (PDOException $e) {}
     }
+    $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
     if (!in_array('latitude', $cols)) {
-        try { $db->exec("ALTER TABLE jobs ADD COLUMN latitude DECIMAL(10,8) DEFAULT NULL AFTER show_on_esplanade"); } catch (PDOException $e) {}
+        try { $db->exec("ALTER TABLE jobs ADD COLUMN latitude DECIMAL(10,8) DEFAULT NULL AFTER show_on_jobmarket"); } catch (PDOException $e) {}
     }
     if (!in_array('longitude', $cols)) {
         try { $db->exec("ALTER TABLE jobs ADD COLUMN longitude DECIMAL(11,8) DEFAULT NULL AFTER latitude"); } catch (PDOException $e) {}
@@ -26,12 +29,12 @@ if ($db) {
     }
 }
 
-// Traitement : afficher ou non sur l'Esplanade
-if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_esplanade'])) {
-    $show = (int)($_POST['show_on_esplanade'] ?? 1);
+// Traitement : afficher ou non sur le JobMarket
+if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_jobmarket'])) {
+    $show = (int)($_POST['show_on_jobmarket'] ?? 1);
     $show = $show ? 1 : 0;
     try {
-        $stmt = $db->prepare('UPDATE jobs SET show_on_esplanade = ? WHERE id = ?');
+        $stmt = $db->prepare('UPDATE jobs SET show_on_jobmarket = ? WHERE id = ?');
         $stmt->execute([$show, $jobId]);
         $statusUpdated = true;
     } catch (PDOException $e) {
@@ -116,7 +119,7 @@ if (!$job) {
     exit;
 }
 
-$showOnEsplanade = isset($job['show_on_esplanade']) ? (int)$job['show_on_esplanade'] : 1;
+$showOnJobMarket = isset($job['show_on_jobmarket']) ? (int)$job['show_on_jobmarket'] : 1;
 
 // Traitement : envoyer le poste par courriel (après chargement de $job)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
@@ -211,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
             </div>
             <div class="job-details-collapse">
                 <button type="button" class="job-details-collapse-trigger" id="jobDetailsTrigger" aria-expanded="false" aria-controls="jobDetailsContent">
-                    <span>Statut, Esplanade, lieu, description et questions</span>
+                    <span>Statut, JobMarket, lieu, description et questions</span>
                     <svg class="job-details-collapse-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
                 <div class="job-details-collapse-content" id="jobDetailsContent" hidden>
@@ -223,15 +226,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                     <button type="submit" name="new_status" value="closed" class="status-btn <?= $jobStatus === 'closed' ? 'active' : '' ?>">Fermé</button>
                 </div>
             </form>
-            <form method="POST" class="job-esplanade-bar" style="display:flex;align-items:center;gap:0.75rem;margin-top:1rem;flex-wrap:wrap;">
-                <input type="hidden" name="toggle_esplanade" value="1">
-                <input type="hidden" name="show_on_esplanade" id="esplanadeVal" value="<?= $showOnEsplanade ?>">
-                <div class="esplanade-toggle-wrap" style="position:relative;display:inline-flex;align-items:center;gap:0.5rem;">
-                    <span style="font-weight:600;color:#111827;">Afficher sur l'Esplanade</span>
-                    <button type="button" id="esplanadeToggleBtn" class="esplanade-toggle" role="switch" aria-checked="<?= $showOnEsplanade ? 'true' : 'false' ?>" aria-label="Afficher sur l'Esplanade" title="L'Esplanade est l'espace de diffusion officiel de la plateforme CiaoCV. Les offres y sont visibles par l'ensemble des candidats inscrits." style="position:relative;width:56px;height:28px;border-radius:50px;border:2px solid #e5e7eb;background:<?= $showOnEsplanade ? '#2563EB' : '#e5e7eb' ?>;cursor:pointer;transition:background 0.2s, border-color 0.2s;flex-shrink:0;">
-                        <span class="esplanade-toggle-knob" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:transform 0.2s;transform:translateX(<?= $showOnEsplanade ? '28px' : '0' ?>);"></span>
+            <form method="POST" class="job-jobmarket-bar" style="display:flex;align-items:center;gap:0.75rem;margin-top:1rem;flex-wrap:wrap;">
+                <input type="hidden" name="toggle_jobmarket" value="1">
+                <input type="hidden" name="show_on_jobmarket" id="jobmarketVal" value="<?= $showOnJobMarket ?>">
+                <div class="jobmarket-toggle-wrap" style="position:relative;display:inline-flex;align-items:center;gap:0.5rem;">
+                    <span style="font-weight:600;color:#111827;">Afficher sur le JobMarket</span>
+                    <button type="button" id="jobmarketToggleBtn" class="jobmarket-toggle" role="switch" aria-checked="<?= $showOnJobMarket ? 'true' : 'false' ?>" aria-label="Afficher sur le JobMarket" title="Le JobMarket est l'espace de diffusion officiel de la plateforme CiaoCV. Les offres y sont visibles par l'ensemble des candidats inscrits." style="position:relative;width:56px;height:28px;border-radius:50px;border:2px solid #e5e7eb;background:<?= $showOnJobMarket ? '#2563EB' : '#e5e7eb' ?>;cursor:pointer;transition:background 0.2s, border-color 0.2s;flex-shrink:0;">
+                        <span class="jobmarket-toggle-knob" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:transform 0.2s;transform:translateX(<?= $showOnJobMarket ? '28px' : '0' ?>);"></span>
                     </button>
-                    <span class="esplanade-tooltip" role="tooltip" style="visibility:hidden;position:absolute;left:0;top:100%;margin-top:6px;padding:0.5rem 0.75rem;background:#111827;color:#fff;font-size:0.8rem;border-radius:8px;max-width:280px;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.15);">L'Esplanade est l'espace de diffusion officiel de la plateforme CiaoCV. Les offres y sont visibles par l'ensemble des candidats inscrits.</span>
+                    <span class="jobmarket-tooltip" role="tooltip" style="visibility:hidden;position:absolute;left:0;top:100%;margin-top:6px;padding:0.5rem 0.75rem;background:#111827;color:#fff;font-size:0.8rem;border-radius:8px;max-width:280px;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.15);">Le JobMarket est l'espace de diffusion officiel de la plateforme CiaoCV. Les offres y sont visibles par l'ensemble des candidats inscrits.</span>
                 </div>
             </form>
             <?php
@@ -368,17 +371,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
             });
         }
 
-        // Bouton Esplanade : toggle on/off + tooltip au survol
-        var toggleBtn = document.getElementById('esplanadeToggleBtn');
-        var esplanadeVal = document.getElementById('esplanadeVal');
-        var wrap = toggleBtn && toggleBtn.closest('.esplanade-toggle-wrap');
-        var tooltip = wrap && wrap.querySelector('.esplanade-tooltip');
-        var knob = toggleBtn && toggleBtn.querySelector('.esplanade-toggle-knob');
-        if (toggleBtn && esplanadeVal) {
+        // Bouton JobMarket : toggle on/off + tooltip au survol
+        var toggleBtn = document.getElementById('jobmarketToggleBtn');
+        var jobmarketVal = document.getElementById('jobmarketVal');
+        var wrap = toggleBtn && toggleBtn.closest('.jobmarket-toggle-wrap');
+        var tooltip = wrap && wrap.querySelector('.jobmarket-tooltip');
+        var knob = toggleBtn && toggleBtn.querySelector('.jobmarket-toggle-knob');
+        if (toggleBtn && jobmarketVal) {
             toggleBtn.addEventListener('click', function() {
-                var on = esplanadeVal.value === '1';
+                var on = jobmarketVal.value === '1';
                 on = !on;
-                esplanadeVal.value = on ? '1' : '0';
+                jobmarketVal.value = on ? '1' : '0';
                 toggleBtn.setAttribute('aria-checked', on ? 'true' : 'false');
                 toggleBtn.style.background = on ? '#2563EB' : '#e5e7eb';
                 toggleBtn.style.borderColor = on ? '#2563EB' : '#e5e7eb';
