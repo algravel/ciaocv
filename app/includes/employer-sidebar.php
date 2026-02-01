@@ -1,7 +1,7 @@
 <?php
 /**
  * Sidebar employeur : logo, navigation, footer.
- * Variable attendue : $sidebarActive ('list' | 'create')
+ * Variable attendue : $sidebarActive ('list' | 'create' | 'profile')
  */
 if (!isset($sidebarActive)) {
     $sidebarActive = '';
@@ -18,6 +18,10 @@ if (!isset($sidebarActive)) {
         <a href="employer-job-create.php" class="app-sidebar-link <?= $sidebarActive === 'create' ? 'active' : '' ?>">
             <span class="app-sidebar-link-icon">➕</span>
             <span>Créer un poste</span>
+        </a>
+        <a href="employer-profile.php" class="app-sidebar-link <?= $sidebarActive === 'profile' ? 'active' : '' ?>">
+            <span class="app-sidebar-link-icon">🏢</span>
+            <span>Mon entreprise</span>
         </a>
     </nav>
     <div class="app-sidebar-footer">

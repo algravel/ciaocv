@@ -4,8 +4,27 @@ require_once __DIR__ . '/db.php';
 
 $jobs = [];
 $totalCandidates = 0;
+$employerProfile = null;
 
 if ($db) {
+    if (isset($_SESSION['user_id'])) {
+        $userId = (int) $_SESSION['user_id'];
+        $cols = $db->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+        $employerCols = ['company_name', 'company_logo_url'];
+        $needCols = array_diff($employerCols, $cols);
+        if (!empty($needCols)) {
+            if (in_array('company_name', $needCols)) {
+                @$db->exec("ALTER TABLE users ADD COLUMN company_name VARCHAR(255) DEFAULT NULL");
+                @$db->exec("ALTER TABLE users ADD COLUMN company_description TEXT DEFAULT NULL");
+                @$db->exec("ALTER TABLE users ADD COLUMN company_description_visible TINYINT(1) DEFAULT 1");
+                @$db->exec("ALTER TABLE users ADD COLUMN company_video_url VARCHAR(500) DEFAULT NULL");
+                @$db->exec("ALTER TABLE users ADD COLUMN company_logo_url VARCHAR(500) DEFAULT NULL");
+            }
+        }
+        $stmt = $db->prepare('SELECT company_name, company_logo_url FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $employerProfile = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
     try {
         $hasDeletedAt = $db->query("SHOW COLUMNS FROM jobs LIKE 'deleted_at'")->rowCount() > 0;
         if ($hasDeletedAt) {
@@ -43,6 +62,24 @@ if ($db) {
         <main class="app-main">
         <?php include __DIR__ . '/includes/employer-header.php'; ?>
         <div class="app-main-content layout-app layout-app-wide">
+
+        <?php if ($employerProfile): ?>
+        <div class="employer-dashboard-profile">
+            <a href="employer-profile.php" class="employer-dashboard-profile-link">
+                <div class="employer-dashboard-logo">
+                    <?php if (!empty($employerProfile['company_logo_url'])): ?>
+                        <img src="<?= htmlspecialchars($employerProfile['company_logo_url']) ?>" alt="">
+                    <?php else: ?>
+                        <span>🏢</span>
+                    <?php endif; ?>
+                </div>
+                <div class="employer-dashboard-info">
+                    <strong><?= htmlspecialchars($employerProfile['company_name'] ?: 'Mon entreprise') ?></strong>
+                    <span>Modifier le profil entreprise →</span>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
 
         <div class="stats-grid">
             <div class="stat-card">

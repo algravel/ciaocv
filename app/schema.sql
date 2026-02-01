@@ -52,6 +52,12 @@ CREATE TABLE IF NOT EXISTS users (
     available_in_weeks TINYINT DEFAULT NULL,
     onboarding_completed TINYINT(1) DEFAULT 0,
     preferred_language VARCHAR(10) DEFAULT 'fr',
+    -- Profil employeur (entreprise)
+    company_name VARCHAR(255) DEFAULT NULL,
+    company_description TEXT DEFAULT NULL,
+    company_description_visible TINYINT(1) DEFAULT 1,
+    company_video_url VARCHAR(500) DEFAULT NULL,
+    company_logo_url VARCHAR(500) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
