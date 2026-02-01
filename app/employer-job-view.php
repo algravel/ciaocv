@@ -180,7 +180,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
 
         <div class="job-detail-card">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1rem;">
-                <h1 style="margin:0;"><?= htmlspecialchars($job['title']) ?></h1>
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <h1 style="margin:0;"><?= htmlspecialchars($job['title']) ?></h1>
+                    <button type="button" id="sendJobEmailBtn" class="job-title-email-btn" aria-label="Envoyer le poste par courriel" title="Envoyer le poste par courriel">
+                        <svg class="job-title-email-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </button>
+                </div>
                 <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce poste ? Cette action est irréversible.');" style="margin:0;">
                     <input type="hidden" name="delete_job" value="confirm">
                     <button type="submit" style="background:#ef4444;color:white;border:none;padding:0.5rem 1rem;border-radius:0.5rem;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:0.3rem;">
@@ -207,9 +212,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                     <span class="esplanade-tooltip" role="tooltip" style="visibility:hidden;position:absolute;left:0;top:100%;margin-top:6px;padding:0.5rem 0.75rem;background:#111827;color:#fff;font-size:0.8rem;border-radius:8px;max-width:280px;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.15);">L'Esplanade est l'espace de diffusion officiel de la plateforme CiaoCV. Les offres y sont visibles par l'ensemble des candidats inscrits.</span>
                 </div>
             </form>
-            <div style="margin-top:1rem;">
-                <button type="button" class="btn btn-secondary" id="sendJobEmailBtn">📧 Envoyer le poste par courriel</button>
-            </div>
             <?php
             $jobLat = isset($job['latitude']) && $job['latitude'] !== '' && $job['latitude'] !== null ? (float)$job['latitude'] : null;
             $jobLng = isset($job['longitude']) && $job['longitude'] !== '' && $job['longitude'] !== null ? (float)$job['longitude'] : null;
