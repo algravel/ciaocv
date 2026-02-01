@@ -96,7 +96,7 @@ $profileUrl = 'https://app.ciaocv.com/profile/' . $userId;
                 <a href="../candidate-jobs.php" class="action-btn primary">
                     <span>💼</span> Voir les emplois pour moi
                 </a>
-                <a href="../candidate.php" class="action-btn secondary">
+                <a href="../candidate-jobs.php" class="action-btn secondary">
                     <span>👤</span> Mon espace candidat
                 </a>
             </div>

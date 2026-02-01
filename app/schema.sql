@@ -28,8 +28,9 @@ CREATE TABLE IF NOT EXISTS applications (
     job_id INT NOT NULL,
     candidate_email VARCHAR(255) NOT NULL,
     candidate_name VARCHAR(255),
+    phone VARCHAR(50) DEFAULT NULL,
     video_url VARCHAR(500),
-    status ENUM('new','viewed','accepted','rejected') DEFAULT 'new',
+    status ENUM('new','viewed','accepted','rejected','pool') DEFAULT 'new',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
 );

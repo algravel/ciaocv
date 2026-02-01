@@ -1385,6 +1385,71 @@ a:hover {
 .tag-rejected { background: var(--error-bg); color: var(--error); }
 .tag-pool { background: #ede9fe; color: #7c3aed; }
 
+/* Section repliable : Statut → Questions */
+.job-details-collapse { margin-top: 1rem; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.job-details-collapse-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-alt, #f9fafb);
+  border: none;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.job-details-collapse-trigger:hover { background: var(--border-light, #e5e7eb); color: var(--text); }
+.job-details-collapse-icon { flex-shrink: 0; width: 1.25rem; height: 1.25rem; transition: transform 0.2s; }
+.job-details-collapse-content { padding: 1rem; border-top: 1px solid var(--border); }
+
+/* Grille candidats (desktop) */
+.candidate-grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+@media (min-width: 1024px) {
+  .candidate-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+}
+.candidate-grid-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.candidate-grid-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.candidate-grid-card.filtered-out { display: none !important; }
+.candidate-grid-photo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-alt, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+}
+.candidate-grid-img { width: 100%; height: 100%; object-fit: cover; }
+.candidate-grid-initial { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
+.candidate-grid-body { width: 100%; }
+.candidate-grid-name { font-weight: 700; margin-bottom: 0.25rem; font-size: 1rem; }
+.candidate-grid-video-link { display: inline-block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--primary); text-decoration: none; }
+.candidate-grid-video-link:hover { text-decoration: underline; }
+.candidate-grid-status { display: inline-block; margin-bottom: 0.35rem; }
+.candidate-grid-date { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem; }
+.candidate-grid-phone { font-size: 0.85rem; margin-bottom: 0.2rem; }
+.candidate-grid-email { font-size: 0.8rem; color: var(--text-secondary); word-break: break-all; }
+
 .video-wrapper {
   background: #000;
   border-radius: var(--radius-xl);

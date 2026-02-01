@@ -146,7 +146,7 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
         <p class="tagline">Votre CV vidéo en 60 secondes</p>
 
         <nav class="menu">
-            <a href="candidate.php" class="menu-item">
+            <a href="candidate-jobs.php" class="menu-item">
                 <div class="menu-icon">👤</div>
                 <div class="menu-text">
                     <div class="menu-title">Espace candidats</div>

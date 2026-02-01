@@ -23,9 +23,7 @@ $profilePercent = $profilePercent ?? 0;
 ?>
 <div class="app-sidebar-backdrop" id="appSidebarBackdrop" aria-hidden="true"></div>
 <aside class="app-sidebar">
-    <a href="candidate.php" class="app-sidebar-logo">CiaoCV</a>
-    <a href="index.php" class="app-sidebar-back">← Accueil</a>
-    <div class="app-sidebar-group-label">Navigation</div>
+    <a href="candidate-jobs.php" class="app-sidebar-logo">CiaoCV</a>
     <nav class="app-sidebar-nav">
         <div class="app-sidebar-link-wrapper">
             <?php if (!$onboardingCompleted): ?>

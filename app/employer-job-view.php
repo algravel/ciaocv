@@ -92,7 +92,17 @@ if ($jobId && $db) {
             $stmtQ->execute([$jobId]);
             $job['questions'] = $stmtQ->fetchAll(PDO::FETCH_ASSOC);
 
-            $stmtA = $db->prepare('SELECT * FROM applications WHERE job_id = ? ORDER BY created_at DESC');
+            $cols = $db->query("SHOW COLUMNS FROM applications")->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('phone', $cols)) {
+                try { $db->exec("ALTER TABLE applications ADD COLUMN phone VARCHAR(50) DEFAULT NULL AFTER candidate_name"); } catch (PDOException $e) {}
+            }
+            $stmtA = $db->prepare('
+                SELECT a.*, u.photo_url, u.video_url AS bio_video_url
+                FROM applications a
+                LEFT JOIN users u ON u.email = a.candidate_email
+                WHERE a.job_id = ?
+                ORDER BY a.created_at DESC
+            ');
             $stmtA->execute([$jobId]);
             $candidates = $stmtA->fetchAll(PDO::FETCH_ASSOC);
         }
@@ -199,6 +209,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                     </form>
                 </div>
             </div>
+            <div class="job-details-collapse">
+                <button type="button" class="job-details-collapse-trigger" id="jobDetailsTrigger" aria-expanded="false" aria-controls="jobDetailsContent">
+                    <span>Statut, Esplanade, lieu, description et questions</span>
+                    <svg class="job-details-collapse-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="job-details-collapse-content" id="jobDetailsContent" hidden>
             <form method="POST" class="job-status-bar">
                 <span class="label">Statut de l'affichage :</span>
                 <div class="status-btns">
@@ -241,6 +257,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                     <?php endforeach; ?>
                 </ol>
             <?php endif; ?>
+                </div>
+            </div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
@@ -261,24 +279,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                 <p>Aucun candidat pour le moment.</p>
             </div>
         <?php else: ?>
-            <div class="candidate-list">
+            <div class="candidate-grid" id="candidateGrid">
                 <?php foreach ($candidates as $i => $c): 
                     $cStatus = $c['status'] ?? 'new';
                     if ($cStatus === 'viewed') $cStatus = 'new';
+                    $statusLabels = ['new' => 'NON TRAITÉ', 'viewed' => 'NON TRAITÉ', 'rejected' => 'REFUSÉ', 'accepted' => 'ACCEPTÉ', 'pool' => 'BANQUE'];
+                    $statusLabel = $statusLabels[$c['status'] ?? 'new'] ?? 'NON TRAITÉ';
+                    $photoUrl = !empty($c['photo_url']) ? trim($c['photo_url']) : null;
+                    $bioVideoUrl = !empty($c['bio_video_url']) ? trim($c['bio_video_url']) : null;
+                    $createdAt = !empty($c['created_at']) ? date('d/m/Y H:i', strtotime($c['created_at'])) : '';
+                    $phone = isset($c['phone']) ? trim($c['phone']) : '';
                 ?>
-                    <a href="employer-candidate-view.php?job=<?= $jobId ?>&idx=<?= $i ?>" class="candidate-card" style="text-decoration:none;color:inherit;" data-status="<?= htmlspecialchars($cStatus) ?>">
-                        <div class="candidate-video-preview">
-                            ▶
+                    <a href="employer-candidate-view.php?job=<?= $jobId ?>&idx=<?= $i ?>" class="candidate-grid-card" data-status="<?= htmlspecialchars($cStatus) ?>">
+                        <div class="candidate-grid-photo">
+                            <?php if ($photoUrl): ?>
+                                <img src="<?= htmlspecialchars($photoUrl) ?>" alt="" class="candidate-grid-img">
+                            <?php else: ?>
+                                <span class="candidate-grid-initial"><?= strtoupper(mb_substr($c['candidate_name'] ?: '?', 0, 1)) ?></span>
+                            <?php endif; ?>
                         </div>
-                        <div class="candidate-info" style="flex:1;">
-                            <div class="candidate-name"><?= htmlspecialchars($c['candidate_name'] ?: 'Sans nom') ?></div>
-                            <div class="candidate-email"><?= htmlspecialchars($c['candidate_email']) ?></div>
+                        <div class="candidate-grid-body">
+                            <div class="candidate-grid-name"><?= htmlspecialchars($c['candidate_name'] ?: 'Sans nom') ?></div>
+                            <?php if ($bioVideoUrl): ?>
+                                <a href="<?= htmlspecialchars($bioVideoUrl) ?>" class="candidate-grid-video-link" target="_blank" rel="noopener" onclick="event.stopPropagation();">🎬 Vidéo bio</a>
+                            <?php endif; ?>
+                            <span class="candidate-grid-status tag-status tag-<?= htmlspecialchars($c['status'] ?? 'new') ?>"><?= $statusLabel ?></span>
+                            <?php if ($createdAt): ?>
+                                <div class="candidate-grid-date">Reçu le <?= $createdAt ?></div>
+                            <?php endif; ?>
+                            <?php if ($phone): ?>
+                                <div class="candidate-grid-phone"><?= htmlspecialchars($phone) ?></div>
+                            <?php endif; ?>
+                            <div class="candidate-grid-email"><?= htmlspecialchars($c['candidate_email']) ?></div>
                         </div>
-                        <?php
-                        $statusLabels = ['new' => 'NON TRAITÉ', 'viewed' => 'NON TRAITÉ', 'rejected' => 'REFUSÉ', 'accepted' => 'ACCEPTÉ', 'pool' => 'BANQUE'];
-                        $statusLabel = $statusLabels[$c['status'] ?? 'new'] ?? 'NON TRAITÉ';
-                        ?>
-                        <span class="tag-status tag-<?= htmlspecialchars($c['status'] ?? 'new') ?>"><?= $statusLabel ?></span>
                     </a>
                 <?php endforeach; ?>
             </div>
@@ -322,6 +355,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
             if (closeBtn) closeBtn.addEventListener('click', closeModal);
         }
 
+        // Section repliable : Statut → Questions
+        var detailsTrigger = document.getElementById('jobDetailsTrigger');
+        var detailsContent = document.getElementById('jobDetailsContent');
+        var detailsIcon = detailsTrigger && detailsTrigger.querySelector('.job-details-collapse-icon');
+        if (detailsTrigger && detailsContent) {
+            detailsTrigger.addEventListener('click', function() {
+                var open = detailsContent.hidden;
+                detailsContent.hidden = !open;
+                detailsTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (detailsIcon) detailsIcon.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+            });
+        }
+
         // Bouton Esplanade : toggle on/off + tooltip au survol
         var toggleBtn = document.getElementById('esplanadeToggleBtn');
         var esplanadeVal = document.getElementById('esplanadeVal');
@@ -351,7 +397,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
     <script>
         (function() {
             const btns = document.querySelectorAll('.filter-btn');
-            const cards = document.querySelectorAll('.candidate-card[data-status]');
+            const cards = document.querySelectorAll('.candidate-grid-card[data-status]');
             const countEl = document.querySelector('h2');
             function updateCount(visible) {
                 if (countEl) countEl.innerHTML = 'Candidats (' + visible + ')';
