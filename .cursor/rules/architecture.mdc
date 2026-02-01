@@ -30,5 +30,5 @@ Cette règle doit être appliquée à chaque interaction.
    - Consulter `.documentation/projet.md` pour les fonctionnalités.
 
 4. **Navigation** :
-   - Liens "Connexion" du site -> `https://app.ciaocv.com`.
+   - Liens "Connexion" du site -> `https://app.ciaocv.com/login.php`.
    - Liens "Retour" de l'app -> `https://www.ciaocv.com`.

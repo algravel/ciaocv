@@ -2,6 +2,43 @@
 /**
  * Espace Candidats - Tableau de bord candidat
  */
+session_start();
+require_once __DIR__ . '/db.php';
+
+// Vérifier si connecté
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit;
+}
+
+// Charger les données utilisateur
+$userName = 'Candidat';
+$onboardingStep = 1;
+$onboardingCompleted = false;
+$profilePercent = 0;
+
+if ($db) {
+    $stmt = $db->prepare('SELECT first_name, onboarding_step, onboarding_completed FROM users WHERE id = ?');
+    $stmt->execute([$_SESSION['user_id']]);
+    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($userData) {
+        $userName = $userData['first_name'] ?: 'Candidat';
+        $onboardingStep = (int)($userData['onboarding_step'] ?? 1);
+        $onboardingCompleted = (bool)$userData['onboarding_completed'];
+        $profilePercent = $onboardingCompleted ? 100 : round((($onboardingStep - 1) / 9) * 100);
+    }
+}
+
+// URL pour modifier/continuer le profil
+$continueUrl = $onboardingCompleted ? 'onboarding/step2-job-type.php' : 'onboarding/step' . max(2, $onboardingStep) . '-job-type.php';
+if ($onboardingStep == 3) $continueUrl = 'onboarding/step3-skills.php';
+elseif ($onboardingStep == 4) $continueUrl = 'onboarding/step4-personality.php';
+elseif ($onboardingStep == 5) $continueUrl = 'onboarding/step5-availability.php';
+elseif ($onboardingStep == 6) $continueUrl = 'onboarding/step6-video.php';
+elseif ($onboardingStep == 7) $continueUrl = 'onboarding/step7-tests.php';
+elseif ($onboardingStep == 8) $continueUrl = 'onboarding/step8-photo.php';
+elseif ($onboardingStep >= 9 || $onboardingCompleted) $continueUrl = 'onboarding/step2-job-type.php';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -124,6 +161,63 @@
 
         .footer a { color: var(--primary); text-decoration: none; }
 
+        /* Profile status */
+        .profile-status {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        .profile-status:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .profile-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .profile-status-title {
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .profile-status-percent {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .profile-progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .profile-progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .profile-status-cta {
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+        .profile-status.complete {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .profile-status.complete .profile-status-percent { color: #22c55e; }
+        .profile-status.complete .profile-progress-fill { background: #22c55e; }
+        .profile-status.complete .profile-status-cta { color: #22c55e; }
+
         @supports (padding-top: env(safe-area-inset-top)) {
             .container { padding-top: calc(1.5rem + env(safe-area-inset-top)); }
         }
@@ -137,6 +231,25 @@
         </header>
 
         <p class="section-title">Espace candidat</p>
+
+        <a href="<?= $continueUrl ?>" class="profile-status <?= $onboardingCompleted ? 'complete' : '' ?>">
+            <div class="profile-status-header">
+                <span class="profile-status-title">
+                    <?= $onboardingCompleted ? 'Profil complété' : 'Compléter mon profil' ?>
+                </span>
+                <span class="profile-status-percent"><?= $profilePercent ?>%</span>
+            </div>
+            <div class="profile-progress-bar">
+                <div class="profile-progress-fill" style="width: <?= $profilePercent ?>%"></div>
+            </div>
+            <div class="profile-status-cta">
+                <?php if ($onboardingCompleted): ?>
+                    Modifier mon profil →
+                <?php else: ?>
+                    Étape <?= $onboardingStep ?>/9 — Continuer →
+                <?php endif; ?>
+            </div>
+        </a>
 
         <nav class="menu">
             <a href="candidate-profile.php" class="menu-item">
