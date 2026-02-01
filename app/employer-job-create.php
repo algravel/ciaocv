@@ -2,8 +2,35 @@
 session_start();
 require_once __DIR__ . '/db.php';
 
-$saved = false;
+$jobId = (int)($_GET['id'] ?? 0);
+$job = null;
 $error = null;
+
+// Charger le poste en mode édition
+if ($jobId && $db) {
+    try {
+        $hasDeletedAt = $db->query("SHOW COLUMNS FROM jobs LIKE 'deleted_at'")->rowCount() > 0;
+        if ($hasDeletedAt) {
+            $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ? AND deleted_at IS NULL');
+        } else {
+            $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ?');
+        }
+        $stmt->execute([$jobId]);
+        $job = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($job) {
+            $stmtQ = $db->prepare('SELECT question_text FROM job_questions WHERE job_id = ? ORDER BY sort_order');
+            $stmtQ->execute([$jobId]);
+            $job['questions'] = $stmtQ->fetchAll(PDO::FETCH_COLUMN);
+        } else {
+            header('Location: employer.php');
+            exit;
+        }
+    } catch (PDOException $e) {
+        header('Location: employer.php');
+        exit;
+    }
+}
+$isEdit = (bool)$job;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
@@ -12,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $latitude = isset($_POST['latitude']) && $_POST['latitude'] !== '' ? (float)$_POST['latitude'] : null;
     $longitude = isset($_POST['longitude']) && $_POST['longitude'] !== '' ? (float)$_POST['longitude'] : null;
     $location_name = trim($_POST['location_name'] ?? '') ?: null;
+    $postId = (int)($_POST['id'] ?? 0);
 
     if (strlen($title) < 2) {
         $error = 'Le titre du poste est requis (min. 2 caractères).';
@@ -19,9 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Maximum 5 questions d\'entrevue.';
     } elseif ($db) {
         try {
-            // Vérifier/créer les colonnes manquantes
             $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
-            
             if (!in_array('employer_id', $cols)) {
                 $db->exec("ALTER TABLE jobs ADD COLUMN employer_id INT DEFAULT 1 AFTER id");
             }
@@ -37,24 +63,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!in_array('location_name', $cols)) {
                 $db->exec("ALTER TABLE jobs ADD COLUMN location_name VARCHAR(255) DEFAULT NULL AFTER longitude");
             }
-            
-            // Créer en brouillon pour que l'utilisateur puisse vérifier avant publication
-            $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status, latitude, longitude, location_name) VALUES (1, ?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$title, $description, 'draft', $latitude, $longitude, $location_name]);
-            $jobId = $db->lastInsertId();
 
-            // Insérer les questions (ignorer les erreurs de clé unique)
-            foreach ($questions as $i => $q) {
-                if ($q !== '') {
-                    try {
-                        $stmtQ = $db->prepare('INSERT INTO job_questions (job_id, question_text, sort_order) VALUES (?, ?, ?)');
-                        $stmtQ->execute([$jobId, $q, $i + 1]);
-                    } catch (PDOException $qe) {
-                        // Ignorer les erreurs de questions
+            if ($postId) {
+                // Mise à jour
+                $stmt = $db->prepare('UPDATE jobs SET title = ?, description = ?, latitude = ?, longitude = ?, location_name = ? WHERE id = ?');
+                $stmt->execute([$title, $description, $latitude, $longitude, $location_name, $postId]);
+                $jobId = $postId;
+                $db->prepare('DELETE FROM job_questions WHERE job_id = ?')->execute([$jobId]);
+                foreach ($questions as $i => $q) {
+                    if ($q !== '') {
+                        try {
+                            $stmtQ = $db->prepare('INSERT INTO job_questions (job_id, question_text, sort_order) VALUES (?, ?, ?)');
+                            $stmtQ->execute([$jobId, $q, $i + 1]);
+                        } catch (PDOException $qe) {}
+                    }
+                }
+            } else {
+                // Création
+                $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status, latitude, longitude, location_name) VALUES (1, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$title, $description, 'draft', $latitude, $longitude, $location_name]);
+                $jobId = $db->lastInsertId();
+                foreach ($questions as $i => $q) {
+                    if ($q !== '') {
+                        try {
+                            $stmtQ = $db->prepare('INSERT INTO job_questions (job_id, question_text, sort_order) VALUES (?, ?, ?)');
+                            $stmtQ->execute([$jobId, $q, $i + 1]);
+                        } catch (PDOException $qe) {}
                     }
                 }
             }
-            $saved = true;
             header('Location: employer-job-view.php?id=' . $jobId);
             exit;
         } catch (PDOException $e) {
@@ -64,47 +101,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Base de données non connectée.';
     }
 }
+
+// Valeurs pour le formulaire (édition ou reprise après erreur ; POST prioritaire)
+$formTitle = isset($_POST['title']) ? (string)$_POST['title'] : ($job['title'] ?? '');
+$formDescription = isset($_POST['description']) ? (string)$_POST['description'] : ($job['description'] ?? '');
+$formLat = isset($_POST['latitude']) ? (string)$_POST['latitude'] : (isset($job['latitude']) ? (string)$job['latitude'] : '');
+$formLng = isset($_POST['longitude']) ? (string)$_POST['longitude'] : (isset($job['longitude']) ? (string)$job['longitude'] : '');
+$formLocationName = isset($_POST['location_name']) ? (string)$_POST['location_name'] : ($job['location_name'] ?? '');
+$formQuestions = [];
+for ($i = 0; $i < 5; $i++) {
+    $formQuestions[$i] = isset($_POST['questions'][$i]) ? (string)$_POST['questions'][$i] : (isset($job['questions'][$i]) ? (string)$job['questions'][$i] : '');
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créer un poste - CiaoCV</title>
+    <title><?= $isEdit ? 'Modifier le poste' : 'Créer un poste' ?> - CiaoCV</title>
     <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
     <div class="app-shell">
-        <?php $sidebarActive = 'create'; include __DIR__ . '/includes/employer-sidebar.php'; ?>
+        <?php $sidebarActive = $isEdit ? 'list' : 'create'; include __DIR__ . '/includes/employer-sidebar.php'; ?>
         <main class="app-main">
         <?php include __DIR__ . '/includes/employer-header.php'; ?>
         <div class="app-main-content layout-app">
-        <h1>Créer un nouveau poste</h1>
+        <h1><?= $isEdit ? 'Modifier le poste' : 'Créer un nouveau poste' ?></h1>
 
         <?php if ($error): ?>
             <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
         <form method="POST">
+            <?php if ($jobId): ?><input type="hidden" name="id" value="<?= (int)$jobId ?>"><?php endif; ?>
             <div class="form-group">
                 <label for="title">Titre du poste *</label>
                 <input type="text" id="title" name="title" required
-                       value="<?= htmlspecialchars($_POST['title'] ?? '') ?>"
+                       value="<?= htmlspecialchars($formTitle) ?>"
                        placeholder="Ex: Développeur Frontend React">
             </div>
 
             <div class="form-group">
                 <label for="description">Description</label>
-                <textarea id="description" name="description" placeholder="Décrivez le poste, les responsabilités..."><?= htmlspecialchars($_POST['description'] ?? '') ?></textarea>
+                <textarea id="description" name="description" placeholder="Décrivez le poste, les responsabilités..."><?= htmlspecialchars($formDescription) ?></textarea>
             </div>
 
             <div class="form-group">
                 <label>Lieu du poste (géolocalisation)</label>
                 <p class="hint">Indiquez l'emplacement pour rapprocher candidats et employeurs. Cliquez sur la carte ou utilisez « Ma position ».</p>
-                <input type="hidden" name="latitude" id="jobLatitude" value="<?= htmlspecialchars($_POST['latitude'] ?? '') ?>">
-                <input type="hidden" name="longitude" id="jobLongitude" value="<?= htmlspecialchars($_POST['longitude'] ?? '') ?>">
-                <input type="hidden" name="location_name" id="jobLocationName" value="<?= htmlspecialchars($_POST['location_name'] ?? '') ?>">
+                <input type="hidden" name="latitude" id="jobLatitude" value="<?= htmlspecialchars($formLat) ?>">
+                <input type="hidden" name="longitude" id="jobLongitude" value="<?= htmlspecialchars($formLng) ?>">
+                <input type="hidden" name="location_name" id="jobLocationName" value="<?= htmlspecialchars($formLocationName) ?>">
                 <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
                     <button type="button" id="jobGeoBtn" class="btn btn-secondary" style="font-size:0.9rem;">📍 Ma position</button>
                     <span id="jobLocationLabel" style="font-size:0.9rem;color:#6B7280;align-self:center;"></span>
@@ -120,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-group">
                             <label>Question <?= $i ?></label>
                             <input type="text" name="questions[]"
-                                   value="<?= htmlspecialchars($_POST['questions'][$i-1] ?? '') ?>"
+                                   value="<?= htmlspecialchars($formQuestions[$i - 1] ?? '') ?>"
                                    placeholder="Ex: Parlez-nous de votre expérience avec React">
                         </div>
                     <?php endfor; ?>
@@ -165,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <button type="submit" class="btn">Créer le poste</button>
+            <button type="submit" class="btn"><?= $isEdit ? 'Enregistrer les modifications' : 'Créer le poste' ?></button>
         </form>
 
         </div>
