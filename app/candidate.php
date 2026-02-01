@@ -218,6 +218,28 @@ elseif ($onboardingStep >= 9 || $onboardingCompleted) $continueUrl = 'onboarding
         .profile-status.complete .profile-progress-fill { background: #22c55e; }
         .profile-status.complete .profile-status-cta { color: #22c55e; }
 
+        /* Pastille notification */
+        .menu-item-wrapper {
+            position: relative;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
         @supports (padding-top: env(safe-area-inset-top)) {
             .container { padding-top: calc(1.5rem + env(safe-area-inset-top)); }
         }
@@ -232,34 +254,26 @@ elseif ($onboardingStep >= 9 || $onboardingCompleted) $continueUrl = 'onboarding
 
         <p class="section-title">Espace candidat</p>
 
-        <a href="<?= $continueUrl ?>" class="profile-status <?= $onboardingCompleted ? 'complete' : '' ?>">
-            <div class="profile-status-header">
-                <span class="profile-status-title">
-                    <?= $onboardingCompleted ? 'Profil complété' : 'Compléter mon profil' ?>
-                </span>
-                <span class="profile-status-percent"><?= $profilePercent ?>%</span>
-            </div>
-            <div class="profile-progress-bar">
-                <div class="profile-progress-fill" style="width: <?= $profilePercent ?>%"></div>
-            </div>
-            <div class="profile-status-cta">
-                <?php if ($onboardingCompleted): ?>
-                    Modifier mon profil →
-                <?php else: ?>
-                    Étape <?= $onboardingStep ?>/9 — Continuer →
-                <?php endif; ?>
-            </div>
-        </a>
-
         <nav class="menu">
-            <a href="candidate-profile.php" class="menu-item">
-                <div class="menu-icon">👤</div>
-                <div class="menu-text">
-                    <div class="menu-title">Mon profil</div>
-                    <div class="menu-desc">Informations et présentations (3 max)</div>
-                </div>
-                <span class="menu-arrow">→</span>
-            </a>
+            <div class="menu-item-wrapper">
+                <?php if (!$onboardingCompleted): ?>
+                    <span class="notification-badge"><?= $profilePercent ?>%</span>
+                <?php endif; ?>
+                <a href="candidate-profile.php" class="menu-item <?= $onboardingCompleted ? '' : 'profile-incomplete' ?>">
+                    <div class="menu-icon">👤</div>
+                    <div class="menu-text">
+                        <div class="menu-title">Mon profil</div>
+                        <div class="menu-desc">
+                            <?php if ($onboardingCompleted): ?>
+                                Profil complété ✓
+                            <?php else: ?>
+                                Étape <?= $onboardingStep ?>/9 — À compléter
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <span class="menu-arrow">→</span>
+                </a>
+            </div>
 
             <a href="candidate-applications.php" class="menu-item">
                 <div class="menu-icon">📋</div>

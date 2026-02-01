@@ -441,6 +441,7 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
             </form>
 
             <div class="login-footer">
+                <a href="forgot-password.php">Mot de passe oublié ?</a><br>
                 Pas encore inscrit ? <a href="onboarding/signup.php">Créer un compte</a>
             </div>
         </div>
