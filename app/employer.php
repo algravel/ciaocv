@@ -7,9 +7,22 @@ $demoMode = false;
 
 if ($db) {
     try {
-        $stmt = $db->query('SELECT j.*, 
-            (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
-            FROM jobs j ORDER BY j.created_at DESC');
+        // Vérifier si la colonne deleted_at existe
+        $hasDeletedAt = $db->query("SHOW COLUMNS FROM jobs LIKE 'deleted_at'")->rowCount() > 0;
+        
+        if ($hasDeletedAt) {
+            // Exclure les postes supprimés (soft delete)
+            $stmt = $db->query('SELECT j.*, 
+                (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
+                FROM jobs j 
+                WHERE j.deleted_at IS NULL 
+                ORDER BY j.created_at DESC');
+        } else {
+            $stmt = $db->query('SELECT j.*, 
+                (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
+                FROM jobs j 
+                ORDER BY j.created_at DESC');
+        }
         $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $stmt = $db->query('SELECT COUNT(*) FROM applications');
@@ -177,8 +190,12 @@ if ($db) {
         </header>
 
         <?php if ($demoMode): ?>
-            <div style="background:#dbeafe;color:#1e40af;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1.5rem;font-size:0.9rem;">
-                Mode démo – données d'exemple. <a href="install.php" style="color:#1e40af;">Connecter la base de données</a> pour les vraies données.
+            <div style="background:#fef3c7;color:#92400e;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1.5rem;font-size:0.9rem;">
+                ⚠️ Mode démo – données d'exemple. <a href="update-schema-jobs.php" style="color:#92400e;font-weight:600;">Initialiser la base de données</a> pour les vraies données.
+            </div>
+        <?php else: ?>
+            <div style="background:#d1fae5;color:#065f46;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1.5rem;font-size:0.9rem;">
+                ✓ Connecté à la base de données
             </div>
         <?php endif; ?>
 

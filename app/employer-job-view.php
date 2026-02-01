@@ -5,10 +5,53 @@ $jobId = (int)($_GET['id'] ?? 0);
 $job = null;
 $candidates = [];
 $demoMode = false;
+$statusUpdated = false;
+
+// Traitement de la suppression (soft delete)
+if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_job']) && $_POST['delete_job'] === 'confirm') {
+    try {
+        // Vérifier/créer la colonne deleted_at si elle n'existe pas
+        $cols = $db->query("SHOW COLUMNS FROM jobs LIKE 'deleted_at'")->rowCount();
+        if ($cols === 0) {
+            $db->exec("ALTER TABLE jobs ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL");
+        }
+        
+        // Soft delete : marquer comme supprimé au lieu de supprimer
+        $stmt = $db->prepare('UPDATE jobs SET deleted_at = NOW() WHERE id = ?');
+        $stmt->execute([$jobId]);
+        
+        header('Location: employer.php?deleted=1');
+        exit;
+    } catch (PDOException $e) {
+        // Ignorer l'erreur
+    }
+}
+
+// Traitement du changement de status
+if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_status'])) {
+    $newStatus = $_POST['new_status'];
+    if (in_array($newStatus, ['draft', 'active', 'closed'])) {
+        try {
+            $stmt = $db->prepare('UPDATE jobs SET status = ? WHERE id = ?');
+            $stmt->execute([$newStatus, $jobId]);
+            $statusUpdated = true;
+        } catch (PDOException $e) {
+            // Ignorer l'erreur
+        }
+    }
+}
 
 if ($jobId && $db) {
     try {
-        $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ?');
+        // Vérifier si la colonne deleted_at existe
+        $cols = $db->query("SHOW COLUMNS FROM jobs LIKE 'deleted_at'")->rowCount();
+        
+        if ($cols > 0) {
+            // Exclure les postes supprimés (soft delete)
+            $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ? AND deleted_at IS NULL');
+        } else {
+            $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ?');
+        }
         $stmt->execute([$jobId]);
         $job = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -162,17 +205,46 @@ if (!$job) {
             </div>
         <?php endif; ?>
 
+        <?php $jobStatus = $job['status'] ?? 'active'; ?>
+        
+        <?php if ($jobStatus === 'draft'): ?>
+            <div style="background:#fef3c7;color:#92400e;padding:1rem 1.25rem;border-radius:8px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+                <div>
+                    <strong>📝 Brouillon</strong> — Ce poste n'est pas encore visible par les candidats.
+                </div>
+                <form method="POST" style="margin:0;">
+                    <input type="hidden" name="new_status" value="active">
+                    <button type="submit" style="background:#16a34a;color:white;border:none;padding:0.6rem 1.25rem;border-radius:0.5rem;font-weight:600;cursor:pointer;">
+                        ✓ Publier le poste
+                    </button>
+                </form>
+            </div>
+        <?php elseif ($statusUpdated): ?>
+            <div style="background:#d1fae5;color:#065f46;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1.5rem;font-size:0.9rem;">
+                ✓ Statut mis à jour avec succès.
+            </div>
+        <?php endif; ?>
+
         <div class="job-card">
-            <h1><?= htmlspecialchars($job['title']) ?></h1>
-            <?php $jobStatus = $job['status'] ?? 'active'; ?>
-            <div class="job-status-bar">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1rem;">
+                <h1 style="margin:0;"><?= htmlspecialchars($job['title']) ?></h1>
+                <?php if (!$demoMode): ?>
+                <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce poste ? Cette action est irréversible.');" style="margin:0;">
+                    <input type="hidden" name="delete_job" value="confirm">
+                    <button type="submit" style="background:#ef4444;color:white;border:none;padding:0.5rem 1rem;border-radius:0.5rem;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:0.3rem;">
+                        🗑 Supprimer
+                    </button>
+                </form>
+                <?php endif; ?>
+            </div>
+            <form method="POST" class="job-status-bar">
                 <span class="label">Statut de l'affichage :</span>
                 <div class="status-btns">
-                    <button type="button" class="status-btn <?= $jobStatus === 'draft' ? 'active' : '' ?>" data-status="draft">Brouillon</button>
-                    <button type="button" class="status-btn <?= $jobStatus === 'active' ? 'active' : '' ?>" data-status="active">En cours</button>
-                    <button type="button" class="status-btn <?= $jobStatus === 'closed' ? 'active' : '' ?>" data-status="closed">Fermé</button>
+                    <button type="submit" name="new_status" value="draft" class="status-btn <?= $jobStatus === 'draft' ? 'active' : '' ?>">Brouillon</button>
+                    <button type="submit" name="new_status" value="active" class="status-btn <?= $jobStatus === 'active' ? 'active' : '' ?>">En cours</button>
+                    <button type="submit" name="new_status" value="closed" class="status-btn <?= $jobStatus === 'closed' ? 'active' : '' ?>">Fermé</button>
                 </div>
-            </div>
+            </form>
             <?php if ($job['description']): ?>
                 <div class="desc"><?= nl2br(htmlspecialchars($job['description'])) ?></div>
             <?php endif; ?>
@@ -231,18 +303,6 @@ if (!$job) {
             <a href="https://www.ciaocv.com">Retour au site principal</a>
         </div>
     </div>
-
-    <script>
-        (function(){
-            var jobStatusBtns = document.querySelectorAll('.job-status-bar .status-btn');
-            jobStatusBtns.forEach(function(btn){
-                btn.addEventListener('click', function(){
-                    jobStatusBtns.forEach(function(b){ b.classList.remove('active'); });
-                    this.classList.add('active');
-                });
-            });
-        })();
-    </script>
 
     <?php if (!empty($candidates)): ?>
     <script>

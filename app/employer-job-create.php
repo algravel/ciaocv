@@ -15,26 +15,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Maximum 5 questions d\'entrevue.';
     } elseif ($db) {
         try {
-            $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description) VALUES (1, ?, ?)');
-            $stmt->execute([$title, $description]);
+            // Vérifier/créer les colonnes manquantes
+            $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
+            
+            if (!in_array('employer_id', $cols)) {
+                $db->exec("ALTER TABLE jobs ADD COLUMN employer_id INT DEFAULT 1 AFTER id");
+            }
+            if (!in_array('status', $cols)) {
+                $db->exec("ALTER TABLE jobs ADD COLUMN status ENUM('draft','active','closed') DEFAULT 'active' AFTER description");
+            }
+            
+            // Créer en brouillon pour que l'utilisateur puisse vérifier avant publication
+            $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status) VALUES (1, ?, ?, ?)');
+            $stmt->execute([$title, $description, 'draft']);
             $jobId = $db->lastInsertId();
 
-            $stmtQ = $db->prepare('INSERT INTO job_questions (job_id, question_text, sort_order) VALUES (?, ?, ?)');
+            // Insérer les questions (ignorer les erreurs de clé unique)
             foreach ($questions as $i => $q) {
                 if ($q !== '') {
-                    $stmtQ->execute([$jobId, $q, $i + 1]);
+                    try {
+                        $stmtQ = $db->prepare('INSERT INTO job_questions (job_id, question_text, sort_order) VALUES (?, ?, ?)');
+                        $stmtQ->execute([$jobId, $q, $i + 1]);
+                    } catch (PDOException $qe) {
+                        // Ignorer les erreurs de questions
+                    }
                 }
             }
             $saved = true;
             header('Location: employer-job-view.php?id=' . $jobId);
             exit;
         } catch (PDOException $e) {
-            header('Location: employer-job-view.php?id=1&demo=1');
-            exit;
+            $error = 'Erreur DB: ' . $e->getMessage();
         }
     } else {
-        header('Location: employer-job-view.php?id=1&demo=1');
-        exit;
+        $error = 'Base de données non connectée.';
     }
 }
 ?>

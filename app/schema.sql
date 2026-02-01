@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     employer_id INT DEFAULT 1,
     title VARCHAR(255) NOT NULL,
     description TEXT,
+    status ENUM('draft','active','closed') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

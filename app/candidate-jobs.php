@@ -9,13 +9,30 @@ $demoMode = false;
 
 if ($db) {
     try {
-        $stmt = $db->query('SELECT j.*, 
+        // Vérifier si les colonnes status et deleted_at existent
+        $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
+        $hasStatus = in_array('status', $cols);
+        $hasDeletedAt = in_array('deleted_at', $cols);
+        
+        // Construire la requête pour afficher uniquement les emplois actifs
+        $sql = 'SELECT j.*, 
             (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
-            FROM jobs j ORDER BY j.created_at DESC');
+            FROM jobs j WHERE 1=1';
+        
+        if ($hasStatus) {
+            $sql .= " AND j.status = 'active'";
+        }
+        if ($hasDeletedAt) {
+            $sql .= " AND j.deleted_at IS NULL";
+        }
+        $sql .= ' ORDER BY j.created_at DESC';
+        
+        $stmt = $db->query($sql);
         $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         $demo = include __DIR__ . '/demo-data.php';
-        $jobs = $demo['jobs'];
+        // Filtrer les emplois actifs dans les données démo
+        $jobs = array_filter($demo['jobs'], fn($j) => ($j['status'] ?? 'active') === 'active');
         $demoMode = true;
     }
 } else {
