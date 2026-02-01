@@ -1226,6 +1226,23 @@ a:hover {
 }
 .job-title-email-btn:hover { color: var(--primary); background: var(--bg-alt); }
 .job-title-email-icon { width: 1.25rem; height: 1.25rem; display: block; color: currentColor; }
+.job-title-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.job-title-edit-btn:hover { color: var(--primary); border-color: var(--primary); background: var(--bg-alt); }
+.job-title-edit-icon { width: 1rem; height: 1rem; flex-shrink: 0; color: currentColor; }
 .job-detail-card .desc { color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; white-space: pre-wrap; }
 
 .hint { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem; }

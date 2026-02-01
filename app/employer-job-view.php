@@ -186,12 +186,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                         <svg class="job-title-email-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     </button>
                 </div>
-                <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce poste ? Cette action est irréversible.');" style="margin:0;">
-                    <input type="hidden" name="delete_job" value="confirm">
-                    <button type="submit" style="background:#ef4444;color:white;border:none;padding:0.5rem 1rem;border-radius:0.5rem;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:0.3rem;">
-                        🗑 Supprimer
-                    </button>
-                </form>
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <a href="edit_job.php?id=<?= (int)$jobId ?>" class="job-title-edit-btn" title="Modifier le poste" aria-label="Modifier le poste">
+                        <svg class="job-title-edit-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span>Modifier</span>
+                    </a>
+                    <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce poste ? Cette action est irréversible.');" style="margin:0;">
+                        <input type="hidden" name="delete_job" value="confirm">
+                        <button type="submit" style="background:#ef4444;color:white;border:none;padding:0.5rem 1rem;border-radius:0.5rem;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:0.3rem;">
+                            🗑 Supprimer
+                        </button>
+                    </form>
+                </div>
             </div>
             <form method="POST" class="job-status-bar">
                 <span class="label">Statut de l'affichage :</span>
