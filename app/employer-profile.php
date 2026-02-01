@@ -64,6 +64,10 @@ $b2BucketId = $_ENV['B2_BUCKET_ID'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'get_upload_url_logo') {
         header('Content-Type: application/json');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['error' => 'Non autorisé']);
+            exit;
+        }
         if (!$b2KeyId || !$b2AppKey || !$b2BucketId) {
             echo json_encode(['error' => 'Config B2 manquante']);
             exit;
@@ -101,6 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($_POST['action'] === 'save_logo') {
         header('Content-Type: application/json');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['error' => 'Non autorisé']);
+            exit;
+        }
         $logoUrl = trim($_POST['logo_url'] ?? '');
         if ($db && $logoUrl !== '') {
             $db->prepare('UPDATE users SET company_logo_url = ? WHERE id = ?')->execute([$logoUrl, $userId]);
@@ -118,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $companyDescription = trim($_POST['company_description'] ?? '');
     $companyDescriptionVisible = isset($_POST['company_description_visible']) && $_POST['company_description_visible'] === '1';
     $companyVideoUrl = trim($_POST['company_video_url'] ?? '');
-    $companyLogoUrl = trim($_POST['company_logo_url'] ?? '');
+    $companyLogoUrl = trim($_POST['company_logo_url'] ?? $user['company_logo_url'] ?? '');
     $companyWebsiteUrl = trim($_POST['company_website_url'] ?? '');
 
     if ($companyVideoUrl !== '' && !filter_var($companyVideoUrl, FILTER_VALIDATE_URL)) {
@@ -207,10 +215,6 @@ $companyWebsiteUrl = trim($user['company_website_url'] ?? '');
                 <div class="form-group">
                     <label for="company_name">Nom de l'entreprise</label>
                     <input type="text" id="company_name" name="company_name" value="<?= htmlspecialchars($companyName) ?>" placeholder="Nom de votre entreprise">
-                </div>
-                <div class="form-group">
-                    <label for="company_website_url">Site web de l'entreprise</label>
-                    <input type="url" id="company_website_url" name="company_website_url" value="<?= htmlspecialchars($companyWebsiteUrl) ?>" placeholder="https://…">
                 </div>
                 <div class="form-group">
                     <label for="company_description">Description de l'entreprise</label>
