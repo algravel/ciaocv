@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS users (
     available_immediately TINYINT(1) DEFAULT 0,
     available_in_weeks TINYINT DEFAULT NULL,
     onboarding_completed TINYINT(1) DEFAULT 0,
+    preferred_language VARCHAR(10) DEFAULT 'fr',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

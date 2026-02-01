@@ -50,9 +50,6 @@ $statusLabels = ['active' => 'En cours', 'draft' => 'Brouillon', 'closed' => 'Te
             <?php endforeach; ?>
         <?php endif; ?>
 
-        <div style="margin-top:1.5rem;">
-            <a href="candidate-jobs.php" class="btn" style="display:inline-block;padding:0.75rem 1.5rem;background:var(--primary);color:white;border-radius:0.5rem;text-decoration:none;font-weight:600;">Voir toutes les offres</a>
-        </div>
 
         </div>
         </main>

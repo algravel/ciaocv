@@ -82,6 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // Charger les données utilisateur
 $user = null;
 if ($db) {
+    $cols = $db->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('preferred_language', $cols)) {
+        try { $db->exec("ALTER TABLE users ADD COLUMN preferred_language VARCHAR(10) DEFAULT 'fr' AFTER onboarding_completed"); } catch (PDOException $e) {}
+    }
     $stmt = $db->prepare('SELECT * FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -97,6 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'update_profile') {
         $firstName = trim($_POST['first_name'] ?? '');
         $email = strtolower(trim($_POST['email'] ?? ''));
+        $preferredLanguage = trim($_POST['preferred_language'] ?? 'fr');
+        if (!in_array($preferredLanguage, ['fr', 'en'])) $preferredLanguage = 'fr';
         
         if (empty($firstName)) {
             $error = 'Le prénom est requis.';
@@ -110,12 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 if ($stmt->fetch()) {
                     $error = 'Cet email est déjà utilisé.';
                 } else {
-                    $db->prepare('UPDATE users SET first_name = ?, email = ? WHERE id = ?')
-                       ->execute([$firstName, $email, $userId]);
+                    $db->prepare('UPDATE users SET first_name = ?, email = ?, preferred_language = ? WHERE id = ?')
+                       ->execute([$firstName, $email, $preferredLanguage, $userId]);
                     $success = 'Profil mis à jour.';
                     // Recharger les données
                     $user['first_name'] = $firstName;
                     $user['email'] = $email;
+                    $user['preferred_language'] = $preferredLanguage;
                     $_SESSION['user_email'] = $email;
                 }
             } catch (PDOException $e) {
@@ -128,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // Données du profil
 $firstName = $user['first_name'] ?? '';
 $email = $user['email'] ?? '';
+$preferredLanguage = $user['preferred_language'] ?? 'fr';
 $videoUrl = $user['video_url'] ?? null;
 $photoUrl = $user['photo_url'] ?? null;
 $jobType = $user['job_type'] ?? null;
@@ -223,6 +231,13 @@ if ($db) {
                 <div class="form-group">
                     <label>Courriel</label>
                     <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" placeholder="votre@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="preferred_language">Langue</label>
+                    <select id="preferred_language" name="preferred_language">
+                        <option value="fr" <?= $preferredLanguage === 'fr' ? 'selected' : '' ?>>Français</option>
+                        <option value="en" <?= $preferredLanguage === 'en' ? 'selected' : '' ?>>English</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Sauvegarder</button>
             </form>

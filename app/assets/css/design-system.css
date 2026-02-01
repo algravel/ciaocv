@@ -435,6 +435,19 @@ a:hover {
     color: var(--text);
   }
 
+  .app-header-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.35rem;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .app-header-switch:hover { color: var(--text); background: rgba(255, 255, 255, 0.15); }
+  .app-header-switch-icon { display: block; width: 1.25rem; height: 1.25rem; color: currentColor; }
+
   .app-header-logout {
     display: inline-flex;
     align-items: center;
