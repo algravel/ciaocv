@@ -436,10 +436,12 @@ a:hover {
   }
 
   .app-header-logout {
-    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-secondary);
     text-decoration: none;
-    padding: 0.35rem 0.6rem;
+    padding: 0.35rem;
     border-radius: 6px;
     transition: color 0.15s, background 0.15s;
   }
@@ -447,6 +449,13 @@ a:hover {
   .app-header-logout:hover {
     color: var(--text);
     background: rgba(255, 255, 255, 0.15);
+  }
+
+  .app-header-logout-icon {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: currentColor;
   }
 
   .app-header-avatar-wrap .avatar-status-wrap {
