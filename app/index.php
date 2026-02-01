@@ -22,8 +22,10 @@ $onboardingCompleted = false;
 $profilePercent = 0;
 
 // Charger les données utilisateur si connecté
+$userPhotoUrl = null;
+$userInitial = 'U';
 if ($isLoggedIn && $db) {
-    $stmt = $db->prepare('SELECT first_name, email, onboarding_step, onboarding_completed FROM users WHERE id = ?');
+    $stmt = $db->prepare('SELECT first_name, email, photo_url, onboarding_step, onboarding_completed FROM users WHERE id = ?');
     $stmt->execute([$_SESSION['user_id']]);
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -33,6 +35,8 @@ if ($isLoggedIn && $db) {
             $email = $userData['email'] ?? $_SESSION['user_email'] ?? '';
             $userName = $email !== '' ? (strstr($email, '@', true) ?: $email) : 'Utilisateur';
         }
+        $userPhotoUrl = !empty($userData['photo_url']) ? trim($userData['photo_url']) : null;
+        $userInitial = $userName ? strtoupper(mb_substr($userName, 0, 1)) : 'U';
         $onboardingStep = (int)($userData['onboarding_step'] ?? 1);
         $onboardingCompleted = (bool)$userData['onboarding_completed'];
         $_SESSION['user_first_name'] = $userName;
@@ -121,12 +125,20 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
 <body class="layout-auth-page">
     <?php if ($isLoggedIn): ?>
     <!-- UTILISATEUR CONNECTÉ -->
-    <div class="auth-header">
-        <div class="user-info">
-            <div class="user-avatar"><?= strtoupper(substr($userName ?? 'U', 0, 1)) ?></div>
-            <span><?= htmlspecialchars($userName ?? 'Utilisateur') ?></span>
+    <div class="auth-header index-header-right">
+        <a href="?logout=1" class="app-header-logout" aria-label="Déconnexion" title="Déconnexion">
+            <svg class="app-header-logout-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
+        <div class="app-header-avatar-wrap">
+            <span class="avatar avatar-status-wrap">
+                <?php if ($userPhotoUrl): ?>
+                    <img src="<?= htmlspecialchars($userPhotoUrl) ?>" alt="" class="avatar-img">
+                <?php else: ?>
+                    <?= htmlspecialchars($userInitial) ?>
+                <?php endif; ?>
+                <span class="avatar-status" aria-hidden="true"></span>
+            </span>
         </div>
-        <a href="?logout=1" class="auth-btn">Déconnexion</a>
     </div>
 
     <div class="container">
