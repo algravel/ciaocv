@@ -148,105 +148,10 @@ if ($db) {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ta vidéo - CiaoCV</title>
     <link rel="icon" href="data:,">
-    <style>
-        .video-section {
-            background: #000;
-            border-radius: 1rem;
-            overflow: hidden;
-            position: relative;
-            aspect-ratio: 9/16;
-            max-height: 50vh;
-            margin: 0 auto 1rem;
-        }
-        .video-section video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .timer {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: rgba(0,0,0,0.7);
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            font-size: 1.25rem;
-            font-weight: 600;
-            font-variant-numeric: tabular-nums;
-            z-index: 10;
-        }
-        .timer.recording { background: #dc2626; }
-        .progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 4px;
-            background: var(--primary);
-            transition: width 0.1s linear;
-            z-index: 10;
-        }
-        .transfer-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-        }
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #374151;
-            border-top: 5px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .questions-guide {
-            background: rgba(37, 99, 235, 0.1);
-            border: 1px solid var(--primary);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        .questions-guide h4 {
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-        .questions-guide ol {
-            margin: 0;
-            padding-left: 1.25rem;
-            font-size: 0.9rem;
-            color: var(--text-light);
-        }
-        .questions-guide li { margin-bottom: 0.25rem; }
-        .video-controls {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .video-controls .btn { flex: 1; }
-        .reassurance {
-            text-align: center;
-            color: var(--text-light);
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-            font-style: italic;
-        }
-        .hidden { display: none !important; }
-    </style>
+    <link rel="stylesheet" href="../assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body>
     <div class="onboarding-container">

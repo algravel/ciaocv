@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once __DIR__ . '/db.php';
 
 $saved = false;
@@ -8,6 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $questions = array_filter(array_map('trim', $_POST['questions'] ?? []));
+    $latitude = isset($_POST['latitude']) && $_POST['latitude'] !== '' ? (float)$_POST['latitude'] : null;
+    $longitude = isset($_POST['longitude']) && $_POST['longitude'] !== '' ? (float)$_POST['longitude'] : null;
+    $location_name = trim($_POST['location_name'] ?? '') ?: null;
 
     if (strlen($title) < 2) {
         $error = 'Le titre du poste est requis (min. 2 caractères).';
@@ -24,10 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!in_array('status', $cols)) {
                 $db->exec("ALTER TABLE jobs ADD COLUMN status ENUM('draft','active','closed') DEFAULT 'active' AFTER description");
             }
+            if (!in_array('latitude', $cols)) {
+                $db->exec("ALTER TABLE jobs ADD COLUMN latitude DECIMAL(10,8) DEFAULT NULL AFTER show_on_esplanade");
+            }
+            if (!in_array('longitude', $cols)) {
+                $db->exec("ALTER TABLE jobs ADD COLUMN longitude DECIMAL(11,8) DEFAULT NULL AFTER latitude");
+            }
+            if (!in_array('location_name', $cols)) {
+                $db->exec("ALTER TABLE jobs ADD COLUMN location_name VARCHAR(255) DEFAULT NULL AFTER longitude");
+            }
             
             // Créer en brouillon pour que l'utilisateur puisse vérifier avant publication
-            $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status) VALUES (1, ?, ?, ?)');
-            $stmt->execute([$title, $description, 'draft']);
+            $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status, latitude, longitude, location_name) VALUES (1, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$title, $description, 'draft', $latitude, $longitude, $location_name]);
             $jobId = $db->lastInsertId();
 
             // Insérer les questions (ignorer les erreurs de clé unique)
@@ -58,159 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Créer un poste - CiaoCV</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --bg: #f3f4f6;
-            --card-bg: #ffffff;
-            --text: #1f2937;
-            --text-light: #6b7280;
-            --border: #e5e7eb;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; }
-        .container { max-width: 600px; margin: 0 auto; padding: 1.5rem; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .logo { font-size: 1.25rem; font-weight: 800; color: var(--primary); text-decoration: none; }
-        .back { color: var(--text-light); text-decoration: none; font-size: 0.9rem; }
-        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
-        .form-group { margin-bottom: 1.25rem; }
-        label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
-        input, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        textarea { min-height: 100px; resize: vertical; }
-        .questions-list { margin-top: 1rem; }
-        .questions-list .form-group { margin-bottom: 1rem; }
-        .questions-list label { font-weight: 500; }
-        .hint { font-size: 0.8rem; color: var(--text-light); margin-top: 0.25rem; }
-        .btn {
-            background: var(--primary);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        .btn:hover { background: var(--primary-dark); }
-        .btn-secondary { background: #6b7280; }
-        .error { background: #fef2f2; color: #dc2626; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-        .footer { margin-top: 2rem; text-align: center; font-size: 0.8rem; color: var(--text-light); }
-        .footer a { color: var(--text-light); }
-
-        /* Vidéo maquette */
-        .video-section {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .video-section h3 { font-size: 1rem; margin-bottom: 0.75rem; }
-        .video-section .hint { margin-bottom: 1rem; }
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 40vh;
-            min-height: 200px;
-            background: #000;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .video-container video {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .video-timer {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 0.35rem 0.75rem;
-            border-radius: 2rem;
-            font-size: 1rem;
-            font-weight: 600;
-            font-variant-numeric: tabular-nums;
-            z-index: 5;
-        }
-        .video-timer.recording { background: #dc2626; }
-        .video-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 4px;
-            background: var(--primary);
-            z-index: 5;
-        }
-        .video-controls { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-        .video-controls .btn { flex: 1; min-width: 120px; }
-        .btn-danger { background: #dc2626; }
-        .btn-success { background: #16a34a; }
-        .btn-success:hover { background: #15803d; }
-        .transfer-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            z-index: 10;
-        }
-        .transfer-overlay.hidden { display: none !important; }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid #374151;
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .video-ready-badge {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .video-settings { margin-bottom: 1rem; }
-        .video-settings select {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-        }
-        .video-settings label { font-size: 0.8rem; }
-        .hidden { display: none !important; }
-    </style>
+    <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <a href="employer.php" class="logo">CiaoCV</a>
-            <a href="employer.php" class="back">← Retour aux affichages</a>
-        </header>
-
+    <div class="app-shell">
+        <?php $sidebarActive = 'create'; include __DIR__ . '/includes/employer-sidebar.php'; ?>
+        <main class="app-main">
+        <?php include __DIR__ . '/includes/employer-header.php'; ?>
+        <div class="app-main-content layout-app">
         <h1>Créer un nouveau poste</h1>
 
         <?php if ($error): ?>
@@ -231,6 +100,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="form-group">
+                <label>Lieu du poste (géolocalisation)</label>
+                <p class="hint">Indiquez l'emplacement pour rapprocher candidats et employeurs. Cliquez sur la carte ou utilisez « Ma position ».</p>
+                <input type="hidden" name="latitude" id="jobLatitude" value="<?= htmlspecialchars($_POST['latitude'] ?? '') ?>">
+                <input type="hidden" name="longitude" id="jobLongitude" value="<?= htmlspecialchars($_POST['longitude'] ?? '') ?>">
+                <input type="hidden" name="location_name" id="jobLocationName" value="<?= htmlspecialchars($_POST['location_name'] ?? '') ?>">
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
+                    <button type="button" id="jobGeoBtn" class="btn btn-secondary" style="font-size:0.9rem;">📍 Ma position</button>
+                    <span id="jobLocationLabel" style="font-size:0.9rem;color:#6B7280;align-self:center;"></span>
+                </div>
+                <div id="jobMap" style="height:280px;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;"></div>
+            </div>
+
+            <div class="form-group">
                 <label>Questions d'entrevue (max. 5)</label>
                 <p class="hint">Ces questions seront affichées aux candidats pour guider leur pitch vidéo.</p>
                 <div class="questions-list">
@@ -245,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <div class="form-group video-section">
+            <div class="form-group video-section-block">
                 <h3>Vidéo de présentation du poste (60 sec)</h3>
                 <p class="hint">Enregistrez une courte vidéo pour présenter le poste aux candidats. Maquette : enregistrement réel, sauvegarde simulée.</p>
                 <div id="videoReadyBadge" class="video-ready-badge hidden">✓ Vidéo prête</div>
@@ -286,9 +168,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn">Créer le poste</button>
         </form>
 
-        <div class="footer">
-            <a href="https://www.ciaocv.com">Retour au site principal</a>
         </div>
+        </main>
     </div>
 
     <script>
@@ -439,6 +320,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             getDevices().then(() => initCamera());
         })();
+    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+    (function() {
+        var mapEl = document.getElementById('jobMap');
+        if (!mapEl) return;
+        var defaultLat = 45.5017, defaultLng = -73.5673;
+        var map = L.map('jobMap').setView([defaultLat, defaultLng], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        var marker = null;
+        var latInput = document.getElementById('jobLatitude');
+        var lngInput = document.getElementById('jobLongitude');
+        var nameInput = document.getElementById('jobLocationName');
+        var labelEl = document.getElementById('jobLocationLabel');
+
+        function setMarker(lat, lng) {
+            if (marker) map.removeLayer(marker);
+            marker = L.marker([lat, lng]).addTo(map);
+            latInput.value = lat;
+            lngInput.value = lng;
+            labelEl.textContent = lat.toFixed(5) + ', ' + lng.toFixed(5);
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1', {
+                    headers: { 'Accept': 'application/json', 'Accept-Language': 'fr' }
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && data.display_name) {
+                        nameInput.value = data.display_name;
+                        labelEl.textContent = data.display_name;
+                    }
+                })
+                .catch(function() {});
+        }
+
+        map.on('click', function(e) {
+            setMarker(e.latlng.lat, e.latlng.lng);
+        });
+
+        document.getElementById('jobGeoBtn').addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                labelEl.textContent = 'Géolocalisation non supportée.';
+                return;
+            }
+            labelEl.textContent = 'Localisation…';
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    map.setView([lat, lng], 14);
+                    setMarker(lat, lng);
+                },
+                function() {
+                    labelEl.textContent = 'Impossible d\'obtenir la position. Cliquez sur la carte.';
+                }
+            );
+        });
+
+        var savedLat = parseFloat(latInput.value);
+        var savedLng = parseFloat(lngInput.value);
+        if (!isNaN(savedLat) && !isNaN(savedLng)) {
+            map.setView([savedLat, savedLng], 14);
+            setMarker(savedLat, savedLng);
+        }
+    })();
     </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'db.php';
 
 $id = $_GET['id'] ?? null;
@@ -19,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = $_POST['description'];
 
     try {
-        $stmt = $pdo->prepare("UPDATE jobs SET title=?, company=?, location=?, type=?, salary=?, description=? WHERE id=?");
+        $stmt = $db->prepare("UPDATE jobs SET title=?, company=?, location=?, type=?, salary=?, description=? WHERE id=?");
         $stmt->execute([$title, $company, $location, $type, $salary, $description, $id]);
         $message = "Offre mise à jour avec succès !";
     } catch (PDOException $e) {
@@ -29,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Récupérer les infos du job
 try {
-    $stmt = $pdo->prepare("SELECT * FROM jobs WHERE id = ?");
+    $stmt = $db->prepare("SELECT * FROM jobs WHERE id = ?");
     $stmt->execute([$id]);
     $job = $stmt->fetch();
     if (!$job) die("Offre introuvable.");
@@ -43,22 +44,14 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modifier l'offre - CiaoCV</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: #f3f4f6; padding: 2rem; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { margin-top: 0; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-        input, select, textarea { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
-        .btn { background: #2563eb; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 600; }
-        .btn-back { color: #6b7280; text-decoration: none; margin-right: 1rem; }
-        .alert { background: #d1fae5; color: #065f46; padding: 1rem; border-radius: 0.375rem; margin-bottom: 1rem; }
-    </style>
+    <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body>
-    <div class="container">
-        <a href="employer.php" class="btn-back">← Retour</a>
+    <div class="app-shell">
+        <?php $sidebarActive = 'list'; include __DIR__ . '/includes/employer-sidebar.php'; ?>
+        <main class="app-main">
+        <?php include __DIR__ . '/includes/employer-header.php'; ?>
+        <div class="app-main-content layout-app">
         <h1>Modifier l'offre</h1>
         
         <?php if ($message): ?>
@@ -97,6 +90,8 @@ try {
             </div>
             <button type="submit" class="btn">Enregistrer les modifications</button>
         </form>
+        </div>
+        </main>
     </div>
 </body>
 </html>

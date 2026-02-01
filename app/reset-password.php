@@ -87,31 +87,11 @@ $showForm = ($validToken && !$success) || ($_SERVER['REQUEST_METHOD'] === 'POST'
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nouveau mot de passe - CiaoCV</title>
-    <style>
-        :root { --primary: #2563eb; --primary-dark: #1e40af; --bg: #111827; --card-bg: #1f2937; --text: #f9fafb; --text-light: #9ca3af; --border: #374151; --success: #22c55e; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-        .container { max-width: 420px; width: 100%; text-align: center; }
-        .logo { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 1.5rem; text-decoration: none; display: block; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 1rem; padding: 2rem; text-align: left; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-light); }
-        .form-group input { width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: 0.75rem; background: var(--bg); color: var(--text); font-size: 1rem; }
-        .form-group input:focus { outline: none; border-color: var(--primary); }
-        .btn { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 0.75rem; font-weight: 600; font-size: 1rem; cursor: pointer; }
-        .btn:hover { background: var(--primary-dark); }
-        .error { background: rgba(239,68,68,0.2); color: #f87171; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
-        .error a { color: #60a5fa; }
-        .success { background: rgba(34,197,94,0.2); color: #22c55e; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
-        .back { display: inline-block; margin-top: 1.5rem; color: var(--text-light); text-decoration: none; font-size: 0.9rem; }
-        .back:hover { color: var(--primary); }
-        .footer { margin-top: 2rem; color: var(--text-light); font-size: 0.85rem; }
-        .footer a { color: var(--primary); text-decoration: none; }
-    </style>
+    <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
-<body>
+<body class="layout-auth-page">
     <div class="container">
         <a href="index.php" class="logo">CiaoCV</a>
         <div class="card">

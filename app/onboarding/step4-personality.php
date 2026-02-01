@@ -64,57 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personnalité - CiaoCV</title>
     <link rel="icon" href="data:,">
-    <style>
-        .trait-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-        .trait-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.25rem 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        .trait-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-        .trait-card.selected {
-            border-color: var(--primary);
-            background: rgba(37, 99, 235, 0.15);
-        }
-        .trait-card input[type="checkbox"] {
-            display: none;
-        }
-        .trait-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        .trait-title {
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-        }
-        .trait-desc {
-            font-size: 0.75rem;
-            color: var(--text-light);
-        }
-        .trait-card.selected .trait-desc {
-            color: var(--text);
-        }
-        @media (max-width: 360px) {
-            .trait-cards {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body>
     <div class="onboarding-container">

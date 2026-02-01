@@ -103,104 +103,10 @@ if ($db) {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo de profil - CiaoCV</title>
     <link rel="icon" href="data:,">
-    <style>
-        .photo-stats {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(37, 99, 235, 0.1));
-            border-radius: 1rem;
-        }
-        .photo-stats .stat {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--success);
-        }
-        .photo-stats p {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-        .photo-container {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 1.5rem;
-            border-radius: 50%;
-            overflow: hidden;
-            background: var(--card-bg);
-            border: 3px solid var(--border);
-        }
-        .photo-container.has-photo {
-            border-color: var(--success);
-        }
-        .photo-container img,
-        .photo-container video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .photo-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-light);
-        }
-        .photo-placeholder .icon {
-            font-size: 4rem;
-            margin-bottom: 0.5rem;
-        }
-        .photo-options {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-        .photo-option {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .photo-option:hover {
-            border-color: var(--primary);
-            background: rgba(37, 99, 235, 0.1);
-        }
-        .photo-option .icon {
-            font-size: 1.5rem;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(37, 99, 235, 0.2);
-            border-radius: 0.75rem;
-        }
-        .photo-option input[type="file"] {
-            display: none;
-        }
-        .hidden { display: none !important; }
-        #existingPhotoControls {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        /* Canvas pour capture */
-        #captureCanvas {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body>
     <div class="onboarding-container">

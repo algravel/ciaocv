@@ -100,26 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($email) && !empty($code) && $
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmer mon compte - CiaoCV</title>
-    <style>
-        :root { --primary: #2563eb; --primary-dark: #1e40af; --bg: #111827; --card-bg: #1f2937; --text: #f9fafb; --text-light: #9ca3af; --border: #374151; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 1rem; padding: 2rem; max-width: 400px; width: 100%; }
-        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 1.5rem; text-decoration: none; display: block; }
-        h1 { font-size: 1.25rem; margin-bottom: 1rem; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-light); }
-        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: #111; color: var(--text); font-size: 1rem; }
-        .form-group input.code-input { text-align: center; letter-spacing: 0.5rem; font-size: 1.5rem; font-weight: bold; }
-        .btn { width: 100%; padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; font-size: 1rem; cursor: pointer; }
-        .btn:hover { background: var(--primary-dark); }
-        .error { background: rgba(239,68,68,0.2); color: #f87171; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
-        .success { background: rgba(34,197,94,0.2); color: #4ade80; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
-        .back { display: inline-block; margin-top: 1.5rem; color: var(--text-light); text-decoration: none; font-size: 0.9rem; }
-        .back:hover { color: var(--primary); }
-    </style>
+    <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
-<body>
+<body class="layout-auth-page">
+    <div class="container">
     <div class="card">
         <a href="index.php" class="logo">CiaoCV</a>
         <h1>Confirmer mon compte</h1>
@@ -144,7 +128,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($email) && !empty($code) && $
             </form>
         <?php endif; ?>
 
-        <a href="login.php" class="back">← Retour à la connexion</a>
+        <a href="index.php" class="back">← Retour à la connexion</a>
+    </div>
     </div>
 </body>
 </html>

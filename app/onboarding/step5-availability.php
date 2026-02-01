@@ -84,48 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Disponibilités - CiaoCV</title>
     <link rel="icon" href="data:,">
-    <style>
-        .time-slots {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-        .time-slot {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.25rem 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        .time-slot:hover {
-            border-color: var(--primary);
-        }
-        .time-slot.selected {
-            border-color: var(--primary);
-            background: rgba(37, 99, 235, 0.15);
-        }
-        .time-slot input[type="checkbox"] {
-            display: none;
-        }
-        .slot-icon {
-            font-size: 1.75rem;
-            margin-bottom: 0.5rem;
-        }
-        .slot-title {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        .slot-desc {
-            font-size: 0.8rem;
-            color: var(--text-light);
-            margin-top: 0.25rem;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body>
     <div class="onboarding-container">

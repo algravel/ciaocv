@@ -23,12 +23,16 @@ $profilePercent = 0;
 
 // Charger les données utilisateur si connecté
 if ($isLoggedIn && $db) {
-    $stmt = $db->prepare('SELECT first_name, onboarding_step, onboarding_completed FROM users WHERE id = ?');
+    $stmt = $db->prepare('SELECT first_name, email, onboarding_step, onboarding_completed FROM users WHERE id = ?');
     $stmt->execute([$_SESSION['user_id']]);
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($userData) {
-        $userName = $userData['first_name'];
+        $userName = trim($userData['first_name'] ?? '');
+        if ($userName === '') {
+            $email = $userData['email'] ?? $_SESSION['user_email'] ?? '';
+            $userName = $email !== '' ? (strstr($email, '@', true) ?: $email) : 'Utilisateur';
+        }
         $onboardingStep = (int)($userData['onboarding_step'] ?? 1);
         $onboardingCompleted = (bool)$userData['onboarding_completed'];
         $_SESSION['user_first_name'] = $userName;
@@ -92,7 +96,8 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
                         // Connexion réussie
                         $_SESSION['user_id'] = $user['id'];
                         $_SESSION['user_email'] = $user['email'];
-                        $_SESSION['user_first_name'] = $user['first_name'];
+                        $firstName = trim($user['first_name'] ?? '');
+                        $_SESSION['user_first_name'] = $firstName !== '' ? $firstName : (strstr($user['email'], '@', true) ?: $user['email']);
                         
                         header('Location: index.php');
                         exit;
@@ -109,274 +114,11 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CiaoCV - Vidéo</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --bg: #111827;
-            --card-bg: #1f2937;
-            --text: #f9fafb;
-            --text-light: #9ca3af;
-            --border: #374151;
-            --success: #22c55e;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 420px;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .logo {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-            letter-spacing: -2px;
-        }
-
-        .tagline {
-            color: var(--text-light);
-            font-size: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        /* Auth header */
-        .auth-header {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            color: white;
-            font-weight: 600;
-        }
-
-        .auth-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-light);
-        }
-
-        .auth-btn:hover {
-            border-color: var(--text-light);
-            color: var(--text);
-        }
-
-        /* Profile status */
-        .profile-status {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
-            text-decoration: none;
-            display: block;
-            transition: all 0.2s;
-        }
-
-        .profile-status:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        .profile-status-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .profile-status-title {
-            color: var(--text);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .profile-status-percent {
-            color: var(--primary);
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .profile-progress-bar {
-            height: 8px;
-            background: var(--border);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        .profile-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--success));
-            border-radius: 4px;
-        }
-
-        .profile-status-cta {
-            color: var(--text-light);
-            font-size: 0.8rem;
-        }
-
-        .profile-status.complete {
-            border-color: var(--success);
-            background: rgba(34, 197, 94, 0.1);
-        }
-
-        .profile-status.complete .profile-status-percent { color: var(--success); }
-        .profile-status.complete .profile-status-cta { color: var(--success); }
-
-        /* Menu */
-        .menu {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background: var(--card-bg);
-            padding: 1.25rem 1.5rem;
-            border-radius: 1rem;
-            text-decoration: none;
-            color: var(--text);
-            border: 1px solid var(--border);
-            transition: all 0.2s;
-        }
-
-        .menu-item:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        .menu-icon {
-            font-size: 2rem;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(37, 99, 235, 0.2);
-            border-radius: 0.75rem;
-        }
-
-        .menu-item:hover .menu-icon { background: rgba(255, 255, 255, 0.2); }
-
-        .menu-text { flex: 1; text-align: left; }
-        .menu-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem; }
-        .menu-desc { font-size: 0.875rem; color: var(--text-light); }
-        .menu-item:hover .menu-desc { color: rgba(255, 255, 255, 0.8); }
-        .menu-arrow { font-size: 1.25rem; color: var(--text-light); }
-        .menu-item:hover .menu-arrow { color: white; }
-
-        /* Login form */
-        .login-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 2rem;
-            text-align: left;
-        }
-
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-light); }
-        .form-group input {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 1rem;
-        }
-        .form-group input:focus { outline: none; border-color: var(--primary); }
-
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn:hover { background: var(--primary-dark); }
-
-        .error {
-            background: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-        .error a { color: #60a5fa; }
-
-        .login-footer {
-            text-align: center;
-            margin-top: 1.5rem;
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-        .login-footer a { color: var(--primary); text-decoration: none; }
-        .login-footer a:hover { text-decoration: underline; }
-
-        .footer {
-            margin-top: 2rem;
-            color: var(--text-light);
-            font-size: 0.75rem;
-            text-align: center;
-        }
-        .footer a { color: var(--primary); text-decoration: none; }
-    </style>
+    <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
-<body>
+<body class="layout-auth-page">
     <?php if ($isLoggedIn): ?>
     <!-- UTILISATEUR CONNECTÉ -->
     <div class="auth-header">

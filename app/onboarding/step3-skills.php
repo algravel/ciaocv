@@ -71,72 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compétences - CiaoCV</title>
     <link rel="icon" href="data:,">
-    <style>
-        .skill-selected-list {
-            margin-top: 1.5rem;
-            display: none;
-        }
-        .skill-selected-list.has-items {
-            display: block;
-        }
-        .skill-item {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-        .skill-item-name {
-            font-weight: 500;
-            flex: 1;
-        }
-        .skill-item select {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            font-size: 0.85rem;
-        }
-        .skill-item-remove {
-            background: none;
-            border: none;
-            color: var(--text-light);
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 0.25rem;
-        }
-        .skill-item-remove:hover {
-            color: #ef4444;
-        }
-        .add-skill-input {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        .add-skill-input input {
-            flex: 1;
-        }
-        .add-skill-input button {
-            padding: 0.75rem 1rem;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text);
-            border-radius: 0.75rem;
-            cursor: pointer;
-        }
-        .add-skill-input button:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body>
     <div class="onboarding-container">

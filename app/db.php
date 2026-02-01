@@ -22,6 +22,12 @@ if (file_exists($envFile)) {
     }
 }
 
+// Version des assets pour cache busting (CSS, etc.)
+if (!defined('ASSET_VERSION')) {
+    $cssPath = __DIR__ . '/assets/css/design-system.css';
+    define('ASSET_VERSION', file_exists($cssPath) ? (string) filemtime($cssPath) : (string) time());
+}
+
 $db = null;
 try {
     $dsn = 'mysql:host=' . ($_ENV['MYSQL_HOST'] ?? 'localhost') .
