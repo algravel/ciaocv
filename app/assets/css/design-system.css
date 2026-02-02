@@ -343,7 +343,9 @@ a:hover {
   .app-shell {
     display: grid;
     grid-template-columns: 280px 1fr;
+    height: 100vh;
     min-height: 100vh;
+    overflow: hidden;
   }
 
   .app-shell.sidebar-collapsed {
@@ -358,9 +360,8 @@ a:hover {
     border-right: none;
   }
 
+  /* Sidebar fixe : ne défile pas, seule la zone principale scroll */
   .app-sidebar {
-    position: sticky;
-    top: 0;
     height: 100vh;
     overflow-y: auto;
     border-bottom: none;
@@ -368,6 +369,16 @@ a:hover {
     padding: 1.5rem 1.25rem;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+  }
+
+  /* Zone principale scrollable, sidebar reste fixe */
+  .app-shell .app-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .app-sidebar-nav {
@@ -453,6 +464,16 @@ a:hover {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  .app-header-avatar-link {
+    display: inline-flex;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 50%;
+  }
+  .app-header-avatar-link:hover {
+    opacity: 0.9;
   }
 
   .app-header-avatar-wrap .avatar {
@@ -1441,6 +1462,7 @@ a:hover {
 .tag-accepted { background: var(--success-bg); color: var(--success); }
 .tag-rejected { background: var(--error-bg); color: var(--error); }
 .tag-pool { background: #ede9fe; color: #7c3aed; }
+.tag-withdrawn { background: #f3f4f6; color: #6b7280; text-decoration: line-through; }
 
 /* Section repliable : Statut → Questions */
 .job-details-collapse { margin-top: 1rem; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
@@ -1463,11 +1485,8 @@ a:hover {
 .job-details-collapse-icon { flex-shrink: 0; width: 1.25rem; height: 1.25rem; transition: transform 0.2s; }
 .job-details-collapse-content { padding: 1rem; border-top: 1px solid var(--border); }
 
-/* Grille candidats (desktop) */
-.candidate-grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
-@media (min-width: 1024px) {
-  .candidate-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-}
+/* Liste candidats - Cards sur mobile, liste sur desktop */
+.candidate-grid { display: flex; flex-direction: column; gap: 1rem; }
 .candidate-grid-card {
   background: var(--card-bg);
   border-radius: var(--radius-xl);
@@ -1484,6 +1503,7 @@ a:hover {
 }
 .candidate-grid-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 .candidate-grid-card.filtered-out { display: none !important; }
+.candidate-with-notes.filtered-out { display: none !important; }
 .candidate-grid-photo {
   width: 80px;
   height: 80px;
@@ -1506,6 +1526,37 @@ a:hover {
 .candidate-grid-date { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem; }
 .candidate-grid-phone { font-size: 0.85rem; margin-bottom: 0.2rem; }
 .candidate-grid-email { font-size: 0.8rem; color: var(--text-secondary); word-break: break-all; }
+
+/* Desktop : affichage en liste horizontale */
+@media (min-width: 768px) {
+  .candidate-grid-card {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    padding: 1rem 1.5rem;
+    gap: 1.25rem;
+  }
+  .candidate-grid-card:hover { transform: translateX(4px); }
+  .candidate-grid-photo {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 0;
+  }
+  .candidate-grid-initial { font-size: 1.25rem; }
+  .candidate-grid-body {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .candidate-grid-name { margin-bottom: 0; min-width: 140px; }
+  .candidate-grid-video-link { margin-bottom: 0; }
+  .candidate-grid-status { margin-bottom: 0; margin-left: auto; order: 99; }
+  .candidate-grid-date { margin-bottom: 0; }
+  .candidate-grid-phone { margin-bottom: 0; }
+  .candidate-grid-email { margin-bottom: 0; color: var(--text-secondary); }
+}
 
 .video-wrapper {
   background: #000;

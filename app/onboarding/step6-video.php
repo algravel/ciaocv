@@ -83,10 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($db) {
             // Permet de passer sans vidéo (URL vide) ou avec vidéo
             if ($videoUrl) {
-                $db->prepare('UPDATE users SET video_url = ?, onboarding_step = 7 WHERE id = ?')
+                $db->prepare('UPDATE users SET video_url = ?, onboarding_step = 8 WHERE id = ?')
                    ->execute([$videoUrl, $userId]);
             } else {
-                $db->prepare('UPDATE users SET onboarding_step = 7 WHERE id = ?')
+                $db->prepare('UPDATE users SET onboarding_step = 8 WHERE id = ?')
                    ->execute([$userId]);
             }
             echo json_encode(['success' => true]);
@@ -351,7 +351,7 @@ if ($db) {
             formData.append('video_url', videoUrl);
             
             await fetch('step6-video.php', { method: 'POST', body: formData });
-            window.location.href = 'step7-tests.php';
+            window.location.href = 'step8-photo.php';
         }
 
         async function deleteVideo() {
@@ -425,7 +425,7 @@ if ($db) {
                 method: 'POST',
                 body: new URLSearchParams({ action: 'save_video', video_url: '' })
             }).then(() => {
-                window.location.href = 'step7-tests.php';
+                window.location.href = 'step8-photo.php';
             });
         });
 

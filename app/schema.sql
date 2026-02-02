@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS applications (
     candidate_name VARCHAR(255),
     phone VARCHAR(50) DEFAULT NULL,
     video_url VARCHAR(500),
-    status ENUM('new','viewed','accepted','rejected','pool') DEFAULT 'new',
+    status ENUM('new','viewed','accepted','rejected','pool','withdrawn') DEFAULT 'new',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
 );
@@ -120,4 +120,30 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_token_expires (token, expires_at)
+);
+
+-- Évaluateurs pour les postes
+CREATE TABLE IF NOT EXISTS job_evaluators (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    job_id INT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    added_by INT NOT NULL,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+    FOREIGN KEY (added_by) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY (job_id, email)
+);
+
+-- Notes d'évaluation partagées
+CREATE TABLE IF NOT EXISTS evaluation_notes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    job_id INT NOT NULL,
+    application_id INT DEFAULT NULL,
+    author_email VARCHAR(255) NOT NULL,
+    author_name VARCHAR(255) DEFAULT NULL,
+    note_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+    FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
+    INDEX idx_job_created (job_id, created_at DESC)
 );

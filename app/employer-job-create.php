@@ -6,6 +6,25 @@ $jobId = (int)($_GET['id'] ?? 0);
 $job = null;
 $error = null;
 
+// Liste des compétences populaires
+$availableSkills = [
+    'communication' => 'Communication',
+    'travail_equipe' => 'Travail d\'équipe',
+    'service_client' => 'Service client',
+    'organisation' => 'Organisation',
+    'gestion_temps' => 'Gestion du temps',
+    'resolution_problemes' => 'Résolution de problèmes',
+    'adaptabilite' => 'Adaptabilité',
+    'leadership' => 'Leadership',
+    'informatique' => 'Informatique / Bureautique',
+    'vente' => 'Vente / Négociation',
+    'langues' => 'Bilinguisme (FR/EN)',
+    'creativite' => 'Créativité',
+    'autonomie' => 'Autonomie',
+    'rigueur' => 'Rigueur / Attention aux détails',
+    'gestion_stress' => 'Gestion du stress'
+];
+
 // Charger le poste en mode édition
 if ($jobId && $db) {
     try {
@@ -21,6 +40,8 @@ if ($jobId && $db) {
             $stmtQ = $db->prepare('SELECT question_text FROM job_questions WHERE job_id = ? ORDER BY sort_order');
             $stmtQ->execute([$jobId]);
             $job['questions'] = $stmtQ->fetchAll(PDO::FETCH_COLUMN);
+            // Charger les compétences existantes
+            $job['skills'] = $job['skills'] ? json_decode($job['skills'], true) : [];
         } else {
             header('Location: employer.php');
             exit;
@@ -41,6 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location_name = trim($_POST['location_name'] ?? '') ?: null;
     $showOnJobMarket = isset($_POST['show_on_jobmarket']) && $_POST['show_on_jobmarket'] === '1' ? 1 : 0;
     $postId = (int)($_POST['id'] ?? 0);
+    $selectedSkills = isset($_POST['skills']) ? array_intersect($_POST['skills'], array_keys($availableSkills)) : [];
+    $skillsJson = !empty($selectedSkills) ? json_encode(array_values($selectedSkills)) : null;
 
     if (strlen($title) < 2) {
         $error = 'Le titre du poste est requis (min. 2 caractères).';
@@ -72,11 +95,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!in_array('location_name', $cols)) {
                 $db->exec("ALTER TABLE jobs ADD COLUMN location_name VARCHAR(255) DEFAULT NULL AFTER longitude");
             }
+            if (!in_array('skills', $cols)) {
+                $db->exec("ALTER TABLE jobs ADD COLUMN skills JSON DEFAULT NULL AFTER location_name");
+            }
 
             if ($postId) {
                 // Mise à jour
-                $stmt = $db->prepare('UPDATE jobs SET title = ?, description = ?, show_on_jobmarket = ?, latitude = ?, longitude = ?, location_name = ? WHERE id = ?');
-                $stmt->execute([$title, $description, $showOnJobMarket, $latitude, $longitude, $location_name, $postId]);
+                $stmt = $db->prepare('UPDATE jobs SET title = ?, description = ?, show_on_jobmarket = ?, latitude = ?, longitude = ?, location_name = ?, skills = ? WHERE id = ?');
+                $stmt->execute([$title, $description, $showOnJobMarket, $latitude, $longitude, $location_name, $skillsJson, $postId]);
                 $jobId = $postId;
                 $db->prepare('DELETE FROM job_questions WHERE job_id = ?')->execute([$jobId]);
                 foreach ($questions as $i => $q) {
@@ -89,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 // Création
-                $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status, show_on_jobmarket, latitude, longitude, location_name) VALUES (1, ?, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$title, $description, 'draft', $showOnJobMarket, $latitude, $longitude, $location_name]);
+                $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status, show_on_jobmarket, latitude, longitude, location_name, skills) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$title, $description, 'draft', $showOnJobMarket, $latitude, $longitude, $location_name, $skillsJson]);
                 $jobId = $db->lastInsertId();
                 foreach ($questions as $i => $q) {
                     if ($q !== '') {
@@ -122,6 +148,7 @@ $formQuestions = [];
 for ($i = 0; $i < 5; $i++) {
     $formQuestions[$i] = isset($_POST['questions'][$i]) ? (string)$_POST['questions'][$i] : (isset($job['questions'][$i]) ? (string)$job['questions'][$i] : '');
 }
+$formSkills = isset($_POST['skills']) ? $_POST['skills'] : ($job['skills'] ?? []);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -156,6 +183,21 @@ for ($i = 0; $i < 5; $i++) {
             <div class="form-group">
                 <label for="description">Description</label>
                 <textarea id="description" name="description" placeholder="Décrivez le poste, les responsabilités..."><?= htmlspecialchars($formDescription) ?></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Compétences recherchées</label>
+                <p class="hint">Sélectionnez les compétences clés pour ce poste</p>
+                <div class="skills-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:0.5rem;margin-top:0.75rem;">
+                    <?php foreach ($availableSkills as $skillKey => $skillLabel): 
+                        $isChecked = in_array($skillKey, $formSkills);
+                    ?>
+                    <label class="skill-checkbox" style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;background:<?= $isChecked ? 'var(--primary-light, #dbeafe)' : 'var(--bg-alt, #f1f5f9)' ?>;border:2px solid <?= $isChecked ? 'var(--primary)' : 'transparent' ?>;border-radius:var(--radius, 8px);cursor:pointer;transition:all 0.2s;font-size:0.9rem;">
+                        <input type="checkbox" name="skills[]" value="<?= $skillKey ?>" <?= $isChecked ? 'checked' : '' ?> style="width:18px;height:18px;accent-color:var(--primary);">
+                        <span><?= htmlspecialchars($skillLabel) ?></span>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
             </div>
 
             <div class="form-group" style="padding:1rem 1.25rem;background:var(--bg-alt, #f1f5f9);border-radius:var(--radius);">
@@ -392,6 +434,21 @@ for ($i = 0; $i < 5; $i++) {
 
             getDevices().then(() => initCamera());
         })();
+    </script>
+    <script>
+    // Gestion des checkboxes de compétences
+    document.querySelectorAll('.skill-checkbox input[type="checkbox"]').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            var label = this.closest('.skill-checkbox');
+            if (this.checked) {
+                label.style.background = 'var(--primary-light, #dbeafe)';
+                label.style.borderColor = 'var(--primary)';
+            } else {
+                label.style.background = 'var(--bg-alt, #f1f5f9)';
+                label.style.borderColor = 'transparent';
+            }
+        });
+    });
     </script>
     <script>
     (function() {

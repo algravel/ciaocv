@@ -8,6 +8,70 @@ $job = null;
 $candidates = [];
 $statusUpdated = false;
 $emailSent = null;
+$evaluatorAdded = false;
+$noteAdded = false;
+$currentUserEmail = $_SESSION['user_email'] ?? null;
+$currentUserId = $_SESSION['user_id'] ?? null;
+
+// Créer les tables d'évaluation si nécessaire
+if ($db) {
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS job_evaluators (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            job_id INT NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            added_by INT NOT NULL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+            UNIQUE KEY (job_id, email)
+        )");
+        
+        $db->exec("CREATE TABLE IF NOT EXISTS evaluation_notes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            job_id INT NOT NULL,
+            application_id INT DEFAULT NULL,
+            author_email VARCHAR(255) NOT NULL,
+            author_name VARCHAR(255) DEFAULT NULL,
+            note_text TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+            INDEX idx_job_created (job_id, created_at DESC)
+        )");
+    } catch (PDOException $e) {
+        // Tables existent déjà
+    }
+}
+
+// Traitement: Ajouter un évaluateur
+if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_evaluator'])) {
+    $evaluatorEmail = filter_var(trim($_POST['evaluator_email'] ?? ''), FILTER_VALIDATE_EMAIL);
+    if ($evaluatorEmail && $currentUserId) {
+        try {
+            $stmt = $db->prepare('INSERT INTO job_evaluators (job_id, email, added_by) VALUES (?, ?, ?)');
+            $stmt->execute([$jobId, $evaluatorEmail, $currentUserId]);
+            $evaluatorAdded = true;
+        } catch (PDOException $e) {
+            // Évaluateur déjà ajouté
+        }
+    }
+}
+
+// Traitement: Ajouter une note
+if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note'])) {
+    $noteText = trim($_POST['note_text'] ?? '');
+    $applicationId = isset($_POST['application_id']) && $_POST['application_id'] !== '' ? (int)$_POST['application_id'] : null;
+    $authorName = $_SESSION['user_first_name'] ?? $_SESSION['company_name'] ?? 'Anonyme';
+    
+    if ($noteText && $currentUserEmail) {
+        try {
+            $stmt = $db->prepare('INSERT INTO evaluation_notes (job_id, application_id, author_email, author_name, note_text) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute([$jobId, $applicationId, $currentUserEmail, $authorName, $noteText]);
+            $noteAdded = true;
+        } catch (PDOException $e) {
+            // Erreur
+        }
+    }
+}
 
 // Créer les colonnes manquantes si besoin
 if ($db) {
@@ -108,9 +172,30 @@ if ($jobId && $db) {
             ');
             $stmtA->execute([$jobId]);
             $candidates = $stmtA->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Charger les évaluateurs
+            $stmtEval = $db->prepare('SELECT * FROM job_evaluators WHERE job_id = ? ORDER BY added_at DESC');
+            $stmtEval->execute([$jobId]);
+            $evaluators = $stmtEval->fetchAll(PDO::FETCH_ASSOC);
+            
         }
     } catch (PDOException $e) {
         $job = null;
+    }
+}
+
+// Vérifier si l'utilisateur a accès (propriétaire ou évaluateur)
+$hasAccess = false;
+if ($job && $currentUserEmail) {
+    $hasAccess = true; // L'employeur a toujours accès
+    // Vérifier si c'est un évaluateur
+    if (isset($evaluators)) {
+        foreach ($evaluators as $eval) {
+            if ($eval['email'] === $currentUserEmail) {
+                $hasAccess = true;
+                break;
+            }
+        }
     }
 }
 
@@ -154,6 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($job['title']) ?> - CiaoCV</title>
     <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
+    <script src="assets/js/local-time.js?v=<?= ASSET_VERSION ?>"></script>
 </head>
 <body>
     <div class="app-shell">
@@ -260,9 +346,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                     <?php endforeach; ?>
                 </ol>
             <?php endif; ?>
+            
+            <!-- Évaluateurs (dans la section détails du poste) -->
+            <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border, #e5e7eb);">
+                <h4 style="margin:0 0 0.75rem 0;font-size:0.95rem;">👥 Évaluateurs</h4>
+                <?php if ($evaluatorAdded): ?>
+                    <div style="padding:0.5rem 0.75rem;background:#d1fae5;color:#065f46;border-radius:6px;margin-bottom:0.75rem;font-size:0.85rem;">✓ Évaluateur ajouté</div>
+                <?php endif; ?>
+                <form method="POST" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+                    <input type="hidden" name="add_evaluator" value="1">
+                    <input type="email" name="evaluator_email" placeholder="email@exemple.com" required 
+                           style="flex:1;min-width:180px;padding:0.5rem 0.75rem;border:1px solid #e5e7eb;border-radius:6px;font-size:0.9rem;">
+                    <button type="submit" class="btn" style="padding:0.5rem 1rem;">+ Ajouter</button>
+                </form>
+                <?php if (!empty($evaluators)): ?>
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                    <?php foreach ($evaluators as $eval): ?>
+                        <span style="padding:0.35rem 0.65rem;background:#e0e7ff;color:#4338ca;border-radius:6px;font-size:0.85rem;">
+                            <?= htmlspecialchars($eval['email']) ?>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+                <?php else: ?>
+                <p style="font-size:0.85rem;color:var(--text-secondary);margin:0;">Aucun évaluateur pour le moment</p>
+                <?php endif; ?>
+            </div>
                 </div>
             </div>
         </div>
+
+        <?php if ($noteAdded): ?>
+            <div style="padding:0.75rem 1rem;background:#d1fae5;color:#065f46;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;">
+                ✓ Note ajoutée
+            </div>
+        <?php endif; ?>
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
             <h2 style="margin: 0;">Candidats (<?= count($candidates) ?>)</h2>
@@ -273,6 +390,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                 <button type="button" class="filter-btn" data-filter="rejected">REFUSÉ</button>
                 <button type="button" class="filter-btn" data-filter="accepted">ACCEPTÉ</button>
                 <button type="button" class="filter-btn" data-filter="pool">BANQUE</button>
+                <button type="button" class="filter-btn" data-filter="withdrawn">RETIRÉ</button>
             </div>
             <?php endif; ?>
         </div>
@@ -286,14 +404,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                 <?php foreach ($candidates as $i => $c): 
                     $cStatus = $c['status'] ?? 'new';
                     if ($cStatus === 'viewed') $cStatus = 'new';
-                    $statusLabels = ['new' => 'NON TRAITÉ', 'viewed' => 'NON TRAITÉ', 'rejected' => 'REFUSÉ', 'accepted' => 'ACCEPTÉ', 'pool' => 'BANQUE'];
+                    $statusLabels = ['new' => 'NON TRAITÉ', 'viewed' => 'NON TRAITÉ', 'rejected' => 'REFUSÉ', 'accepted' => 'ACCEPTÉ', 'pool' => 'BANQUE', 'withdrawn' => 'RETIRÉ'];
                     $statusLabel = $statusLabels[$c['status'] ?? 'new'] ?? 'NON TRAITÉ';
                     $photoUrl = !empty($c['photo_url']) ? trim($c['photo_url']) : null;
                     $bioVideoUrl = !empty($c['bio_video_url']) ? trim($c['bio_video_url']) : null;
-                    $createdAt = !empty($c['created_at']) ? date('d/m/Y H:i', strtotime($c['created_at'])) : '';
+                    $createdAtRaw = trim($c['created_at'] ?? '');
+                    $createdAtIso = $createdAtRaw !== '' ? preg_replace('/\s/', 'T', $createdAtRaw) . 'Z' : '';
+                    $createdAtFallback = $createdAtRaw !== '' ? date('d/m/Y H:i', strtotime($createdAtRaw)) : '';
                     $phone = isset($c['phone']) ? trim($c['phone']) : '';
                 ?>
-                    <a href="employer-candidate-view.php?job=<?= $jobId ?>&idx=<?= $i ?>" class="candidate-grid-card" data-status="<?= htmlspecialchars($cStatus) ?>">
+                    <a href="employer-candidate-view.php?job=<?= $jobId ?>&idx=<?= $i ?>" class="candidate-grid-card candidate-with-notes" data-status="<?= htmlspecialchars($cStatus) ?>">
                         <div class="candidate-grid-photo">
                             <?php if ($photoUrl): ?>
                                 <img src="<?= htmlspecialchars($photoUrl) ?>" alt="" class="candidate-grid-img">
@@ -307,8 +427,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                                 <a href="<?= htmlspecialchars($bioVideoUrl) ?>" class="candidate-grid-video-link" target="_blank" rel="noopener" onclick="event.stopPropagation();">🎬 Vidéo bio</a>
                             <?php endif; ?>
                             <span class="candidate-grid-status tag-status tag-<?= htmlspecialchars($c['status'] ?? 'new') ?>"><?= $statusLabel ?></span>
-                            <?php if ($createdAt): ?>
-                                <div class="candidate-grid-date">Reçu le <?= $createdAt ?></div>
+                            <?php if ($createdAtIso !== ''): ?>
+                                <div class="candidate-grid-date">Reçu le <time datetime="<?= htmlspecialchars($createdAtIso) ?>"><?= $createdAtFallback ?></time></div>
                             <?php endif; ?>
                             <?php if ($phone): ?>
                                 <div class="candidate-grid-phone"><?= htmlspecialchars($phone) ?></div>
@@ -400,7 +520,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
     <script>
         (function() {
             const btns = document.querySelectorAll('.filter-btn');
-            const cards = document.querySelectorAll('.candidate-grid-card[data-status]');
+            const cards = document.querySelectorAll('.candidate-with-notes[data-status]');
             const countEl = document.querySelector('h2');
             function updateCount(visible) {
                 if (countEl) countEl.innerHTML = 'Candidats (' + visible + ')';

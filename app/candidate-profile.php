@@ -130,6 +130,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
     }
+    if ($_POST['action'] === 'change_password') {
+        $current = $_POST['current_password'] ?? '';
+        $new = $_POST['new_password'] ?? '';
+        $confirm = $_POST['new_password_confirm'] ?? '';
+        if (empty($current) || empty($new) || empty($confirm)) {
+            $error = 'Tous les champs du mot de passe sont requis.';
+        } elseif (strlen($new) < 8) {
+            $error = 'Le nouveau mot de passe doit contenir au moins 8 caractères.';
+        } elseif ($new !== $confirm) {
+            $error = 'Les deux mots de passe ne correspondent pas.';
+        } else {
+            $stmt = $db->prepare('SELECT password_hash FROM users WHERE id = ?');
+            $stmt->execute([$userId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row || !password_verify($current, $row['password_hash'])) {
+                $error = 'Mot de passe actuel incorrect.';
+            } else {
+                $hash = password_hash($new, PASSWORD_DEFAULT);
+                $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$hash, $userId]);
+                $success = 'Mot de passe mis à jour.';
+            }
+        }
+    }
 }
 
 // Données du profil
@@ -240,6 +263,27 @@ if ($db) {
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Sauvegarder</button>
+            </form>
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="section">
+            <h2>Mot de passe</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="change_password">
+                <div class="form-group">
+                    <label for="current_password">Mot de passe actuel</label>
+                    <input type="password" id="current_password" name="current_password" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label for="new_password">Nouveau mot de passe</label>
+                    <input type="password" id="new_password" name="new_password" placeholder="••••••••" autocomplete="new-password" minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="new_password_confirm">Confirmer le nouveau mot de passe</label>
+                    <input type="password" id="new_password_confirm" name="new_password_confirm" placeholder="••••••••" autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Changer le mot de passe</button>
             </form>
         </div>
 

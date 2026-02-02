@@ -1,6 +1,6 @@
 <?php
 /**
- * Maquette : voir la réponse vidéo d'un candidat
+ * Voir la fiche candidat : vidéo, statut, notes d'évaluation partagées
  */
 session_start();
 require_once __DIR__ . '/db.php';
@@ -9,6 +9,28 @@ $jobId = (int)($_GET['job'] ?? 0);
 $idx = (int)($_GET['idx'] ?? 0);
 $job = null;
 $candidate = null;
+$notes = [];
+$noteAdded = false;
+$noteError = null;
+$currentUserEmail = $_SESSION['user_email'] ?? null;
+$currentUserId = $_SESSION['user_id'] ?? null;
+
+// S'assurer que la table evaluation_notes existe (même schéma que employer-job-view)
+if ($db) {
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS evaluation_notes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            job_id INT NOT NULL,
+            application_id INT DEFAULT NULL,
+            author_email VARCHAR(255) NOT NULL,
+            author_name VARCHAR(255) DEFAULT NULL,
+            note_text TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_job_created (job_id, created_at DESC),
+            INDEX idx_app (application_id)
+        )");
+    } catch (PDOException $e) {}
+}
 
 if ($jobId && $db) {
     try {
@@ -31,8 +53,38 @@ if (!$job || !$candidate) {
     exit;
 }
 
-$videoUrl = $candidate['video_url'] ?? '';
+// ID de la candidature (clé peut être 'id' ou 'ID' selon le driver)
+$applicationId = (int)($candidate['id'] ?? $candidate['ID'] ?? 0);
 
+// Traitement : ajouter une note
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note']) && $db && $currentUserEmail) {
+    $noteText = trim($_POST['note_text'] ?? '');
+    $authorName = $_SESSION['user_first_name'] ?? $_SESSION['company_name'] ?? 'Anonyme';
+    if ($noteText !== '' && $applicationId > 0) {
+        try {
+            $stmt = $db->prepare('INSERT INTO evaluation_notes (job_id, application_id, author_email, author_name, note_text) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute([$jobId, $applicationId, $currentUserEmail, $authorName, $noteText]);
+            $noteAdded = true;
+        } catch (PDOException $e) {
+            $noteError = 'Erreur lors de l\'enregistrement : ' . $e->getMessage();
+        }
+    } elseif ($applicationId <= 0) {
+        $noteError = 'Impossible d\'identifier la candidature.';
+    }
+}
+
+// Charger les notes pour ce candidat (plus récentes en premier)
+if ($applicationId > 0 && $db) {
+    try {
+        $stmt = $db->prepare('SELECT * FROM evaluation_notes WHERE job_id = ? AND application_id = ? ORDER BY created_at DESC');
+        $stmt->execute([$jobId, $applicationId]);
+        $notes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $notes = [];
+    }
+}
+
+$videoUrl = $candidate['video_url'] ?? '';
 $currentStatus = $candidate['status'] ?? 'new';
 ?>
 <!DOCTYPE html>
@@ -42,6 +94,7 @@ $currentStatus = $candidate['status'] ?? 'new';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($candidate['candidate_name'] ?? 'Candidat') ?> - CiaoCV</title>
     <link rel="stylesheet" href="assets/css/design-system.css?v=<?= ASSET_VERSION ?>">
+    <script src="assets/js/local-time.js?v=<?= ASSET_VERSION ?>"></script>
 </head>
 <body>
     <div class="app-shell">
@@ -80,13 +133,43 @@ $currentStatus = $candidate['status'] ?? 'new';
         </div>
 
         <div class="notes-section">
-            <h3>Notes internes</h3>
-            <textarea id="internalNotes" placeholder="Vos notes privées sur ce candidat (non visibles par le candidat)…"></textarea>
-            <p class="hint">Ces notes ne sont visibles que par vous.</p>
-            <div class="save-row">
-                <button type="button" class="btn-save">Sauvegarder</button>
-                <p class="save-feedback" id="saveFeedback" style="display:none;">✓ Enregistré</p>
+            <h3>Notes</h3>
+            <?php if ($noteAdded): ?>
+                <div style="padding:0.5rem 0.75rem;background:#d1fae5;color:#065f46;border-radius:6px;margin-bottom:0.75rem;font-size:0.9rem;">✓ Note enregistrée</div>
+            <?php endif; ?>
+            <?php if ($noteError): ?>
+                <div style="padding:0.5rem 0.75rem;background:#fee2e2;color:#b91c1c;border-radius:6px;margin-bottom:0.75rem;font-size:0.9rem;"><?= htmlspecialchars($noteError) ?></div>
+            <?php endif; ?>
+            <p class="hint">Notes partagées entre l'entreprise et les évaluateurs (non visibles par le candidat).</p>
+            <?php if ($currentUserEmail): ?>
+            <form method="POST" style="margin-bottom:1rem;">
+                <input type="hidden" name="add_note" value="1">
+                <textarea name="note_text" rows="3" required placeholder="Ajouter une note sur ce candidat…" 
+                          style="width:100%;padding:0.75rem;border:1px solid var(--border, #e5e7eb);border-radius:8px;resize:vertical;"></textarea>
+                <button type="submit" class="btn" style="margin-top:0.5rem;">Publier la note</button>
+            </form>
+            <?php else: ?>
+                <p class="hint" style="color:#b91c1c;">Connectez-vous pour ajouter une note.</p>
+            <?php endif; ?>
+            <?php if (!empty($notes)): ?>
+            <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                <?php foreach ($notes as $note): 
+                    $createdAt = trim($note['created_at'] ?? '');
+                    $isoUtc = $createdAt !== '' ? preg_replace('/\s/', 'T', $createdAt) . 'Z' : '';
+                    $noteDateFallback = $createdAt !== '' ? date('d/m/Y H:i', strtotime($createdAt)) : '';
+                ?>
+                    <div style="padding:1rem;background:var(--bg-alt, #f8fafc);border:1px solid var(--border, #e5e7eb);border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.5rem;">
+                            <strong style="color:var(--primary);"><?= htmlspecialchars($note['author_name']) ?></strong>
+                            <?php if ($isoUtc !== ''): ?><time datetime="<?= htmlspecialchars($isoUtc) ?>" style="font-size:0.8rem;color:var(--text-secondary);"><?= $noteDateFallback ?></time><?php endif; ?>
+                        </div>
+                        <div style="color:var(--text);white-space:pre-wrap;"><?= htmlspecialchars($note['note_text']) ?></div>
+                    </div>
+                <?php endforeach; ?>
             </div>
+            <?php else: ?>
+            <p style="font-size:0.9rem;color:var(--text-secondary);">Aucune note pour le moment.</p>
+            <?php endif; ?>
         </div>
 
         </div>
@@ -105,11 +188,6 @@ $currentStatus = $candidate['status'] ?? 'new';
                     btns.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                 });
-            });
-            document.querySelector('.btn-save').addEventListener('click', function() {
-                var f = document.getElementById('saveFeedback');
-                f.style.display = '';
-                setTimeout(function() { f.style.display = 'none'; }, 2000);
             });
         })();
     </script>
