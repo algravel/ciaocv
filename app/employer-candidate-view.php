@@ -39,13 +39,21 @@ if ($jobId && $db) {
         $stmt->execute([$jobId]);
         $job = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($job) {
-            $stmtA = $db->prepare('SELECT a.*, u.phone FROM applications a LEFT JOIN users u ON u.email = a.candidate_email WHERE a.job_id = ? ORDER BY a.created_at DESC');
+            // Vérifier si la colonne phone existe dans users
+            $userCols = $db->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+            $hasPhone = in_array('phone', $userCols);
+            if ($hasPhone) {
+                $stmtA = $db->prepare('SELECT a.*, u.phone FROM applications a LEFT JOIN users u ON u.email = a.candidate_email WHERE a.job_id = ? ORDER BY a.created_at DESC');
+            } else {
+                $stmtA = $db->prepare('SELECT a.* FROM applications a WHERE a.job_id = ? ORDER BY a.created_at DESC');
+            }
             $stmtA->execute([$jobId]);
             $all = $stmtA->fetchAll(PDO::FETCH_ASSOC);
             $candidate = $all[$idx] ?? null;
         }
     } catch (PDOException $e) {
         $job = null;
+        error_log('employer-candidate-view error: ' . $e->getMessage());
     }
 }
 
@@ -186,7 +194,7 @@ $currentStatus = $candidate['status'] ?? 'new';
                     <?php if ($noteError): ?>
                         <div
                             style="padding:0.5rem 0.75rem;background:#fee2e2;color:#b91c1c;border-radius:6px;margin-bottom:0.75rem;font-size:0.9rem;">
-                                <?= htmlspecialchars($noteError) ?>
+                            <?= htmlspecialchars($noteError) ?>
                         </div>
                     <?php endif; ?>
                     <p class="hint">Notes partagées entre l'entreprise et les évaluateurs (non visibles par le
@@ -201,13 +209,13 @@ $currentStatus = $candidate['status'] ?? 'new';
                     <?php else: ?>
                         <p class="hint" style="color:#b91c1c;">Connectez-vous pour ajouter une note.</p>
                     <?php endif; ?>
-                 <?php if (!empty($notes)): ?>
+                    <?php if (!empty($notes)): ?>
                         <div style="display:flex;flex-direction:column;gap:0.75rem;">
-                                <?php foreach ($notes as $note):
-                                    $createdAt = trim($note['created_at'] ?? '');
-                                    $isoUtc = $createdAt !== '' ? preg_replace('/\s/', 'T', $createdAt) . 'Z' : '';
-                                    $noteDateFallback = $createdAt !== '' ? date('d/m/Y H:i', strtotime($createdAt)) : '';
-                                    ?>
+                            <?php foreach ($notes as $note):
+                                $createdAt = trim($note['created_at'] ?? '');
+                                $isoUtc = $createdAt !== '' ? preg_replace('/\s/', 'T', $createdAt) . 'Z' : '';
+                                $noteDateFallback = $createdAt !== '' ? date('d/m/Y H:i', strtotime($createdAt)) : '';
+                                ?>
                                 <div
                                     style="padding:1rem;background:var(--bg-alt, #f8fafc);border:1px solid var(--border, #e5e7eb);border-radius:8px;">
                                     <div
@@ -218,21 +226,21 @@ $currentStatus = $candidate['status'] ?? 'new';
                                             style="font-size:0.8rem;color:var(--text-secondary);"><?= $noteDateFallback ?><?= isset($note['author_ip']) && $note['author_ip'] !== '' ? ' · IP ' . htmlspecialchars($note['author_ip']) : '' ?></span>
                                     </div>
                                     <div style="color:var(--text);white-space:pre-wrap;">
-                                       <?= htmlspecialchars($note['note_text']) ?>
+                                        <?= htmlspecialchars($note['note_text']) ?>
                                     </div>
                                 </div>
-                          <?php endforeach; ?>
+                            <?php endforeach; ?>
                         </div>
-                  <?php else: ?>
+                    <?php else: ?>
                         <p style="font-size:0.9rem;color:var(--text-secondary);">Aucune note pour le moment.</p>
-                  <?php endif; ?>
+                    <?php endif; ?>
                 </div>
 
                 <div class="status-section">
                     <h3>Statut</h3>
-             <?php if (($candidate['status'] ?? '') === 'withdrawn'): ?>
+                    <?php if (($candidate['status'] ?? '') === 'withdrawn'): ?>
                         <span class="status-badge status-withdrawn">Décliné par le candidat</span>
-                  <?php else: ?>
+                    <?php else: ?>
                         <div class="status-btns">
                             <button type="button" class="status-btn" data-status="new" data-label="NON TRAITÉ">NON
                                 TRAITÉ</button>
@@ -242,7 +250,7 @@ $currentStatus = $candidate['status'] ?? 'new';
                                 data-label="ACCEPTÉ">ACCEPTÉ</button>
                             <button type="button" class="status-btn" data-status="pool" data-label="BANQUE">BANQUE</button>
                         </div>
-                  <?php endif; ?>
+                    <?php endif; ?>
                 </div>
 
             </div>
