@@ -26,22 +26,19 @@ if ($db) {
         $employerProfile = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     try {
+        $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        $hasEmployerId = $db->query("SHOW COLUMNS FROM jobs LIKE 'employer_id'")->rowCount() > 0;
         $hasDeletedAt = $db->query("SHOW COLUMNS FROM jobs LIKE 'deleted_at'")->rowCount() > 0;
-        if ($hasDeletedAt) {
-            $stmt = $db->query('SELECT j.*, 
-                (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
-                FROM jobs j 
-                WHERE j.deleted_at IS NULL 
-                ORDER BY j.created_at DESC');
-        } else {
-            $stmt = $db->query('SELECT j.*, 
-                (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
-                FROM jobs j 
-                ORDER BY j.created_at DESC');
-        }
+        $where = $hasEmployerId && $userId ? 'j.employer_id = ' . (int)$userId : '1';
+        if ($hasDeletedAt) $where .= ' AND j.deleted_at IS NULL';
+        $stmt = $db->query("SELECT j.*, 
+            (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
+            FROM jobs j 
+            WHERE $where 
+            ORDER BY j.created_at DESC");
         $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $stmt = $db->query('SELECT COUNT(*) FROM applications');
-        $totalCandidates = (int)$stmt->fetchColumn();
+        $totalCandidates = 0;
+        foreach ($jobs as $j) $totalCandidates += (int)($j['nb_candidates'] ?? 0);
     } catch (PDOException $e) {
         $jobs = [];
         $totalCandidates = 0;

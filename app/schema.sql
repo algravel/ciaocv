@@ -1,3 +1,16 @@
+-- Postes / descriptions de poste réutilisables par l'employeur (templates)
+CREATE TABLE IF NOT EXISTS employer_positions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employer_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT DEFAULT NULL,
+    job_type ENUM('full_time','part_time','shift','temporary','internship') DEFAULT NULL,
+    work_location ENUM('on_site','remote','hybrid') DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employer_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_employer (employer_id)
+);
+
 -- Tables pour les postes employeur et candidatures
 -- Exécuter une fois pour créer la structure
 
@@ -6,6 +19,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     employer_id INT DEFAULT 1,
     title VARCHAR(255) NOT NULL,
     description TEXT,
+    job_type ENUM('full_time','part_time','shift','temporary','internship') DEFAULT NULL,
+    work_location ENUM('on_site','remote','hybrid') DEFAULT NULL,
     status ENUM('draft','active','closed') DEFAULT 'active',
     show_on_jobmarket TINYINT(1) DEFAULT 1,
     latitude DECIMAL(10, 8) DEFAULT NULL,
@@ -122,11 +137,14 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     INDEX idx_token_expires (token, expires_at)
 );
 
--- Évaluateurs pour les postes
+-- Évaluateurs pour les postes (invitation par courriel avec lien sécurisé)
 CREATE TABLE IF NOT EXISTS job_evaluators (
     id INT AUTO_INCREMENT PRIMARY KEY,
     job_id INT NOT NULL,
     email VARCHAR(255) NOT NULL,
+    name VARCHAR(255) DEFAULT NULL,
+    access_token VARCHAR(64) NOT NULL UNIQUE,
+    token_expires_at TIMESTAMP NULL DEFAULT NULL,
     added_by INT NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
@@ -134,13 +152,24 @@ CREATE TABLE IF NOT EXISTS job_evaluators (
     UNIQUE KEY (job_id, email)
 );
 
--- Notes d'évaluation partagées
+-- Codes de confirmation évaluateur (6 chiffres, expiration courte)
+CREATE TABLE IF NOT EXISTS evaluator_access_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(64) NOT NULL,
+    code CHAR(6) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_token_expires (token, expires_at)
+);
+
+-- Notes d'évaluation partagées (auteur, courriel, IP, heure)
 CREATE TABLE IF NOT EXISTS evaluation_notes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     job_id INT NOT NULL,
     application_id INT DEFAULT NULL,
     author_email VARCHAR(255) NOT NULL,
     author_name VARCHAR(255) DEFAULT NULL,
+    author_ip VARCHAR(45) DEFAULT NULL,
     note_text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,

@@ -56,14 +56,21 @@ if (!$job || !$candidate) {
 // ID de la candidature (clé peut être 'id' ou 'ID' selon le driver)
 $applicationId = (int)($candidate['id'] ?? $candidate['ID'] ?? 0);
 
-// Traitement : ajouter une note
+// Traitement : ajouter une note (nom, courriel, IP, heure)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note']) && $db && $currentUserEmail) {
     $noteText = trim($_POST['note_text'] ?? '');
     $authorName = $_SESSION['user_first_name'] ?? $_SESSION['company_name'] ?? 'Anonyme';
+    $authorIp = $_SERVER['REMOTE_ADDR'] ?? null;
     if ($noteText !== '' && $applicationId > 0) {
         try {
-            $stmt = $db->prepare('INSERT INTO evaluation_notes (job_id, application_id, author_email, author_name, note_text) VALUES (?, ?, ?, ?, ?)');
-            $stmt->execute([$jobId, $applicationId, $currentUserEmail, $authorName, $noteText]);
+            $noteCols = $db->query("SHOW COLUMNS FROM evaluation_notes")->fetchAll(PDO::FETCH_COLUMN);
+            if (in_array('author_ip', $noteCols)) {
+                $stmt = $db->prepare('INSERT INTO evaluation_notes (job_id, application_id, author_email, author_name, author_ip, note_text) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$jobId, $applicationId, $currentUserEmail, $authorName, $authorIp, $noteText]);
+            } else {
+                $stmt = $db->prepare('INSERT INTO evaluation_notes (job_id, application_id, author_email, author_name, note_text) VALUES (?, ?, ?, ?, ?)');
+                $stmt->execute([$jobId, $applicationId, $currentUserEmail, $authorName, $noteText]);
+            }
             $noteAdded = true;
         } catch (PDOException $e) {
             $noteError = 'Erreur lors de l\'enregistrement : ' . $e->getMessage();
@@ -124,12 +131,16 @@ $currentStatus = $candidate['status'] ?? 'new';
 
         <div class="status-section">
             <h3>Statut</h3>
+            <?php if (($candidate['status'] ?? '') === 'withdrawn'): ?>
+                <span class="status-badge status-withdrawn">Décliner par le candidat</span>
+            <?php else: ?>
             <div class="status-btns">
                 <button type="button" class="status-btn" data-status="new" data-label="NON TRAITÉ">NON TRAITÉ</button>
                 <button type="button" class="status-btn" data-status="rejected" data-label="REFUSÉ">REFUSÉ</button>
                 <button type="button" class="status-btn" data-status="accepted" data-label="ACCEPTÉ">ACCEPTÉ</button>
                 <button type="button" class="status-btn" data-status="pool" data-label="BANQUE">BANQUE</button>
             </div>
+            <?php endif; ?>
         </div>
 
         <div class="notes-section">
@@ -159,9 +170,9 @@ $currentStatus = $candidate['status'] ?? 'new';
                     $noteDateFallback = $createdAt !== '' ? date('d/m/Y H:i', strtotime($createdAt)) : '';
                 ?>
                     <div style="padding:1rem;background:var(--bg-alt, #f8fafc);border:1px solid var(--border, #e5e7eb);border-radius:8px;">
-                        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.5rem;">
-                            <strong style="color:var(--primary);"><?= htmlspecialchars($note['author_name']) ?></strong>
-                            <?php if ($isoUtc !== ''): ?><time datetime="<?= htmlspecialchars($isoUtc) ?>" style="font-size:0.8rem;color:var(--text-secondary);"><?= $noteDateFallback ?></time><?php endif; ?>
+                        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.25rem;">
+                            <strong style="color:var(--primary);"><?= htmlspecialchars($note['author_name'] ?? $note['author_email']) ?></strong>
+                            <span style="font-size:0.8rem;color:var(--text-secondary);"><?= $noteDateFallback ?><?= isset($note['author_ip']) && $note['author_ip'] !== '' ? ' · IP ' . htmlspecialchars($note['author_ip']) : '' ?></span>
                         </div>
                         <div style="color:var(--text);white-space:pre-wrap;"><?= htmlspecialchars($note['note_text']) ?></div>
                     </div>
@@ -178,7 +189,7 @@ $currentStatus = $candidate['status'] ?? 'new';
 
     <script>
         (function() {
-            const currentStatus = '<?= in_array($currentStatus, ['new','viewed','rejected','accepted']) ? $currentStatus : ($currentStatus === 'pool' ? 'pool' : 'new') ?>';
+            const currentStatus = '<?= in_array($currentStatus, ['new','viewed','rejected','accepted','pool']) ? $currentStatus : 'new' ?>';
             const btns = document.querySelectorAll('.status-btn');
             btns.forEach(btn => {
                 if (btn.dataset.status === currentStatus || (currentStatus === 'viewed' && btn.dataset.status === 'new')) {

@@ -11,8 +11,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $userId = (int) $_SESSION['user_id'];
-$success = null;
-$error = null;
+$success = $_SESSION['flash_success'] ?? null;
+$error = $_SESSION['flash_error'] ?? null;
+if (isset($_SESSION['flash_success'])) unset($_SESSION['flash_success']);
+if (isset($_SESSION['flash_error'])) unset($_SESSION['flash_error']);
 
 // S'assurer que les colonnes profil employeur et préférences existent
 if ($db) {
@@ -256,14 +258,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 } else {
                     $db->prepare('UPDATE users SET first_name = ?, email = ?, preferred_language = ? WHERE id = ?')
                        ->execute([$firstNamePost, $emailNew, $preferredLanguageNew, $userId]);
-                    $success = 'Compte mis à jour.';
-                    $user['first_name'] = $firstNamePost;
-                    $user['email'] = $emailNew;
-                    $user['preferred_language'] = $preferredLanguageNew;
-                    $firstName = $firstNamePost;
-                    $email = $emailNew;
-                    $preferredLanguage = $preferredLanguageNew;
                     $_SESSION['user_email'] = $emailNew;
+                    $_SESSION['flash_success'] = 'Compte mis à jour.';
+                    header('Location: employer-profile.php');
+                    exit;
                 }
             } catch (PDOException $e) {
                 $error = 'Erreur lors de la mise à jour.';
@@ -289,7 +287,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             } else {
                 $hash = password_hash($new, PASSWORD_DEFAULT);
                 $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$hash, $userId]);
-                $success = 'Mot de passe mis à jour.';
+                $_SESSION['flash_success'] = 'Mot de passe mis à jour.';
+                header('Location: employer-profile.php');
+                exit;
             }
         }
     }
@@ -309,16 +309,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         try {
             $db->prepare('UPDATE users SET company_name = ?, company_description = ?, company_description_visible = ?, company_video_url = ?, company_logo_url = ?, company_website_url = ? WHERE id = ?')
                ->execute([$companyName ?: null, $companyDescription ?: null, $companyDescriptionVisible ? 1 : 0, $companyVideoUrl ?: null, $companyLogoUrl ?: null, $companyWebsiteUrl ?: null, $userId]);
-            $success = 'Profil entreprise mis à jour.';
-            $user['company_name'] = $companyName;
-            $user['company_description'] = $companyDescription;
-            $user['company_description_visible'] = $companyDescriptionVisible ? 1 : 0;
-            $user['company_video_url'] = $companyVideoUrl;
-            $user['company_logo_url'] = $companyLogoUrl;
-            $user['company_website_url'] = $companyWebsiteUrl;
+            $_SESSION['flash_success'] = 'Profil entreprise mis à jour.';
+            header('Location: employer-profile.php');
+            exit;
         } catch (PDOException $e) {
             $error = 'Erreur lors de la mise à jour.';
         }
+    }
     }
 }
 
@@ -437,10 +434,6 @@ $companyWebsiteUrl = trim($user['company_website_url'] ?? '');
                 <input type="hidden" name="company_video_url" value="<?= htmlspecialchars($companyVideoUrl) ?>">
                 <input type="hidden" name="company_logo_url" value="<?= htmlspecialchars($companyLogoUrl) ?>">
                 <div class="form-group">
-                    <label for="company_website_url">Site web de l'entreprise</label>
-                    <input type="url" id="company_website_url" name="company_website_url" value="<?= htmlspecialchars($companyWebsiteUrl) ?>" placeholder="https://www.votre-entreprise.com">
-                </div>
-                <div class="form-group">
                     <label for="company_name">Nom de l'entreprise</label>
                     <input type="text" id="company_name" name="company_name" value="<?= htmlspecialchars($companyName) ?>" placeholder="Nom de votre entreprise">
                 </div>
@@ -453,6 +446,10 @@ $companyWebsiteUrl = trim($user['company_website_url'] ?? '');
                         <input type="checkbox" name="company_description_visible" value="1" <?= $companyDescriptionVisible ? 'checked' : '' ?>>
                         Afficher la description aux candidats (sinon masquée)
                     </label>
+                </div>
+                <div class="form-group">
+                    <label for="company_website_url">Site web de l'entreprise</label>
+                    <input type="url" id="company_website_url" name="company_website_url" value="<?= htmlspecialchars($companyWebsiteUrl) ?>" placeholder="https://www.votre-entreprise.com">
                 </div>
                 <button type="submit" class="btn btn-primary">Sauvegarder</button>
             </form>

@@ -13,9 +13,7 @@ if ($db) {
         $hasStatus = in_array('status', $cols);
         $hasDeletedAt = in_array('deleted_at', $cols);
         $hasJobMarket = in_array('show_on_jobmarket', $cols);
-        $sql = 'SELECT j.*, 
-            (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as nb_candidates 
-            FROM jobs j WHERE 1=1';
+        $sql = 'SELECT j.* FROM jobs j WHERE 1=1';
         if ($hasStatus) {
             $sql .= " AND j.status = 'active'";
         }
@@ -66,7 +64,6 @@ if ($db) {
                         <?php endif; ?>
                         <div class="job-meta">
                             <span class="job-status-badge <?= $jStatus ?>"><?= $statusLabel ?></span>
-                            <span><?= $job['nb_candidates'] ?? 0 ?> candidat(s)</span>
                         </div>
                     </a>
                 <?php endforeach; ?>

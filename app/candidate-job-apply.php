@@ -18,6 +18,7 @@ if (!$userId) {
 $jobId = (int)($_GET['id'] ?? 0);
 $job = null;
 $alreadyApplied = false;
+$applicationWithdrawn = false;
 
 if ($jobId && $db) {
     try {
@@ -32,10 +33,14 @@ if ($jobId && $db) {
             $stmtQ->execute([$jobId]);
             $job['questions'] = $stmtQ->fetchAll(PDO::FETCH_ASSOC);
             
-            // Vérifier si l'utilisateur a déjà postulé
-            $stmtCheck = $db->prepare('SELECT COUNT(*) FROM applications WHERE job_id = ? AND candidate_email = ?');
-            $stmtCheck->execute([$jobId, $userEmail]);
-            $alreadyApplied = $stmtCheck->fetchColumn() > 0;
+            // Vérifier si l'utilisateur a déjà postulé et le statut (avecdrawn = désistement)
+            $stmtCheck = $db->prepare('SELECT id, status FROM applications WHERE job_id = ? AND (candidate_email = ? OR user_id = ?) ORDER BY created_at DESC LIMIT 1');
+            $stmtCheck->execute([$jobId, $userEmail, $userId]);
+            $existingApp = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+            if ($existingApp) {
+                $applicationWithdrawn = (($existingApp['status'] ?? '') === 'withdrawn');
+                $alreadyApplied = !$applicationWithdrawn;
+            }
         }
     } catch (PDOException $e) {
         $job = null;
@@ -133,9 +138,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $db->exec("ALTER TABLE applications ADD COLUMN user_id INT DEFAULT NULL AFTER id");
                 }
                 
-                // Insérer la candidature avec la vidéo
-                $stmtInsert = $db->prepare('INSERT INTO applications (user_id, job_id, candidate_email, candidate_name, video_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
-                $stmtInsert->execute([$userId, $jobId, $userEmail, $userName, $videoUrl, 'new']);
+                // Si désistement précédent : mettre à jour la candidature au lieu d'insérer
+                $stmtExisting = $db->prepare('SELECT id FROM applications WHERE job_id = ? AND (candidate_email = ? OR user_id = ?) AND status = ?');
+                $stmtExisting->execute([$jobId, $userEmail, $userId, 'withdrawn']);
+                $existingRow = $stmtExisting->fetch(PDO::FETCH_ASSOC);
+                if ($existingRow) {
+                    $db->prepare('UPDATE applications SET user_id = ?, candidate_email = ?, candidate_name = ?, video_url = ?, status = ? WHERE id = ?')
+                       ->execute([$userId, $userEmail, $userName, $videoUrl, 'new', $existingRow['id']]);
+                } else {
+                    $stmtInsert = $db->prepare('INSERT INTO applications (user_id, job_id, candidate_email, candidate_name, video_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
+                    $stmtInsert->execute([$userId, $jobId, $userEmail, $userName, $videoUrl, 'new']);
+                }
                 
                 echo json_encode(['success' => true, 'redirect' => 'candidate-applications.php?success=1']);
             } catch (PDOException $e) {
@@ -323,6 +336,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="success" style="padding:1rem;background:#efe;border:1px solid #cfc;border-radius:8px;margin-bottom:1rem;color:#060;">
                 ✓ Vous avez déjà postulé à cette offre. <a href="candidate-applications.php" style="color:var(--primary);">Voir mes candidatures</a>
             </div>
+        <?php elseif ($applicationWithdrawn): ?>
+            <div style="padding:1rem;background:var(--bg-alt,#f8fafc);border:1px solid var(--border,#e5e7eb);border-radius:8px;margin-bottom:1rem;color:var(--text-secondary);">
+                Vous vous êtes retiré de cette candidature. Vous pouvez postuler à nouveau ci-dessous si vous le souhaitez.
+            </div>
         <?php endif; ?>
         
         <div class="job-card">
@@ -350,6 +367,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 <a href="candidate-applications.php" class="btn btn-secondary">Voir mes candidatures</a>
             </div>
         <?php else: ?>
+            <?php if ($applicationWithdrawn): ?>
+            <p style="margin-bottom:1rem;color:var(--text-secondary);font-size:0.95rem;">Postuler à nouveau à cette offre :</p>
+            <?php endif; ?>
             <!-- Section enregistrement vidéo -->
             <div class="video-record-section">
                 <h3>🎬 Enregistre ta vidéo de candidature</h3>

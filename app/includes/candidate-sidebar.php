@@ -20,6 +20,20 @@ if ((!isset($onboardingCompleted) || !isset($onboardingStep)) && isset($db, $_SE
 $onboardingStep = $onboardingStep ?? 1;
 $onboardingCompleted = $onboardingCompleted ?? false;
 $profilePercent = $profilePercent ?? 0;
+
+// Photo / initial pour le footer (avatar)
+$sidebarPhotoUrl = null;
+$sidebarInitial = 'C';
+if (isset($_SESSION['user_id'], $db)) {
+    $stmtU = $db->prepare('SELECT first_name, photo_url FROM users WHERE id = ?');
+    $stmtU->execute([$_SESSION['user_id']]);
+    $rowU = $stmtU->fetch(PDO::FETCH_ASSOC);
+    if ($rowU) {
+        $sidebarPhotoUrl = !empty($rowU['photo_url']) ? trim($rowU['photo_url']) : null;
+        $fn = trim($rowU['first_name'] ?? '');
+        if ($fn !== '') $sidebarInitial = strtoupper(mb_substr($fn, 0, 1));
+    }
+}
 ?>
 <div class="app-sidebar-backdrop" id="appSidebarBackdrop" aria-hidden="true"></div>
 <aside class="app-sidebar">
@@ -44,6 +58,8 @@ $profilePercent = $profilePercent ?? 0;
         </a>
     </nav>
     <div class="app-sidebar-footer">
-        <a href="https://www.ciaocv.com">Retour au site principal</a>
+        <div class="app-sidebar-footer-actions">
+            <!-- Avatar déplacé dans le header à droite du switch -->
+        </div>
     </div>
 </aside>

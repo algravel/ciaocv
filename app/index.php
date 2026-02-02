@@ -79,7 +79,7 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
 <body class="layout-auth-page">
     <div class="container">
         <div class="logo">CiaoCV</div>
-        <p class="tagline">Votre CV vidéo en 60 secondes</p>
+        <p class="tagline">L'entrevue réinventée !</p>
 
         <div class="login-card">
             <?php if ($error): ?>

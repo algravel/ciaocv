@@ -2,9 +2,29 @@
 session_start();
 require_once __DIR__ . '/db.php';
 
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+$userId = (int) $_SESSION['user_id'];
+
 $jobId = (int)($_GET['id'] ?? 0);
 $job = null;
 $error = null;
+
+// Type d'emploi et lieu de travail (alignés sur l'onboarding candidat step2 pour le matching)
+$jobTypes = [
+    'full_time' => ['icon' => '💼', 'title' => 'Temps plein', 'desc' => '35-40h par semaine'],
+    'part_time' => ['icon' => '⏰', 'title' => 'Temps partiel', 'desc' => 'Moins de 35h par semaine'],
+    'shift' => ['icon' => '🔄', 'title' => 'Quart de travail', 'desc' => 'Horaires rotatifs'],
+    'temporary' => ['icon' => '📅', 'title' => 'Temporaire', 'desc' => 'Contrat à durée déterminée'],
+    'internship' => ['icon' => '🎓', 'title' => 'Stage', 'desc' => 'Formation en entreprise'],
+];
+$workLocations = [
+    'on_site' => ['icon' => '🏢', 'title' => 'Sur place', 'desc' => 'Au bureau ou en magasin'],
+    'remote' => ['icon' => '🏠', 'title' => 'Télétravail', 'desc' => '100% à distance'],
+    'hybrid' => ['icon' => '🔀', 'title' => 'Hybride', 'desc' => 'Mix bureau et maison'],
+];
 
 // Liste des compétences populaires
 $availableSkills = [
@@ -25,16 +45,27 @@ $availableSkills = [
     'gestion_stress' => 'Gestion du stress'
 ];
 
-// Charger le poste en mode édition
+// Charger le poste en mode édition (uniquement si appartient à l'employeur)
 if ($jobId && $db) {
     try {
-        $hasDeletedAt = $db->query("SHOW COLUMNS FROM jobs LIKE 'deleted_at'")->rowCount() > 0;
-        if ($hasDeletedAt) {
-            $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ? AND deleted_at IS NULL');
+        $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
+        $hasEmployerId = in_array('employer_id', $cols);
+        $hasDeletedAt = in_array('deleted_at', $cols);
+        if ($hasEmployerId) {
+            if ($hasDeletedAt) {
+                $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ? AND employer_id = ? AND deleted_at IS NULL');
+            } else {
+                $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ? AND employer_id = ?');
+            }
+            $stmt->execute([$jobId, $userId]);
         } else {
-            $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ?');
+            if ($hasDeletedAt) {
+                $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ? AND deleted_at IS NULL');
+            } else {
+                $stmt = $db->prepare('SELECT * FROM jobs WHERE id = ?');
+            }
+            $stmt->execute([$jobId]);
         }
-        $stmt->execute([$jobId]);
         $job = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($job) {
             $stmtQ = $db->prepare('SELECT question_text FROM job_questions WHERE job_id = ? ORDER BY sort_order');
@@ -53,9 +84,31 @@ if ($jobId && $db) {
 }
 $isEdit = (bool)$job;
 
+// Postes réutilisables (pour le sélecteur en création)
+$employerPositions = [];
+$selectedPosition = null;
+if (!$isEdit && $db && isset($_SESSION['user_id'])) {
+    try {
+        $stmt = $db->query("SHOW TABLES LIKE 'employer_positions'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $db->prepare('SELECT id, title FROM employer_positions WHERE employer_id = ? ORDER BY title');
+            $stmt->execute([$userId]);
+            $employerPositions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (PDOException $e) {}
+    $positionId = isset($_GET['position_id']) ? (int)$_GET['position_id'] : 0;
+    if ($positionId) {
+        $stmt = $db->prepare('SELECT * FROM employer_positions WHERE id = ? AND employer_id = ?');
+        $stmt->execute([$positionId, $userId]);
+        $selectedPosition = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $jobType = trim($_POST['job_type'] ?? '');
+    $workLocation = trim($_POST['work_location'] ?? '');
     $questions = array_filter(array_map('trim', $_POST['questions'] ?? []));
     $latitude = isset($_POST['latitude']) && $_POST['latitude'] !== '' ? (float)$_POST['latitude'] : null;
     $longitude = isset($_POST['longitude']) && $_POST['longitude'] !== '' ? (float)$_POST['longitude'] : null;
@@ -65,8 +118,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $selectedSkills = isset($_POST['skills']) ? array_intersect($_POST['skills'], array_keys($availableSkills)) : [];
     $skillsJson = !empty($selectedSkills) ? json_encode(array_values($selectedSkills)) : null;
 
+    if (!in_array($jobType, array_keys($jobTypes))) $jobType = null;
+    if (!in_array($workLocation, array_keys($workLocations))) $workLocation = null;
+
     if (strlen($title) < 2) {
         $error = 'Le titre du poste est requis (min. 2 caractères).';
+    } elseif (empty($jobType)) {
+        $error = 'Choisissez un type d\'emploi pour le matching avec les candidats.';
+    } elseif (empty($workLocation)) {
+        $error = 'Choisissez un lieu de travail pour le matching avec les candidats.';
     } elseif (count($questions) > 5) {
         $error = 'Maximum 5 questions d\'entrevue.';
     } elseif ($db) {
@@ -98,11 +158,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!in_array('skills', $cols)) {
                 $db->exec("ALTER TABLE jobs ADD COLUMN skills JSON DEFAULT NULL AFTER location_name");
             }
+            if (!in_array('job_type', $cols)) {
+                $db->exec("ALTER TABLE jobs ADD COLUMN job_type ENUM('full_time','part_time','shift','temporary','internship') DEFAULT NULL AFTER title");
+                $cols = $db->query("SHOW COLUMNS FROM jobs")->fetchAll(PDO::FETCH_COLUMN);
+            }
+            if (!in_array('work_location', $cols)) {
+                $db->exec("ALTER TABLE jobs ADD COLUMN work_location ENUM('on_site','remote','hybrid') DEFAULT NULL AFTER job_type");
+            }
 
             if ($postId) {
                 // Mise à jour
-                $stmt = $db->prepare('UPDATE jobs SET title = ?, description = ?, show_on_jobmarket = ?, latitude = ?, longitude = ?, location_name = ?, skills = ? WHERE id = ?');
-                $stmt->execute([$title, $description, $showOnJobMarket, $latitude, $longitude, $location_name, $skillsJson, $postId]);
+                $stmt = $db->prepare('UPDATE jobs SET title = ?, description = ?, job_type = ?, work_location = ?, show_on_jobmarket = ?, latitude = ?, longitude = ?, location_name = ?, skills = ? WHERE id = ?');
+                $stmt->execute([$title, $description, $jobType ?: null, $workLocation ?: null, $showOnJobMarket, $latitude, $longitude, $location_name, $skillsJson, $postId]);
                 $jobId = $postId;
                 $db->prepare('DELETE FROM job_questions WHERE job_id = ?')->execute([$jobId]);
                 foreach ($questions as $i => $q) {
@@ -115,8 +182,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 // Création
-                $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, status, show_on_jobmarket, latitude, longitude, location_name, skills) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$title, $description, 'draft', $showOnJobMarket, $latitude, $longitude, $location_name, $skillsJson]);
+                $stmt = $db->prepare('INSERT INTO jobs (employer_id, title, description, job_type, work_location, status, show_on_jobmarket, latitude, longitude, location_name, skills) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$userId, $title, $description, $jobType ?: null, $workLocation ?: null, 'draft', $showOnJobMarket, $latitude, $longitude, $location_name, $skillsJson]);
                 $jobId = $db->lastInsertId();
                 foreach ($questions as $i => $q) {
                     if ($q !== '') {
@@ -137,9 +204,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Valeurs pour le formulaire (édition ou reprise après erreur ; POST prioritaire)
-$formTitle = isset($_POST['title']) ? (string)$_POST['title'] : ($job['title'] ?? '');
-$formDescription = isset($_POST['description']) ? (string)$_POST['description'] : ($job['description'] ?? '');
+// Valeurs pour le formulaire (édition ou reprise après erreur ; POST prioritaire ; sinon poste choisi)
+$formTitle = isset($_POST['title']) ? (string)$_POST['title'] : ($job['title'] ?? ($selectedPosition['title'] ?? ''));
+$formDescription = isset($_POST['description']) ? (string)$_POST['description'] : ($job['description'] ?? ($selectedPosition['description'] ?? ''));
 $formLat = isset($_POST['latitude']) ? (string)$_POST['latitude'] : (isset($job['latitude']) ? (string)$job['latitude'] : '');
 $formLng = isset($_POST['longitude']) ? (string)$_POST['longitude'] : (isset($job['longitude']) ? (string)$job['longitude'] : '');
 $formLocationName = isset($_POST['location_name']) ? (string)$_POST['location_name'] : ($job['location_name'] ?? '');
@@ -149,6 +216,9 @@ for ($i = 0; $i < 5; $i++) {
     $formQuestions[$i] = isset($_POST['questions'][$i]) ? (string)$_POST['questions'][$i] : (isset($job['questions'][$i]) ? (string)$job['questions'][$i] : '');
 }
 $formSkills = isset($_POST['skills']) ? $_POST['skills'] : ($job['skills'] ?? []);
+$formJobType = isset($_POST['job_type']) ? (string)$_POST['job_type'] : ($job['job_type'] ?? ($selectedPosition['job_type'] ?? ''));
+$formWorkLocation = isset($_POST['work_location']) ? (string)$_POST['work_location'] : ($job['work_location'] ?? ($selectedPosition['work_location'] ?? ''));
+$formPositionId = $selectedPosition ? (int)$selectedPosition['id'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -171,8 +241,29 @@ $formSkills = isset($_POST['skills']) ? $_POST['skills'] : ($job['skills'] ?? []
             <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <form method="POST">
+        <form method="POST" id="jobCreateForm">
             <?php if ($jobId): ?><input type="hidden" name="id" value="<?= (int)$jobId ?>"><?php endif; ?>
+            <?php if (!$isEdit && !empty($employerPositions)): ?>
+            <div class="form-group">
+                <label for="position_id">Choisir un poste (optionnel)</label>
+                <p class="hint">Sélectionnez un poste défini dans « Mes postes » pour pré-remplir le titre et la description.</p>
+                <select id="position_id" name="position_id" class="form-control" style="max-width:400px;">
+                    <option value="">— Créer sans partir d'un poste —</option>
+                    <?php foreach ($employerPositions as $pos): ?>
+                        <option value="<?= (int)$pos['id'] ?>" <?= $formPositionId === (int)$pos['id'] ? 'selected' : '' ?>><?= htmlspecialchars($pos['title']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <script>
+                (function(){
+                    var sel = document.getElementById('position_id');
+                    if (sel) sel.addEventListener('change', function(){
+                        var v = this.value;
+                        if (v) window.location = 'employer-job-create.php?position_id=' + v;
+                    });
+                })();
+                </script>
+            </div>
+            <?php endif; ?>
             <div class="form-group">
                 <label for="title">Titre du poste *</label>
                 <input type="text" id="title" name="title" required
@@ -183,6 +274,38 @@ $formSkills = isset($_POST['skills']) ? $_POST['skills'] : ($job['skills'] ?? []
             <div class="form-group">
                 <label for="description">Description</label>
                 <textarea id="description" name="description" placeholder="Décrivez le poste, les responsabilités..."><?= htmlspecialchars($formDescription) ?></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Type d'emploi *</label>
+                <p class="hint">Même critères que les candidats pour le matching.</p>
+                <div class="option-cards" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:0.75rem;margin-top:0.5rem;">
+                    <?php foreach ($jobTypes as $value => $type): ?>
+                    <label class="option-card <?= $formJobType === $value ? 'selected' : '' ?>" data-group="job_type" style="margin:0;cursor:pointer;padding:0.75rem;">
+                        <input type="radio" name="job_type" value="<?= $value ?>" <?= $formJobType === $value ? 'checked' : '' ?> required>
+                        <div class="option-icon" style="font-size:1.25rem;"><?= $type['icon'] ?></div>
+                        <div class="option-text">
+                            <div class="option-title" style="font-size:0.9rem;"><?= $type['title'] ?></div>
+                        </div>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Lieu de travail *</label>
+                <p class="hint">Sur place, télétravail ou hybride — pour le matching avec les candidats.</p>
+                <div class="option-cards" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:0.75rem;margin-top:0.5rem;">
+                    <?php foreach ($workLocations as $value => $loc): ?>
+                    <label class="option-card <?= $formWorkLocation === $value ? 'selected' : '' ?>" data-group="work_location" style="margin:0;cursor:pointer;padding:0.75rem;">
+                        <input type="radio" name="work_location" value="<?= $value ?>" <?= $formWorkLocation === $value ? 'checked' : '' ?> required>
+                        <div class="option-icon" style="font-size:1.25rem;"><?= $loc['icon'] ?></div>
+                        <div class="option-text">
+                            <div class="option-title" style="font-size:0.9rem;"><?= $loc['title'] ?></div>
+                        </div>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
             </div>
 
             <div class="form-group">
@@ -286,6 +409,16 @@ $formSkills = isset($_POST['skills']) ? $_POST['skills'] : ($job['skills'] ?? []
         </main>
     </div>
 
+    <script>
+        // Sélection visuelle des cartes Type d'emploi / Lieu de travail
+        document.querySelectorAll('.option-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var group = this.getAttribute('data-group');
+                document.querySelectorAll('.option-card[data-group="' + group + '"]').forEach(function(c) { c.classList.remove('selected'); });
+                this.classList.add('selected');
+            });
+        });
+    </script>
     <script>
         (function() {
             const MAX_DURATION = 60;

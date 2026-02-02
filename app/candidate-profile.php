@@ -12,8 +12,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $userId = $_SESSION['user_id'];
-$success = null;
-$error = null;
+$success = $_SESSION['flash_success'] ?? null;
+$error = $_SESSION['flash_error'] ?? null;
+if (isset($_SESSION['flash_success'])) unset($_SESSION['flash_success']);
+if (isset($_SESSION['flash_error'])) unset($_SESSION['flash_error']);
 
 // Charger B2 pour l'upload photo (modal)
 $envFile = dirname(__DIR__) . '/.env';
@@ -118,12 +120,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 } else {
                     $db->prepare('UPDATE users SET first_name = ?, email = ?, preferred_language = ? WHERE id = ?')
                        ->execute([$firstName, $email, $preferredLanguage, $userId]);
-                    $success = 'Profil mis à jour.';
-                    // Recharger les données
-                    $user['first_name'] = $firstName;
-                    $user['email'] = $email;
-                    $user['preferred_language'] = $preferredLanguage;
                     $_SESSION['user_email'] = $email;
+                    $_SESSION['flash_success'] = 'Profil mis à jour.';
+                    header('Location: candidate-profile.php');
+                    exit;
                 }
             } catch (PDOException $e) {
                 $error = 'Erreur lors de la mise à jour.';
@@ -149,7 +149,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             } else {
                 $hash = password_hash($new, PASSWORD_DEFAULT);
                 $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$hash, $userId]);
-                $success = 'Mot de passe mis à jour.';
+                $_SESSION['flash_success'] = 'Mot de passe mis à jour.';
+                header('Location: candidate-profile.php');
+                exit;
             }
         }
     }
@@ -236,15 +238,22 @@ if ($db) {
                 <?php endif; ?>
                 <span class="profile-photo-edit-hint">Modifier</span>
             </button>
-            <div class="profile-info">
-                <h3><?= htmlspecialchars($firstName ?: 'Candidat') ?></h3>
-                <p><?= htmlspecialchars($email) ?></p>
+            <div class="profile-info profile-header-main">
+                <div>
+                    <h3><?= htmlspecialchars($firstName ?: 'Candidat') ?></h3>
+                    <p><?= htmlspecialchars($email) ?></p>
+                </div>
             </div>
         </div>
 
         <!-- Informations de base -->
-        <div class="section">
-            <h2>Informations <a href="onboarding/step2-job-type.php">Modifier →</a></h2>
+        <div class="section" id="section-informations">
+            <div class="section-header">
+                <h2>Informations</h2>
+                <a href="onboarding/step2-job-type.php" class="btn btn-secondary btn-icon" title="Préférences" aria-label="Préférences">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </a>
+            </div>
             <form method="POST">
                 <input type="hidden" name="action" value="update_profile">
                 <div class="form-group">
@@ -289,7 +298,13 @@ if ($db) {
 
         <!-- Préférences d'emploi -->
         <div class="section">
-            <h2>Préférences <a href="onboarding/step2-job-type.php">Modifier →</a></h2>
+            <div class="section-header">
+                <h2>Préférences</h2>
+                <a href="onboarding/step2-job-type.php" class="btn btn-secondary btn-icon" title="Modifier mes préférences">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span>Modifier mes préférences</span>
+                </a>
+            </div>
             <div class="info-grid">
                 <div class="info-item">
                     <label>Type d'emploi</label>
@@ -305,7 +320,13 @@ if ($db) {
         <!-- Compétences -->
         <?php if (!empty($skills)): ?>
         <div class="section">
-            <h2>Compétences <a href="onboarding/step3-skills.php">Modifier →</a></h2>
+            <div class="section-header">
+                <h2>Compétences</h2>
+                <a href="onboarding/step3-skills.php" class="btn btn-secondary btn-icon" title="Modifier mes compétences">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span>Modifier mes compétences</span>
+                </a>
+            </div>
             <div class="tags">
                 <?php foreach ($skills as $skill): ?>
                     <span class="tag"><?= htmlspecialchars($skill['skill_name']) ?></span>
@@ -317,7 +338,13 @@ if ($db) {
         <!-- Personnalité -->
         <?php if (!empty($traits)): ?>
         <div class="section">
-            <h2>Personnalité <a href="onboarding/step4-personality.php">Modifier →</a></h2>
+            <div class="section-header">
+                <h2>Personnalité</h2>
+                <a href="onboarding/step4-personality.php" class="btn btn-secondary btn-icon" title="Modifier ma personnalité">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span>Modifier ma personnalité</span>
+                </a>
+            </div>
             <div class="tags">
                 <?php foreach ($traits as $trait): ?>
                     <span class="tag"><?= htmlspecialchars($trait) ?></span>
@@ -328,7 +355,13 @@ if ($db) {
 
         <!-- Vidéo de présentation -->
         <div class="section">
-            <h2>Ma vidéo <a href="onboarding/step6-video.php">Modifier →</a></h2>
+            <div class="section-header">
+                <h2>Ma vidéo</h2>
+                <a href="onboarding/step6-video.php" class="btn btn-secondary btn-icon" title="Modifier ma vidéo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span>Modifier ma vidéo</span>
+                </a>
+            </div>
             <div class="video-preview">
                 <?php if ($videoUrl): ?>
                     <video controls src="<?= htmlspecialchars($videoUrl) ?>"></video>

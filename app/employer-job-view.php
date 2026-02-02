@@ -13,17 +13,33 @@ $noteAdded = false;
 $currentUserEmail = $_SESSION['user_email'] ?? null;
 $currentUserId = $_SESSION['user_id'] ?? null;
 
-// Créer les tables d'évaluation si nécessaire
+// Créer / mettre à jour les tables d'évaluation
 if ($db) {
     try {
         $db->exec("CREATE TABLE IF NOT EXISTS job_evaluators (
             id INT AUTO_INCREMENT PRIMARY KEY,
             job_id INT NOT NULL,
             email VARCHAR(255) NOT NULL,
+            name VARCHAR(255) DEFAULT NULL,
+            access_token VARCHAR(64) NOT NULL UNIQUE,
+            token_expires_at TIMESTAMP NULL DEFAULT NULL,
             added_by INT NOT NULL,
             added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
             UNIQUE KEY (job_id, email)
+        )");
+        $cols = $db->query("SHOW COLUMNS FROM job_evaluators")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('name', $cols)) { $db->exec("ALTER TABLE job_evaluators ADD COLUMN name VARCHAR(255) DEFAULT NULL AFTER email"); }
+        if (!in_array('access_token', $cols)) { $db->exec("ALTER TABLE job_evaluators ADD COLUMN access_token VARCHAR(64) NULL UNIQUE AFTER name"); }
+        if (!in_array('token_expires_at', $cols)) { $db->exec("ALTER TABLE job_evaluators ADD COLUMN token_expires_at TIMESTAMP NULL DEFAULT NULL AFTER access_token"); }
+        
+        $db->exec("CREATE TABLE IF NOT EXISTS evaluator_access_codes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            token VARCHAR(64) NOT NULL,
+            code CHAR(6) NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_token_expires (token, expires_at)
         )");
         
         $db->exec("CREATE TABLE IF NOT EXISTS evaluation_notes (
@@ -37,35 +53,68 @@ if ($db) {
             FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
             INDEX idx_job_created (job_id, created_at DESC)
         )");
+        $noteCols = $db->query("SHOW COLUMNS FROM evaluation_notes")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('author_ip', $noteCols)) { $db->exec("ALTER TABLE evaluation_notes ADD COLUMN author_ip VARCHAR(45) DEFAULT NULL AFTER author_name"); }
     } catch (PDOException $e) {
-        // Tables existent déjà
+        // Tables existent déjà ou erreur ALTER
     }
 }
 
-// Traitement: Ajouter un évaluateur
-if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_evaluator'])) {
+// Traitement: Ajouter un évaluateur (nom + courriel, génération token, envoi courriel)
+if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_evaluator']) && $currentUserId) {
     $evaluatorEmail = filter_var(trim($_POST['evaluator_email'] ?? ''), FILTER_VALIDATE_EMAIL);
-    if ($evaluatorEmail && $currentUserId) {
+    $evaluatorName = trim($_POST['evaluator_name'] ?? '');
+    if ($evaluatorEmail) {
         try {
-            $stmt = $db->prepare('INSERT INTO job_evaluators (job_id, email, added_by) VALUES (?, ?, ?)');
-            $stmt->execute([$jobId, $evaluatorEmail, $currentUserId]);
+            $token = bin2hex(random_bytes(32));
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
+            $cols = $db->query("SHOW COLUMNS FROM job_evaluators")->fetchAll(PDO::FETCH_COLUMN);
+            if (in_array('access_token', $cols)) {
+                $stmt = $db->prepare('INSERT INTO job_evaluators (job_id, email, name, access_token, token_expires_at, added_by) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$jobId, $evaluatorEmail, $evaluatorName ?: null, $token, $expiresAt, $currentUserId]);
+            } else {
+                $stmt = $db->prepare('INSERT INTO job_evaluators (job_id, email, added_by) VALUES (?, ?, ?)');
+                $stmt->execute([$jobId, $evaluatorEmail, $currentUserId]);
+                $token = '';
+            }
             $evaluatorAdded = true;
+            if ($token !== '') {
+                $stmtJob = $db->prepare('SELECT title FROM jobs WHERE id = ?');
+                $stmtJob->execute([$jobId]);
+                $jobRow = $stmtJob->fetch(PDO::FETCH_ASSOC);
+                $jobTitle = $jobRow ? htmlspecialchars($jobRow['title']) : 'Ce poste';
+                $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'app.ciaocv.com');
+                $accessUrl = $baseUrl . '/evaluator-access.php?token=' . $token;
+                $html = '<p>Bonjour' . ($evaluatorName ? ' ' . htmlspecialchars($evaluatorName) : '') . ',</p>';
+                $html .= '<p>Vous avez été invité à consulter les candidatures pour l\'offre <strong>' . $jobTitle . '</strong>.</p>';
+                $html .= '<p><a href="' . htmlspecialchars($accessUrl) . '" style="display:inline-block;margin-top:1rem;padding:0.75rem 1.5rem;background:#4f46e5;color:white;text-decoration:none;border-radius:0.5rem;font-weight:600;">Accéder aux candidats à évaluer</a></p>';
+                $html .= '<p style="color:#64748b;font-size:0.875rem;">Ce lien est valide 30 jours. Vous devrez confirmer votre identité par un code envoyé à cette adresse courriel.</p>';
+                $html .= '<p style="color:#64748b;font-size:0.875rem;">CiaoCV</p>';
+                send_zepto($evaluatorEmail, 'Accès évaluateur – ' . $jobTitle, $html);
+            }
         } catch (PDOException $e) {
-            // Évaluateur déjà ajouté
+            // Évaluateur déjà ajouté ou erreur
         }
     }
 }
 
-// Traitement: Ajouter une note
+// Traitement: Ajouter une note (avec IP et heure)
 if ($jobId && $db && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note'])) {
     $noteText = trim($_POST['note_text'] ?? '');
     $applicationId = isset($_POST['application_id']) && $_POST['application_id'] !== '' ? (int)$_POST['application_id'] : null;
     $authorName = $_SESSION['user_first_name'] ?? $_SESSION['company_name'] ?? 'Anonyme';
+    $authorIp = $_SERVER['REMOTE_ADDR'] ?? null;
     
     if ($noteText && $currentUserEmail) {
         try {
-            $stmt = $db->prepare('INSERT INTO evaluation_notes (job_id, application_id, author_email, author_name, note_text) VALUES (?, ?, ?, ?, ?)');
-            $stmt->execute([$jobId, $applicationId, $currentUserEmail, $authorName, $noteText]);
+            $noteCols = $db->query("SHOW COLUMNS FROM evaluation_notes")->fetchAll(PDO::FETCH_COLUMN);
+            if (in_array('author_ip', $noteCols)) {
+                $stmt = $db->prepare('INSERT INTO evaluation_notes (job_id, application_id, author_email, author_name, author_ip, note_text) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$jobId, $applicationId, $currentUserEmail, $authorName, $authorIp, $noteText]);
+            } else {
+                $stmt = $db->prepare('INSERT INTO evaluation_notes (job_id, application_id, author_email, author_name, note_text) VALUES (?, ?, ?, ?, ?)');
+                $stmt->execute([$jobId, $applicationId, $currentUserEmail, $authorName, $noteText]);
+            }
             $noteAdded = true;
         } catch (PDOException $e) {
             // Erreur
@@ -353,17 +402,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                 <?php if ($evaluatorAdded): ?>
                     <div style="padding:0.5rem 0.75rem;background:#d1fae5;color:#065f46;border-radius:6px;margin-bottom:0.75rem;font-size:0.85rem;">✓ Évaluateur ajouté</div>
                 <?php endif; ?>
-                <form method="POST" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+                <form method="POST" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;align-items:flex-end;">
                     <input type="hidden" name="add_evaluator" value="1">
-                    <input type="email" name="evaluator_email" placeholder="email@exemple.com" required 
-                           style="flex:1;min-width:180px;padding:0.5rem 0.75rem;border:1px solid #e5e7eb;border-radius:6px;font-size:0.9rem;">
+                    <div style="display:flex;flex-direction:column;gap:0.25rem;">
+                        <label for="evaluator_name" style="font-size:0.8rem;color:var(--text-secondary);">Nom</label>
+                        <input type="text" id="evaluator_name" name="evaluator_name" placeholder="Prénom Nom" 
+                               style="min-width:160px;padding:0.5rem 0.75rem;border:1px solid #e5e7eb;border-radius:6px;font-size:0.9rem;">
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:0.25rem;">
+                        <label for="evaluator_email" style="font-size:0.8rem;color:var(--text-secondary);">Courriel *</label>
+                        <input type="email" id="evaluator_email" name="evaluator_email" placeholder="email@exemple.com" required 
+                               style="min-width:200px;padding:0.5rem 0.75rem;border:1px solid #e5e7eb;border-radius:6px;font-size:0.9rem;">
+                    </div>
                     <button type="submit" class="btn" style="padding:0.5rem 1rem;">+ Ajouter</button>
                 </form>
+                <p class="hint" style="margin:0 0 0.75rem 0;font-size:0.85rem;">Un courriel avec un lien d'accès sera envoyé à l'évaluateur. Il devra confirmer son identité par un code reçu par courriel.</p>
                 <?php if (!empty($evaluators)): ?>
                 <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
                     <?php foreach ($evaluators as $eval): ?>
                         <span style="padding:0.35rem 0.65rem;background:#e0e7ff;color:#4338ca;border-radius:6px;font-size:0.85rem;">
-                            <?= htmlspecialchars($eval['email']) ?>
+                            <?= htmlspecialchars($eval['name'] ? $eval['name'] . ' – ' . $eval['email'] : $eval['email']) ?>
                         </span>
                     <?php endforeach; ?>
                 </div>
