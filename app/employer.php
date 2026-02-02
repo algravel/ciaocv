@@ -26,14 +26,19 @@ if ($db) {
         $stmt->execute([$userId]);
         $employerProfile = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Vérifier si l'employeur a des postes définis
+        // Charger les postes définis par l'employeur
+        $positions = [];
         try {
-            $stmt = $db->prepare('SELECT COUNT(*) FROM employer_positions WHERE employer_id = ?');
-            $stmt->execute([$userId]);
-            $hasPositions = $stmt->fetchColumn() > 0;
+            $stmt = $db->query("SHOW TABLES LIKE 'employer_positions'");
+            if ($stmt->rowCount() > 0) {
+                $stmt = $db->prepare('SELECT * FROM employer_positions WHERE employer_id = ? ORDER BY title');
+                $stmt->execute([$userId]);
+                $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
         } catch (PDOException $e) {
-            $hasPositions = false;
+            $positions = [];
         }
+        $hasPositions = count($positions) > 0;
     }
     try {
         $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
@@ -119,18 +124,6 @@ if ($db) {
                     <?php endif; ?>
                 </div>
 
-                <?php if (!$hasPositions): ?>
-                    <div class="card" style="padding:1.5rem;margin-bottom:1.5rem;background:#fffbeb;border-color:#fbbf24;">
-                        <p style="margin:0;display:flex;align-items:center;gap:0.5rem;">
-                            <span style="font-size:1.25rem;">💡</span>
-                            <span><strong>Astuce :</strong> Pour créer un affichage, commencez par <a
-                                    href="employer-positions.php" style="color:var(--primary);font-weight:600;">définir vos
-                                    postes</a> (titre, compétences recherchées, etc.). Ensuite, vous pourrez publier des
-                                affichages basés sur ces postes.</span>
-                        </p>
-                    </div>
-                <?php endif; ?>
-
                 <?php if (!empty($jobs)): ?>
                     <div class="filter-bar">
                         <button type="button" class="filter-btn active" data-filter="all">Tous</button>
@@ -143,11 +136,6 @@ if ($db) {
                 <?php if (empty($jobs)): ?>
                     <div class="empty-state">
                         <p>Aucun affichage pour le moment.</p>
-                        <?php if ($hasPositions): ?>
-                            <a href="employer-job-create.php" class="btn btn-primary">Créer mon premier affichage</a>
-                        <?php else: ?>
-                            <a href="employer-positions.php" class="btn btn-primary">Définir mes postes</a>
-                        <?php endif; ?>
                     </div>
                 <?php else: ?>
                     <div class="job-list">
