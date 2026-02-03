@@ -1,51 +1,57 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs - CiaoCV</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --primary: #00D4FF;
-            --primary-hover: #00B8E6;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
             --accent-violet: #A78BFA;
             --text-white: #FFFFFF;
             --text-gray: #94A3B8;
             --bg-dark: #0a0f1a;
             --bg-card: rgba(30, 41, 59, 0.6);
             --glass: rgba(30, 41, 59, 0.4);
-            --glass-border: rgba(255,255,255,0.08);
+            --glass-border: rgba(255, 255, 255, 0.08);
             --radius-lg: 28px;
             --radius-xl: 36px;
             --border-dark: #334155;
             --bg-gradient: radial-gradient(ellipse 80% 50% at 70% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
-                           radial-gradient(ellipse 60% 40% at 20% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
-                           radial-gradient(ellipse at 50% 0%, rgba(15, 23, 42, 0.95) 0%, #0a0f1a 60%);
+                radial-gradient(ellipse 60% 40% at 20% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 0%, rgba(15, 23, 42, 0.95) 0%, #0a0f1a 60%);
         }
 
         [data-theme="light"] {
-            --primary: #0ea5e9;
-            --primary-hover: #0284c7;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
             --accent-violet: #8b5cf6;
             --text-white: #0f172a;
             --text-gray: #475569;
             --bg-dark: #f8fafc;
             --bg-card: rgba(255, 255, 255, 0.8);
             --glass: rgba(255, 255, 255, 0.6);
-            --glass-border: rgba(0,0,0,0.1);
+            --glass-border: rgba(0, 0, 0, 0.1);
             --border-dark: #e2e8f0;
             --bg-gradient: radial-gradient(circle at 50% 0%, #e0f2fe 0%, #f8fafc 100%);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         html {
             scroll-behavior: smooth;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             background: var(--bg-dark);
             background-image: var(--bg-gradient);
             color: var(--text-white);
@@ -54,7 +60,11 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 5%; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 5%;
+        }
 
         /* ========== HEADER ========== */
         .navbar {
@@ -69,32 +79,23 @@
         .logo {
             font-size: 1.5rem;
             font-weight: 800;
-            color: var(--text-white);
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
+            color: var(--primary);
             text-decoration: none;
+            letter-spacing: -0.025em;
         }
-        .logo-mark {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--accent-violet));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--text-white);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+
+        @media (min-width: 640px) {
+            .logo {
+                font-size: 2rem;
+            }
         }
-        .logo-icon { color: var(--primary); }
 
         .nav-links {
             display: flex;
             gap: 2rem;
             align-items: center;
         }
+
         .nav-links a {
             text-decoration: none;
             color: var(--text-white);
@@ -103,7 +104,12 @@
             transition: color 0.2s;
             position: relative;
         }
-        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
         .nav-links a.active::after {
             content: '';
             position: absolute;
@@ -115,7 +121,12 @@
             border-radius: 1px;
         }
 
-        .nav-actions { display: flex; align-items: center; gap: 1rem; }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
         .btn-login {
             background: linear-gradient(135deg, #1e3a5f, #2563eb);
             color: var(--text-white);
@@ -123,21 +134,27 @@
             border-radius: 12px;
             text-decoration: none;
             font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s;
         }
-        .btn-login:hover { background: linear-gradient(135deg, #2563eb, #3b82f6); opacity: 0.95; }
+
+        .btn-login:hover {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            opacity: 0.95;
+        }
 
         /* ========== HERO TARIFS ========== */
         .tarifs-hero {
             text-align: center;
             padding: 6rem 5% 4rem;
         }
+
         .tarifs-hero h1 {
             font-size: 3rem;
             font-weight: 800;
             margin-bottom: 1rem;
         }
+
         .tarifs-hero p {
             font-size: 1.1rem;
             color: var(--text-gray);
@@ -146,7 +163,10 @@
         }
 
         /* ========== TARIFS GRID ========== */
-        .pricing-section { padding: 2rem 5% 6rem; }
+        .pricing-section {
+            padding: 2rem 5% 6rem;
+        }
+
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -154,6 +174,7 @@
             max-width: 1100px;
             margin: 0 auto 2rem;
         }
+
         .pricing-card {
             background: var(--glass);
             backdrop-filter: blur(16px);
@@ -165,17 +186,38 @@
             display: flex;
             flex-direction: column;
         }
-        .pricing-card:hover { transform: translateY(-4px); border-color: rgba(0, 212, 255, 0.3); }
-        .pricing-card h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        .pricing-card .price { font-size: 2.5rem; font-weight: 800; color: var(--primary); margin: 1rem 0; }
-        .pricing-card .price-desc { color: var(--text-gray); font-size: 0.9rem; margin-bottom: 2rem; min-height: 3rem; }
-        
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-card .price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+
+        .pricing-card .price-desc {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            min-height: 3rem;
+        }
+
         .pricing-features {
             list-style: none;
             text-align: left;
             margin-bottom: 2rem;
             flex-grow: 1;
         }
+
         .pricing-features li {
             margin-bottom: 0.8rem;
             color: var(--text-gray);
@@ -183,6 +225,7 @@
             align-items: flex-start;
             gap: 0.5rem;
         }
+
         .pricing-features li::before {
             content: '✓';
             color: var(--primary);
@@ -200,8 +243,11 @@
             font-weight: 600;
             transition: all 0.2s;
         }
-        .btn-outline:hover { background: rgba(0, 212, 255, 0.15); }
-        
+
+        .btn-outline:hover {
+            background: rgba(0, 212, 255, 0.15);
+        }
+
         .pricing-card.featured {
             background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
             border: 1px solid var(--primary);
@@ -209,7 +255,11 @@
             transform: scale(1.05);
             z-index: 10;
         }
-        .pricing-card.featured:hover { transform: scale(1.05) translateY(-4px); }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-4px);
+        }
+
         .btn-primary-full {
             display: block;
             width: 100%;
@@ -221,7 +271,10 @@
             font-weight: 700;
             transition: opacity 0.2s;
         }
-        .btn-primary-full:hover { opacity: 0.9; }
+
+        .btn-primary-full:hover {
+            opacity: 0.9;
+        }
 
         /* ========== FOOTER ========== */
         footer {
@@ -230,6 +283,7 @@
             border-top: 1px solid var(--glass-border);
             background: rgba(10, 15, 26, 0.5);
         }
+
         .footer-inner {
             max-width: 1200px;
             margin: 0 auto;
@@ -238,6 +292,7 @@
             gap: 3rem;
             align-items: start;
         }
+
         .footer-links h4 {
             font-size: 0.85rem;
             text-transform: uppercase;
@@ -245,7 +300,11 @@
             color: var(--text-gray);
             margin-bottom: 1rem;
         }
-        .footer-links ul { list-style: none; }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
         .footer-links a {
             color: var(--text-gray);
             text-decoration: none;
@@ -254,7 +313,11 @@
             margin-bottom: 0.5rem;
             transition: color 0.2s;
         }
-        .footer-links a:hover { color: var(--primary); }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
         .footer-bottom {
             max-width: 1200px;
             margin: 0 auto;
@@ -267,10 +330,28 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
-        .footer-bottom p { color: var(--text-gray); font-size: 0.85rem; }
-        .footer-legal { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
-        .footer-legal a { color: var(--text-gray); text-decoration: none; font-size: 0.85rem; }
-        .footer-legal a:hover { color: var(--primary); }
+
+        .footer-bottom p {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+        }
+
+        .footer-legal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .footer-legal a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .footer-legal a:hover {
+            color: var(--primary);
+        }
 
         .btn-theme-toggle {
             background: var(--glass);
@@ -286,23 +367,37 @@
             transition: all 0.2s;
             font-size: 1.2rem;
         }
-        .btn-theme-toggle:hover { background: var(--glass-border); transform: rotate(15deg); }
+
+        .btn-theme-toggle:hover {
+            background: var(--glass-border);
+            transform: rotate(15deg);
+        }
 
         @media (max-width: 900px) {
-            .pricing-grid { grid-template-columns: 1fr; }
-            .pricing-card.featured { transform: none; }
-            .footer-inner { grid-template-columns: 1fr; }
-            .nav-links { display: none; }
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- HEADER -->
     <header class="navbar">
-        <a href="index.html" class="logo">
-            <img src="assets/logo.svg" alt="CiaoCV Logo" style="height: 40px;">
-        </a>
+        <a href="index.html" class="logo">CiaoCV</a>
         <nav class="nav-links">
             <a href="emplois.html">Trouver un emploi</a>
             <a href="index.html#publier">Publier un poste</a>
@@ -343,7 +438,8 @@
             <!-- PRO -->
             <div class="pricing-card featured">
                 <h3>Pro</h3>
-                <div class="price">29€<span style="font-size:1rem;font-weight:400;color:var(--text-gray)">/mois</span></div>
+                <div class="price">29€<span style="font-size:1rem;font-weight:400;color:var(--text-gray)">/mois</span>
+                </div>
                 <div class="price-desc">Pour les recruteurs actifs et PME</div>
                 <ul class="pricing-features">
                     <li>Publication d'offres illimitées</li>
@@ -415,7 +511,7 @@
     <script>
         const themeToggle = document.getElementById('themeToggle');
         const html = document.documentElement;
-        
+
         // Icons
         const iconMoon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
         const iconSun = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
@@ -435,7 +531,7 @@
         themeToggle.addEventListener('click', () => {
             const currentTheme = html.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
+
             html.setAttribute('data-theme', newTheme);
             setIcon(newTheme);
             localStorage.setItem('theme', newTheme);
@@ -443,4 +539,5 @@
     </script>
 
 </body>
+
 </html>
