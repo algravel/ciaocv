@@ -3803,21 +3803,45 @@ a:hover {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card-bg);
-  color: var(--text-muted);
+  color: var(--text);
   font-size: 0.95rem;
-  cursor: not-allowed;
-  opacity: 0.6;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
   min-height: 44px;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.oauth-btn:hover {
+  border-color: var(--text-muted);
+  background: var(--bg-alt);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
 }
 
 .oauth-btn svg {
   width: 20px;
   height: 20px;
+}
+
+.oauth-btn.oauth-google:hover {
+  border-color: #4285F4;
+}
+
+.oauth-btn.oauth-microsoft:hover {
+  border-color: #00A4EF;
+}
+
+/* Disabled OAuth buttons (fallback) */
+.oauth-btn:disabled,
+.oauth-btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+  color: var(--text-muted);
 }
 
 /* ========== Tables (employeur) ========== */
