@@ -452,10 +452,10 @@
     <header class="navbar">
         <a href="index.html" class="logo">CiaoCV</a>
         <nav class="nav-links">
-            <a href="emplois.html" class="active">Trouver un emploi</a>
-            <a href="index.html#publier">Publier un poste</a>
+            <a href="index.html#features">Solution RH</a>
             <a href="index.html#comment">Comment ça marche</a>
             <a href="tarifs.html">Tarifs</a>
+            <a href="emplois.html" class="active">Espace Candidats</a>
         </nav>
         <div class="nav-actions">
             <button class="btn-theme-toggle" id="themeToggle" title="Changer de thème" aria-label="Changer de thème">
@@ -466,44 +466,23 @@
     </header>
 
     <div class="search-page-header">
-        <h1>Trouvez votre prochain job</h1>
-        <p>Plus de 500 entreprises recrutent sur CiaoCV</p>
+        <h1>Espace Candidat</h1>
+        <p>Gérez vos entrevues vidéo et votre profil.</p>
     </div>
 
-    <section class="search-section">
-        <div class="search-wrapper">
-            <form id="searchForm" class="search-bar" onsubmit="event.preventDefault(); searchJobs();">
-                <div class="input-wrap">
-                    <span>🔍</span>
-                    <input type="text" id="q" placeholder="Poste ou mot-clé">
-                </div>
-                <div class="input-wrap">
-                    <span>📍</span>
-                    <input type="text" id="location" placeholder="Ville / Télétravail">
-                </div>
-                <div class="input-wrap">
-                    <select id="type">
-                        <option value="">Type</option>
-                        <option value="Temps plein">Temps plein</option>
-                        <option value="Temps partiel">Temps partiel</option>
-                        <option value="Stage">Stage</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-search-hero">Rechercher</button>
-            </form>
-            <div class="quick-filters">
-                <button type="button" class="pill" onclick="setSearch('Sans expérience')"><span class="plus">+</span>
-                    Sans expérience</button>
-                <button type="button" class="pill" onclick="setSearch('Entrée rapide')"><span class="plus">+</span>
-                    Entrée rapide</button>
-                <button type="button" class="pill" onclick="setSearch('Télétravail')"><span class="plus">+</span>
-                    Télétravail</button>
-            </div>
-        </div>
+    <section class="search-section" style="text-align: center; min-height: 40vh;">
+        <div
+            style="background: var(--glass); padding: 3rem; border-radius: 20px; max-width: 600px; margin: 0 auto; border: 1px solid var(--glass-border);">
+            <h3>Vous avez été invité à une entrevue ?</h3>
+            <p style="margin: 1rem 0 2rem; color: var(--text-gray);">Connectez-vous pour enregistrer vos réponses vidéo
+                ou compléter votre profil.</p>
 
-        <!-- RESULTATS RECHERCHE -->
-        <div id="searchResults" class="jobs-grid">
-            <p style="text-align:center; grid-column:1/-1;">Chargement...</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="https://app.ciaocv.com/login" class="btn-search-hero" style="text-decoration: none;">Se
+                    connecter</a>
+                <a href="https://app.ciaocv.com/signup" class="btn-search-hero"
+                    style="background: transparent; border: 1px solid var(--glass-border);">Créer un compte</a>
+            </div>
         </div>
     </section>
 
