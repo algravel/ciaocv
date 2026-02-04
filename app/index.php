@@ -259,11 +259,11 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
 <body class="page-login">
     <!-- HEADER -->
     <header class="navbar">
-        <a href="../index.html" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
+        <a href="https://www.ciaocv.com/index.html" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
 
         <nav class="nav-links">
-            <a href="../tarifs.html" data-i18n="nav.service">Notre service</a>
-            <a href="../guide-candidat.html" data-i18n="nav.guide">Préparez votre entrevue</a>
+            <a href="https://www.ciaocv.com/tarifs.html" data-i18n="nav.service">Notre service</a>
+            <a href="https://www.ciaocv.com/guide-candidat.html" data-i18n="nav.guide">Préparez votre entrevue</a>
         </nav>
 
         <div class="nav-actions">
@@ -297,8 +297,8 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
         <a href="#" class="lang-toggle" id="langToggleMobile"
             style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
 
-        <a href="../tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
-        <a href="../guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
+        <a href="https://www.ciaocv.com/tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
+        <a href="https://www.ciaocv.com/guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
         <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
             <a href="onboarding/register-candidate.php" class="btn-header-primary"
                 style="font-size:1.1rem; padding:1rem;" data-i18n="nav.candidate">Espace Candidat</a>
@@ -315,24 +315,6 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
                 <h1 data-i18n="login.hero.title">Content de vous <br><span class="highlight">revoir !</span></h1>
                 <p class="hero-subtitle" data-i18n="login.hero.subtitle">Accédez à votre espace pour gérer vos entrevues
                     vidéo et vos candidatures en toute simplicité.</p>
-
-                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 2rem;">
-                    <div
-                        style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; font-weight: 500; color: var(--text-gray);">
-                        <span style="color: var(--primary); font-weight: bold;">✓</span> <span
-                            data-i18n="login.hero.usp.fast">Rapide</span>
-                    </div>
-                    <div
-                        style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; font-weight: 500; color: var(--text-gray);">
-                        <span style="color: var(--primary); font-weight: bold;">✓</span> <span
-                            data-i18n="login.hero.usp.secure">Sécurisé</span>
-                    </div>
-                    <div
-                        style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; font-weight: 500; color: var(--text-gray);">
-                        <span style="color: var(--primary); font-weight: bold;">✓</span> <span
-                            data-i18n="login.hero.usp.human">Humain</span>
-                    </div>
-                </div>
             </div>
 
             <div class="hero-form">
@@ -397,6 +379,15 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
                             </svg>
                             <span data-i18n="login.oauth.google">Continuer avec Google</span>
                         </a>
+                        <a href="oauth-microsoft.php?action=login" class="btn-oauth">
+                            <svg width="20" height="20" viewBox="0 0 23 23">
+                                <path fill="#f35325" d="M1 1h10v10H1z"/>
+                                <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                                <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                                <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                            </svg>
+                            <span data-i18n="login.oauth.microsoft">Continuer avec Microsoft</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -412,10 +403,10 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
                     style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;">
                     CIAOCV</h4>
                 <ul style="list-style: none;">
-                    <li><a href="../tarifs.html"
+                    <li><a href="https://www.ciaocv.com/tarifs.html"
                             style="color: white; text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.6rem; opacity: 0.9;"
                             data-i18n="footer.service">Notre service</a></li>
-                    <li><a href="../guide-candidat.html"
+                    <li><a href="https://www.ciaocv.com/guide-candidat.html"
                             style="color: white; text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.6rem; opacity: 0.9;"
                             data-i18n="footer.guide">Préparez votre entrevue</a></li>
                 </ul>
@@ -444,15 +435,13 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
         </div>
         <div
             style="max-width: 1200px; margin: 2rem auto 0; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2); text-align: center;">
-            <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.85rem;">© 2026 CiaoCV • <span
-                    data-i18n="footer.project">Un projet de <a href="https://3wlabz.com" target="_blank"
-                        style="color:white; text-decoration:none; font-weight:500;">3W Capital</a></span></p>
+            <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.85rem;">© 2026 CiaoCV</p>
             <p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.85rem;" data-i18n="footer.proudly">Fièrement humain
                 ❤️</p>
         </div>
     </footer>
 
-    <script src="../assets/js/i18n.js"></script>
+    <script src="assets/js/i18n.js?v=<?= defined('ASSET_VERSION') ? ASSET_VERSION : '1.2' ?>"></script>
     <script>
         function toggleMenu() {
             const menu = document.getElementById('mobileMenu');

@@ -388,7 +388,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_job_email'])) {
                 <div class="desc"><?= nl2br(htmlspecialchars($job['description'])) ?></div>
             <?php endif; ?>
             <?php if (!empty($job['questions'])): ?>
-                <div class="questions-title">Questions d'entrevue :</div>
+                <div class="questions-title">Questions d'entrevue de présélection :</div>
                 <ol class="questions-list">
                     <?php foreach ($job['questions'] as $q): ?>
                         <li><?= htmlspecialchars($q['question_text']) ?></li>

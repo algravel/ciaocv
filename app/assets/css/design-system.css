@@ -16,6 +16,7 @@
   --card-bg: #FFFFFF;
 
   --text: #0F172A;
+  --text-white: #0F172A; /* même usage que www (logo "cv") */
   --text-secondary: #64748B;
   --text-muted: #94A3B8;
 

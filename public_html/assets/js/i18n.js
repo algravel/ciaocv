@@ -1,25 +1,25 @@
 const translations = {
     fr: {
         "nav.service": "Notre service",
-        "nav.guide": "Préparez votre entrevue",
+        "nav.guide": "Préparez votre entrevue de présélection",
         "nav.recruiter": "Espace Recruteur",
         "nav.candidate": "Espace Candidat",
 
-        "hero.title": "L'entrevue vidéo <br><span class=\"highlight\">simplifiée</span> pour tous.",
-        "hero.subtitle": "Gagnez du temps sur vos recrutements. Invitez les candidats, recevez leurs réponses vidéo, et choisissez les meilleurs talents en quelques minutes.",
+        "hero.title": "L'entrevue vidéo de présélection <br><span class=\"highlight\">simplifiée</span> pour tous.",
+        "hero.subtitle": "Gagnez du temps sur vos recrutements. Invitez les candidats à des entrevues de présélection en vidéo, recevez leurs réponses, et choisissez les meilleurs talents en quelques minutes.",
         "hero.cta.start": "Commencer maintenant",
         "hero.cta.demo": "Voir la démo",
         "hero.trust": "+2000 recruteurs nous font confiance",
 
         "stats.faster": "Plus rapide",
         "stats.matches": "Meilleurs matchs",
-        "stats.video": "Pré-qualification",
+        "stats.video": "Entrevues de présélection",
 
         "benefits.title": "Pourquoi passer à la vidéo ?",
         "benefits.subtitle": "Une méthode moderne pour des recrutements plus humains et efficaces.",
 
-        "benefit.1.title": "Pré-entrevue Vidéo",
-        "benefit.1.text": "Définissez 3 questions clés. Les candidats y répondent en vidéo, vous permettant de juger l'aisance et le fit culturel immédiatement.",
+        "benefit.1.title": "Entrevue de présélection en vidéo",
+        "benefit.1.text": "Définissez 3 questions clés. Les candidats y répondent en vidéo dans le cadre d'une entrevue de présélection, vous permettant de juger l'aisance et le fit culturel immédiatement.",
 
         "benefit.2.title": "Gain de Temps",
         "benefit.2.text": "Plus besoin d'appeler 50 candidats. Visionnez les réponses à votre rythme et ne convoquez que les profils qui vous ont convaincu.",
@@ -38,13 +38,12 @@ const translations = {
         "card.3.text": "Suivez vos KPIs et optimisez votre processus.",
 
         "footer.service": "Notre service",
-        "footer.guide": "Préparez votre entrevue",
+        "footer.guide": "Préparez votre entrevue de présélection",
         "footer.legal": "Légal",
         "footer.privacy": "Politique de confidentialité",
         "footer.terms": "Conditions d’utilisation",
         "footer.contact": "Contact",
         "footer.rights": "Tous droits réservés.",
-        "footer.project": 'Un projet de <a href="https://3wlabz.com" target="_blank" style="color:white; text-decoration:none; font-weight:500;">3W Capital</a>',
         "footer.proudly": "Fièrement humain ❤️",
 
         "pricing.title": "Investissez dans l'humain.",
@@ -109,10 +108,10 @@ const translations = {
         "faq.q1": "Puis-je annuler à tout moment ?",
         "faq.a1": "Oui, l'offre Pro est sans engagement. Vous pouvez arrêter votre abonnement en un clic depuis votre espace. Aucun frais caché.",
         "faq.q2": "Qu'est-ce qu'une candidature vidéo ?",
-        "faq.a2": "C'est une réponse enregistrée par le candidat via sa webcam ou son téléphone. Vous définissez les questions, ils répondent quand ils veulent. Vous gagnez un temps précieux en évitant les premiers appels téléphoniques.",
+        "faq.a2": "C'est une réponse enregistrée par le candidat dans le cadre d'une entrevue de présélection en vidéo (webcam ou téléphone). Vous définissez les questions, ils répondent quand ils veulent. Vous gagnez un temps précieux en évitant les premiers appels téléphoniques.",
 
-        "guide.title": "Maîtrisez votre <br><span style=\"color:var(--primary)\">entrevue vidéo</span>.",
-        "guide.subtitle": "L'entrevue vidéo différée est votre chance de briller sans le stress du direct. Voici 6 conseils pour réussir votre présentation.",
+        "guide.title": "Maîtrisez votre <br><span style=\"color:var(--primary)\">entrevue vidéo de présélection</span>.",
+        "guide.subtitle": "L'entrevue vidéo de présélection différée est votre chance de briller sans le stress du direct. Voici 6 conseils pour réussir votre présentation.",
         "guide.tip1.title": "Soignez l'éclairage",
         "guide.tip1.text": "La lumière doit venir de face (face à une fenêtre est idéal). Évitez le contre-jour qui rend votre visage sombre.",
         "guide.tip2.title": "Vérifiez le son",
@@ -136,9 +135,9 @@ const translations = {
         "guide.cta.btn": "Tester ma configuration",
 
         "jobs.title": "Espace Candidat",
-        "jobs.subtitle": "Gérez vos entrevues vidéo et votre profil.",
-        "jobs.invite.title": "Vous avez été invité à une entrevue ?",
-        "jobs.invite.text": "Connectez-vous pour enregistrer vos réponses vidéo ou compléter votre profil.",
+        "jobs.subtitle": "Gérez vos entrevues vidéo de présélection et votre profil.",
+        "jobs.invite.title": "Vous avez été invité à une entrevue de présélection ?",
+        "jobs.invite.text": "Connectez-vous pour enregistrer vos réponses vidéo de présélection ou compléter votre profil.",
         "jobs.invite.login": "Se connecter",
         "jobs.invite.signup": "Créer un compte",
 
@@ -148,7 +147,7 @@ const translations = {
         "nav.space": "Espace Candidats",
 
         "login.hero.title": "Content de vous <br><span class=\"highlight\">revoir !</span>",
-        "login.hero.subtitle": "Accédez à votre espace pour gérer vos entrevues vidéo et vos candidatures en toute simplicité.",
+        "login.hero.subtitle": "Accédez à votre espace pour gérer vos entrevues vidéo de présélection et vos candidatures en toute simplicité.",
         "login.hero.usp.fast": "Rapide",
         "login.hero.usp.secure": "Sécurisé",
         "login.hero.usp.human": "Humain",
@@ -166,25 +165,25 @@ const translations = {
     },
     en: {
         "nav.service": "Our Service",
-        "nav.guide": "Prepare your interview",
+        "nav.guide": "Prepare your pre-selection interview",
         "nav.recruiter": "Recruiter Login",
         "nav.candidate": "Candidate Login",
 
-        "hero.title": "Video interviewing <br><span class=\"highlight\">made simple</span> for everyone.",
-        "hero.subtitle": "Save time on recruiting. Invite candidates, receive their video responses, and choose the best talent in minutes.",
+        "hero.title": "Pre-selection video interviewing <br><span class=\"highlight\">made simple</span> for everyone.",
+        "hero.subtitle": "Save time on recruiting. Invite candidates to pre-selection video interviews, receive their responses, and choose the best talent in minutes.",
         "hero.cta.start": "Start Now",
         "hero.cta.demo": "Watch Demo",
         "hero.trust": "+2000 recruiters trust us",
 
         "stats.faster": "Faster",
         "stats.matches": "Better Matches",
-        "stats.video": "Pre-qualification",
+        "stats.video": "Pre-selection interviews",
 
         "benefits.title": "Why switch to video?",
         "benefits.subtitle": "A modern method for more human and efficient recruitment.",
 
-        "benefit.1.title": "Video Pre-interview",
-        "benefit.1.text": "Define 3 key questions. Candidates answer in video, allowing you to judge fluency and cultural fit immediately.",
+        "benefit.1.title": "Pre-selection video interview",
+        "benefit.1.text": "Define 3 key questions. Candidates answer in video as part of a pre-selection interview, allowing you to judge fluency and cultural fit immediately.",
 
         "benefit.2.title": "Time Saving",
         "benefit.2.text": "No need to call 50 candidates. Watch responses at your own pace and only invite profiles that convinced you.",
@@ -203,13 +202,12 @@ const translations = {
         "card.3.text": "Track your KPIs and optimize your process.",
 
         "footer.service": "Our Service",
-        "footer.guide": "Prepare your interview",
+        "footer.guide": "Prepare your pre-selection interview",
         "footer.legal": "Legal",
         "footer.privacy": "Privacy Policy",
         "footer.terms": "Terms of Use",
         "footer.contact": "Contact",
         "footer.rights": "All rights reserved.",
-        "footer.project": 'A project by <a href="https://3wlabz.com" target="_blank" style="color:white; text-decoration:none; font-weight:500;">3W Capital</a>',
         "footer.proudly": "Proudly human ❤️",
 
         "pricing.title": "Invest in people.",
@@ -274,10 +272,10 @@ const translations = {
         "faq.q1": "Can I cancel anytime?",
         "faq.a1": "Yes, the Pro plan is no-commitment. You can stop your subscription in one click from your account. No hidden fees.",
         "faq.q2": "What is a video application?",
-        "faq.a2": "It's a response recorded by the candidate via webcam or phone. You define the questions, they answer when they want. You save precious time by avoiding initial phone screenings.",
+        "faq.a2": "It's a response recorded by the candidate as part of a pre-selection video interview (webcam or phone). You define the questions, they answer when they want. You save precious time by avoiding initial phone screenings.",
 
-        "guide.title": "Master your <br><span style=\"color:var(--primary)\">video interview</span>.",
-        "guide.subtitle": "The delayed video interview is your chance to shine without the stress of live interaction. Here are 6 tips to succeed in your presentation.",
+        "guide.title": "Master your <br><span style=\"color:var(--primary)\">pre-selection video interview</span>.",
+        "guide.subtitle": "The delayed pre-selection video interview is your chance to shine without the stress of live interaction. Here are 6 tips to succeed in your presentation.",
         "guide.tip1.title": "Care for lighting",
         "guide.tip1.text": "Light should come from the front (facing a window is ideal). Avoid backlighting which makes your face dark.",
         "guide.tip2.title": "Check the sound",
@@ -301,9 +299,9 @@ const translations = {
         "guide.cta.btn": "Test my setup",
 
         "jobs.title": "Candidate Space",
-        "jobs.subtitle": "Manage your video interviews and your profile.",
-        "jobs.invite.title": "Have you been invited to an interview?",
-        "jobs.invite.text": "Log in to record your video responses or complete your profile.",
+        "jobs.subtitle": "Manage your pre-selection video interviews and your profile.",
+        "jobs.invite.title": "Have you been invited to a pre-selection interview?",
+        "jobs.invite.text": "Log in to record your pre-selection video responses or complete your profile.",
         "jobs.invite.login": "Log In",
         "jobs.invite.signup": "Create Account",
 
@@ -313,7 +311,7 @@ const translations = {
         "nav.space": "Candidate Space",
 
         "login.hero.title": "Good to see you <br><span class=\"highlight\">again!</span>",
-        "login.hero.subtitle": "Access your space to manage your video interviews and applications with ease.",
+        "login.hero.subtitle": "Access your space to manage your pre-selection video interviews and applications with ease.",
         "login.hero.usp.fast": "Fast",
         "login.hero.usp.secure": "Secure",
         "login.hero.usp.human": "Human",
