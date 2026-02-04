@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
     <div class="app-container">
@@ -17,8 +19,12 @@
                 <div class="logo-icon"><i class="fa-solid fa-code-branch"></i></div>
                 <span>CiaoCV</span>
             </div>
-            
+
             <nav class="nav-links">
+                <a href="index.html" class="nav-item">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Templates</span>
+                </a>
                 <a href="#" class="nav-item active">
                     <i class="fa-solid fa-grid-2"></i>
                     <span>Dashboard</span>
@@ -55,10 +61,12 @@
                     <button class="icon-btn"><i class="fa-solid fa-gear"></i></button>
                     <button class="icon-btn">
                         <i class="fa-regular fa-bell"></i>
-                        <span style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: red; border-radius: 50%;"></span>
+                        <span
+                            style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: red; border-radius: 50%;"></span>
                     </button>
                     <div class="user-profile">
-                        <img src="https://ui-avatars.com/api/?name=Jane+Doe&background=random" alt="User" class="avatar">
+                        <img src="https://ui-avatars.com/api/?name=Jane+Doe&background=random" alt="User"
+                            class="avatar">
                         <i class="fa-solid fa-caret-down" style="font-size: 0.75rem; color: var(--text-secondary);"></i>
                     </div>
                 </div>
@@ -69,14 +77,18 @@
                 <div class="page-header">
                     <div>
                         <h1 class="page-title">Recruitment Overview</h1>
-                        <div style="margin-top: 1rem; border-bottom: 2px solid var(--border-color); display: inline-flex; width: 100%;">
-                            <a href="#" style="padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary-color); color: var(--primary-color); font-weight: 500;">Dashboard</a>
+                        <div
+                            style="margin-top: 1rem; border-bottom: 2px solid var(--border-color); display: inline-flex; width: 100%;">
+                            <a href="#"
+                                style="padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary-color); color: var(--primary-color); font-weight: 500;">Dashboard</a>
                             <a href="#" style="padding: 0.5rem 1rem; color: var(--text-secondary);">Jobs</a>
-                            <a href="candidates.html" style="padding: 0.5rem 1rem; color: var(--text-secondary);">Candidates</a>
+                            <a href="candidates.html"
+                                style="padding: 0.5rem 1rem; color: var(--text-secondary);">Candidates</a>
                             <a href="#" style="padding: 0.5rem 1rem; color: var(--text-secondary);">Analytics</a>
                         </div>
                     </div>
-                    <button style="background-color: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer;">
+                    <button
+                        style="background-color: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer;">
                         Get full chart
                     </button>
                 </div>
@@ -86,7 +98,8 @@
                     <div class="card">
                         <div class="card-header">
                             <h2 class="card-title">Hires by Department (Q2)</h2>
-                            <button style="border: 1px solid var(--border-color); background: white; padding: 0.25rem 0.5rem; border-radius: 0.375rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <button
+                                style="border: 1px solid var(--border-color); background: white; padding: 0.25rem 0.5rem; border-radius: 0.375rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                                 All months <i class="fa-solid fa-chevron-down"></i>
                             </button>
                         </div>
@@ -106,10 +119,14 @@
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <div class="pie-chart"></div>
                             <div class="chart-legend">
-                                <div class="legend-item"><span class="dot" style="background: var(--primary-color)"></span> LinkedIn</div>
-                                <div class="legend-item"><span class="dot" style="background: #60A5FA"></span> Career Page</div>
-                                <div class="legend-item"><span class="dot" style="background: #93C5FD"></span> Referral</div>
-                                <div class="legend-item"><span class="dot" style="background: #BFDBFE"></span> Agency</div>
+                                <div class="legend-item"><span class="dot"
+                                        style="background: var(--primary-color)"></span> LinkedIn</div>
+                                <div class="legend-item"><span class="dot" style="background: #60A5FA"></span> Career
+                                    Page</div>
+                                <div class="legend-item"><span class="dot" style="background: #93C5FD"></span> Referral
+                                </div>
+                                <div class="legend-item"><span class="dot" style="background: #BFDBFE"></span> Agency
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -134,13 +151,17 @@
                         <div class="card-header">
                             <h2 class="card-title">Applications Received</h2>
                         </div>
-                        <div style="height: 200px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #EFF6FF 100%); position: relative; border-bottom: 1px solid #E5E7EB;">
+                        <div
+                            style="height: 200px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #EFF6FF 100%); position: relative; border-bottom: 1px solid #E5E7EB;">
                             <!-- Simple SVG Line Chart Mockup -->
                             <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none">
-                                <path d="M0,150 L80,100 L160,120 L240,80 L320,110 L400,50" stroke="var(--primary-color)" stroke-width="3" fill="none" />
-                                <path d="M0,150 L80,100 L160,120 L240,80 L320,110 L400,50 L400,200 L0,200 Z" fill="rgba(37, 99, 235, 0.1)" />
+                                <path d="M0,150 L80,100 L160,120 L240,80 L320,110 L400,50" stroke="var(--primary-color)"
+                                    stroke-width="3" fill="none" />
+                                <path d="M0,150 L80,100 L160,120 L240,80 L320,110 L400,50 L400,200 L0,200 Z"
+                                    fill="rgba(37, 99, 235, 0.1)" />
                             </svg>
-                            <div style="position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 1rem; font-size: 0.75rem; color: var(--text-secondary);">
+                            <div
+                                style="position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 1rem; font-size: 0.75rem; color: var(--text-secondary);">
                                 <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
                             </div>
                         </div>
@@ -151,4 +172,5 @@
     </div>
 
 </body>
+
 </html>
