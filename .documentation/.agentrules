@@ -1,0 +1,5 @@
+
+# Browser Verification
+- When verifying changes, ALWAYS verify in the browser automatically using the browser tool. 
+- Do NOT ask the user for confirmation to perform browser verification actions. 
+- Do NOT ask the user to manually verify in their own browser.

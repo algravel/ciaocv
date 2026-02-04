@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide Candidat - Réussir votre entrevue vidéo | CiaoCV</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1.2">
+    <style>
+        /* Specific Styles for Guide Page */
+        .guide-hero {
+            text-align: center;
+            padding: 8rem 5% 4rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .guide-hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: var(--text-white);
+            letter-spacing: -0.02em;
+        }
+
+        .guide-hero p {
+            font-size: 1.25rem;
+            color: var(--text-gray);
+            line-height: 1.8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto 5rem;
+            padding: 0 5%;
+        }
+
+        .tip-card {
+            background: white;
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .tip-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .tip-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--bg-alt);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            border: 1px solid var(--border-dark);
+        }
+
+        .tip-content h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-white);
+        }
+
+        .tip-content p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .checklist-section {
+            background: var(--primary);
+            color: white;
+            padding: 5rem 5%;
+            margin-bottom: 5rem;
+        }
+
+        .checklist-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .checklist-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .checklist-items {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .check-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: 500;
+        }
+
+        .check-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: white;
+            cursor: pointer;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 0 5% 6rem;
+        }
+
+        .cta-box {
+            background: var(--bg-alt);
+            border: 2px solid var(--border-dark);
+            border-radius: var(--radius-xl);
+            padding: 3rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .guide-hero h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="navbar">
+        <a href="index.html" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
+
+        <nav class="nav-links">
+            <a href="tarifs.html" data-i18n="nav.service">Notre service</a>
+            <a href="guide-candidat.html" style="color:var(--primary); font-weight:700;" data-i18n="nav.guide">Préparez
+                votre entrevue</a>
+        </nav>
+
+        <div class="nav-actions">
+            <!-- Language Toggle -->
+            <a href="#" id="langToggle"
+                style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
+
+            <!-- Dual Login Strategy -->
+            <a href="onboarding/signup.php" class="btn-header-secondary" data-i18n="nav.recruiter">
+                Espace Recruteur
+            </a>
+            <a href="onboarding/register-candidate.php" class="btn-header-primary" data-i18n="nav.candidate">
+                Espace Candidat
+            </a>
+
+            <button class="hamburger" aria-label="Menu" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%; display:flex;"
+            onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <a href="tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
+        <a href="guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
+        <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
+            <a href="onboarding/register-candidate.php" class="btn-header-primary"
+                style="font-size:1.1rem; padding:1rem;" data-i18n="nav.candidate">Espace Candidat</a>
+            <a href="onboarding/signup.php" class="btn-header-secondary"
+                style="font-size:1.1rem; padding:1rem; color:var(--text-gray);" data-i18n="nav.recruiter">Espace
+                Recruteur</a>
+        </div>
+    </div>
+
+    <div class="guide-hero">
+        <h1 data-i18n="guide.title">Maîtrisez votre <br><span style="color:var(--primary)">entrevue vidéo</span>.</h1>
+        <p data-i18n="guide.subtitle">L'entrevue vidéo différée est votre chance de briller sans le stress du direct.
+            Voici 6 conseils pour réussir
+            votre présentation.</p>
+    </div>
+
+    <!-- TIPS GRID -->
+    <section class="tips-grid">
+        <!-- 1. Lumière -->
+        <div class="tip-card">
+            <div class="tip-icon">💡</div>
+            <div class="tip-content">
+                <h3 data-i18n="guide.tip1.title">Soignez l'éclairage</h3>
+                <p data-i18n="guide.tip1.text">La lumière doit venir de face (face à une fenêtre est idéal). Évitez le
+                    contre-jour qui rend votre
+                    visage sombre.</p>
+            </div>
+        </div>
+
+        <!-- 2. Son -->
+        <div class="tip-card">
+            <div class="tip-icon">🎙️</div>
+            <div class="tip-content">
+                <h3 data-i18n="guide.tip2.title">Vérifiez le son</h3>
+                <p data-i18n="guide.tip2.text">Trouvez un endroit calme. Utilisez des écouteurs avec micro pour une
+                    clarté optimale et éviter
+                    l'écho.</p>
+            </div>
+        </div>
+
+        <!-- 3. Décor -->
+        <div class="tip-card">
+            <div class="tip-icon">🖼️</div>
+            <div class="tip-content">
+                <h3 data-i18n="guide.tip3.title">Cadrez votre décor</h3>
+                <p data-i18n="guide.tip3.text">Optez pour un fond neutre et rangé. Évitez les distractions visuelles
+                    derrière vous.</p>
+            </div>
+        </div>
+
+        <!-- 4. Regard -->
+        <div class="tip-card">
+            <div class="tip-icon">👀</div>
+            <div class="tip-content">
+                <h3 data-i18n="guide.tip4.title">Regardez la caméra</h3>
+                <p data-i18n="guide.tip4.text">Pour donner l'impression de regarder le recruteur dans les yeux, regardez
+                    la lentille, pas votre
+                    écran.</p>
+            </div>
+        </div>
+
+        <!-- 5. Tenue -->
+        <div class="tip-card">
+            <div class="tip-icon">👔</div>
+            <div class="tip-content">
+                <h3 data-i18n="guide.tip5.title">Habillez-vous pro</h3>
+                <p data-i18n="guide.tip5.text">Même à distance, la première impression compte. Adoptez une tenue
+                    professionnelle, comme pour un
+                    entretien physique.</p>
+            </div>
+        </div>
+
+        <!-- 6. Pitch -->
+        <div class="tip-card">
+            <div class="tip-icon">⏱️</div>
+            <div class="tip-content">
+                <h3 data-i18n="guide.tip6.title">Soyez concis</h3>
+                <p data-i18n="guide.tip6.text">Structurez vos réponses. Une réponse claire et directe de 60 secondes
+                    vaut mieux qu'un long discours
+                    flou.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHECKLIST -->
+    <section class="checklist-section">
+        <div class="checklist-wrapper">
+            <h2 class="checklist-title" data-i18n="guide.checklist.title">Checklist avant de démarrer</h2>
+            <div class="checklist-items">
+                <label class="check-item">
+                    <input type="checkbox"> <span data-i18n="guide.checklist.item1">Mon téléphone ou ordinateur est
+                        chargé à 100%</span>
+                </label>
+                <label class="check-item">
+                    <input type="checkbox"> <span data-i18n="guide.checklist.item2">J'ai mis mon téléphone en mode "Ne
+                        pas déranger"</span>
+                </label>
+                <label class="check-item">
+                    <input type="checkbox"> <span data-i18n="guide.checklist.item3">J'ai un verre d'eau à portée de
+                        main</span>
+                </label>
+                <label class="check-item">
+                    <input type="checkbox"> <span data-i18n="guide.checklist.item4">J'ai testé ma connexion
+                        internet</span>
+                </label>
+                <label class="check-item">
+                    <input type="checkbox"> <span data-i18n="guide.checklist.item5">Je suis seul(e) et au calme pour les
+                        15 prochaines minutes</span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA TEST -->
+    <section class="cta-section">
+        <div class="cta-box">
+            <h2 style="font-size:2rem; font-weight:700; margin-bottom:1rem; color:var(--text-white);"
+                data-i18n="guide.cta.title">Prêt à essayer ?
+            </h2>
+            <p style="color:var(--text-gray); margin-bottom:2rem;" data-i18n="guide.cta.text">Vérifiez que tout
+                fonctionne techniquement avant de
+                lancer votre première candidature.</p>
+            <a href="onboarding/test-config.php" class="btn-primary" style="padding:1rem 2.5rem; font-size:1.1rem;"
+                data-i18n="guide.cta.btn">
+                Tester ma configuration</a>
+        </div>
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-links">
+                <h4>CIAOCV</h4>
+                <ul>
+                    <li><a href="tarifs.html" data-i18n="footer.service">Notre Service</a></li>
+                    <li><a href="guide-candidat.html" data-i18n="footer.guide">Préparez votre entrevue</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4 data-i18n="footer.legal">Légal</h4>
+                <ul>
+                    <li><a href="#" data-i18n="footer.privacy">Politique de confidentialité</a></li>
+                    <li><a href="#" data-i18n="footer.terms">Conditions d’utilisation</a></li>
+                    <li><a href="#">EFVP</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4 data-i18n="footer.contact">Contact</h4>
+                <ul>
+                    <li><a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>
+                © 2026 CiaoCV
+                <span style="margin: 0 10px; opacity: 0.4;">•</span>
+                <span data-i18n="footer.project">Un projet de <a href="https://3wlabz.com" target="_blank"
+                        style="color:white; text-decoration:none; font-weight:500;">3W Capital</a></span>
+            </p>
+            <p style="margin-top: 0.5rem; opacity: 0.8;" data-i18n="footer.proudly">
+                Fièrement humain ❤️
+            </p>
+        </div>
+    </footer>
+
+    </footer>
+
+    <script>
+        // Hamburger Menu
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const hamburger = document.querySelector('.hamburger');
+
+            // Toggle active class on menu
+            if (menu.classList.contains('active')) {
+                menu.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            } else {
+                menu.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            // Sync all hamburger buttons
+            document.querySelectorAll('.hamburger').forEach(btn => {
+                btn.classList.toggle('active');
+            });
+        }
+    </script>
+    <script src="assets/js/i18n.js"></script>
+</body>
+
+</html>

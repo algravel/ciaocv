@@ -450,38 +450,45 @@
 
     <!-- HEADER -->
     <header class="navbar">
-        <a href="index.html" class="logo">CiaoCV</a>
+        <a href="index.html" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
         <nav class="nav-links">
-            <a href="index.html#features">Solution RH</a>
-            <a href="index.html#comment">Comment ça marche</a>
-            <a href="tarifs.html">Tarifs</a>
-            <a href="emplois.html" class="active">Espace Candidats</a>
+            <a href="index.html#features" data-i18n="nav.brand">Solution RH</a>
+            <a href="index.html#comment" data-i18n="nav.how">Comment ça marche</a>
+            <a href="tarifs.html" data-i18n="nav.pricing">Tarifs</a>
+            <a href="emplois.html" class="active" data-i18n="nav.space">Espace Candidats</a>
         </nav>
         <div class="nav-actions">
+            <!-- Language Toggle -->
+            <a href="#" id="langToggle"
+                style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
+
             <button class="btn-theme-toggle" id="themeToggle" title="Changer de thème" aria-label="Changer de thème">
                 <!-- Icon will be injected by JS -->
             </button>
-            <a href="https://app.ciaocv.com" class="btn-login">Connexion</a>
+            <a href="https://app.ciaocv.com" class="btn-login" data-i18n="nav.candidate">Connexion</a>
         </div>
     </header>
 
     <div class="search-page-header">
-        <h1>Espace Candidat</h1>
-        <p>Gérez vos entrevues vidéo et votre profil.</p>
+        <h1 data-i18n="jobs.title">Espace Candidat</h1>
+        <p data-i18n="jobs.subtitle">Gérez vos entrevues vidéo et votre profil.</p>
     </div>
 
     <section class="search-section" style="text-align: center; min-height: 40vh;">
         <div
             style="background: var(--glass); padding: 3rem; border-radius: 20px; max-width: 600px; margin: 0 auto; border: 1px solid var(--glass-border);">
-            <h3>Vous avez été invité à une entrevue ?</h3>
-            <p style="margin: 1rem 0 2rem; color: var(--text-gray);">Connectez-vous pour enregistrer vos réponses vidéo
+            <h3 data-i18n="jobs.invite.title">Vous avez été invité à une entrevue ?</h3>
+            <p style="margin: 1rem 0 2rem; color: var(--text-gray);" data-i18n="jobs.invite.text">Connectez-vous pour
+                enregistrer vos réponses vidéo
                 ou compléter votre profil.</p>
 
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="https://app.ciaocv.com/login" class="btn-search-hero" style="text-decoration: none;">Se
+                <a href="https://app.ciaocv.com/login" class="btn-search-hero" style="text-decoration: none;"
+                    data-i18n="jobs.invite.login">Se
                     connecter</a>
                 <a href="https://app.ciaocv.com/signup" class="btn-search-hero"
-                    style="background: transparent; border: 1px solid var(--glass-border);">Créer un compte</a>
+                    style="background: transparent; border: 1px solid var(--glass-border);"
+                    data-i18n="jobs.invite.signup">Créer un compte</a>
             </div>
         </div>
     </section>
@@ -490,42 +497,41 @@
     <footer>
         <div class="footer-inner">
             <div class="footer-links">
-                <h4>Entreprise</h4>
+                <h4>CIAOCV</h4>
                 <ul>
-                    <li><a href="index.html#publier">Publier un poste</a></li>
-                    <li><a href="tarifs.html">Tarifs</a></li>
-                    <li><a href="#">Packs d'entreprise</a></li>
-                    <li><a href="index.html#comment">Comment ça marche</a></li>
+                    <li><a href="tarifs.html" data-i18n="footer.service">Notre Service</a></li>
+                    <li><a href="guide-candidat.html" data-i18n="footer.guide">Préparez votre entrevue</a></li>
                 </ul>
             </div>
             <div class="footer-links">
-                <h4>Candidat</h4>
+                <h4 data-i18n="footer.legal">Légal</h4>
                 <ul>
-                    <li><a href="#">Conditions d’utilisation</a></li>
-                    <li><a href="#">Confidentialité</a></li>
+                    <li><a href="#" data-i18n="footer.privacy">Politique de confidentialité</a></li>
+                    <li><a href="#" data-i18n="footer.terms">Conditions d’utilisation</a></li>
+                    <li><a href="#">EFVP</a></li>
                 </ul>
             </div>
             <div class="footer-links">
-                <h4>Candidat</h4>
+                <h4 data-i18n="footer.contact">Contact</h4>
                 <ul>
-                    <li><a href="emplois.html">Trouver un emploi</a></li>
-                    <li><a href="#">Opportunités</a></li>
-                    <li><a href="#">Conseils</a></li>
-                    <li><a href="index.html#comment">Comment ça marche</a></li>
+                    <li><a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a></li>
                 </ul>
             </div>
         </div>
-        <div class="footer-bottom">
-            <p>© 3.0.24 CiaoCV</p>
-            <div class="footer-legal">
-                <a href="#">A propos</a>
-                <a href="#">Contact</a>
-                <a href="#">Conditions</a>
-                <a href="#">Confidentialité</a>
-            </div>
+        <div class="footer-bottom" style="display:block; text-align:center;">
+            <p>
+                © 2026 CiaoCV
+                <span style="margin: 0 10px; opacity: 0.4;">•</span>
+                <span data-i18n="footer.project">Un projet de <a href="https://3wlabz.com" target="_blank"
+                        style="color:white; text-decoration:none; font-weight:500;">3W Capital</a></span>
+            </p>
+            <p style="margin-top: 0.5rem; opacity: 0.8;" data-i18n="footer.proudly">
+                Fièrement humain ❤️
+            </p>
         </div>
     </footer>
 
+    <script src="assets/js/i18n.js"></script>
     <script>
         // THEME TOGGLE
         const themeToggle = document.getElementById('themeToggle');

@@ -4,390 +4,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarifs - CiaoCV</title>
+    <title>Notre Service - CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <!-- Correct Link to Shared CSS -->
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1.2">
     <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --accent-violet: #A78BFA;
-            --text-white: #FFFFFF;
-            --text-gray: #94A3B8;
-            --bg-dark: #0a0f1a;
-            --bg-card: rgba(30, 41, 59, 0.6);
-            --glass: rgba(30, 41, 59, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --radius-lg: 28px;
-            --radius-xl: 36px;
-            --border-dark: #334155;
-            --bg-gradient: radial-gradient(ellipse 80% 50% at 70% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 40% at 20% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 0%, rgba(15, 23, 42, 0.95) 0%, #0a0f1a 60%);
-        }
-
-        [data-theme="light"] {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --accent-violet: #8b5cf6;
-            --text-white: #0f172a;
-            --text-gray: #475569;
-            --bg-dark: #f8fafc;
-            --bg-card: rgba(255, 255, 255, 0.8);
-            --glass: rgba(255, 255, 255, 0.6);
-            --glass-border: rgba(0, 0, 0, 0.1);
-            --border-dark: #e2e8f0;
-            --bg-gradient: radial-gradient(circle at 50% 0%, #e0f2fe 0%, #f8fafc 100%);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg-dark);
-            background-image: var(--bg-gradient);
-            color: var(--text-white);
-            line-height: 1.5;
-            min-height: 100vh;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 5%;
-        }
-
-        /* ========== HEADER ========== */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.25rem 5%;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            text-decoration: none;
-            letter-spacing: -0.025em;
-        }
-
-        @media (min-width: 640px) {
-            .logo {
-                font-size: 2rem;
-            }
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-white);
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-            position: relative;
-        }
-
-        .nav-links a:hover,
-        .nav-links a.active {
-            color: var(--primary);
-        }
-
-        .nav-links a.active::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--primary);
-            border-radius: 1px;
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .btn-login {
-            background: linear-gradient(135deg, #1e3a5f, #2563eb);
-            color: var(--text-white);
-            padding: 0.65rem 1.5rem;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s;
-        }
-
-        .btn-login:hover {
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            opacity: 0.95;
-        }
-
-        /* ========== HERO TARIFS ========== */
-        .tarifs-hero {
+        /* Specific Styles for Pricing Page */
+        .pricing-hero {
             text-align: center;
-            padding: 6rem 5% 4rem;
+            padding: 6rem 5% 3rem;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
-        .tarifs-hero h1 {
+        .pricing-hero h1 {
             font-size: 3rem;
             font-weight: 800;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-white);
+            letter-spacing: -0.02em;
         }
 
-        .tarifs-hero p {
-            font-size: 1.1rem;
+        .pricing-hero p {
+            font-size: 1.25rem;
             color: var(--text-gray);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* ========== TARIFS GRID ========== */
-        .pricing-section {
-            padding: 2rem 5% 6rem;
+            line-height: 1.8;
         }
 
         .pricing-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            max-width: 1100px;
-            margin: 0 auto 2rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto 6rem;
+            padding: 0 5%;
         }
 
         .pricing-card {
-            background: var(--glass);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
+            background: white;
+            border: 1px solid var(--border-dark);
             border-radius: var(--radius-lg);
-            padding: 2.5rem;
-            text-align: center;
-            transition: transform 0.2s;
+            padding: 2rem 1.5rem;
             display: flex;
             flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
         }
 
         .pricing-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(0, 212, 255, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
         }
 
-        .pricing-card h3 {
-            font-size: 1.5rem;
+        .pricing-card.featured {
+            border: 2px solid var(--primary);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1);
+            transform: scale(1.05);
+            /* Slight scale */
+            z-index: 2;
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .price-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .price-header h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
             margin-bottom: 0.5rem;
+            color: var(--text-white);
         }
 
-        .pricing-card .price {
-            font-size: 2.5rem;
+        .price-amount {
+            font-size: 2.25rem;
             font-weight: 800;
-            color: var(--primary);
-            margin: 1rem 0;
+            color: var(--text-white);
+            line-height: 1.2;
         }
 
-        .pricing-card .price-desc {
-            color: var(--text-gray);
+        .price-period {
             font-size: 0.9rem;
-            margin-bottom: 2rem;
-            min-height: 3rem;
+            color: var(--text-gray);
+            font-weight: 400;
         }
 
-        .pricing-features {
+        .price-desc {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .features-list {
+            flex: 1;
             list-style: none;
-            text-align: left;
-            margin-bottom: 2rem;
-            flex-grow: 1;
+            margin: 1.5rem 0;
+            padding: 0;
         }
 
-        .pricing-features li {
+        .features-list li {
+            position: relative;
+            padding-left: 1.5rem;
             margin-bottom: 0.8rem;
             color: var(--text-gray);
-            display: flex;
-            align-items: flex-start;
-            gap: 0.5rem;
+            font-size: 0.9rem;
         }
 
-        .pricing-features li::before {
-            content: '✓';
+        .features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
             color: var(--primary);
             font-weight: bold;
         }
 
-        .btn-outline {
+        .btn-price {
             display: block;
-            width: 100%;
-            padding: 0.8rem;
-            border-radius: 12px;
-            border: 1px solid var(--primary);
-            color: var(--primary);
+            text-align: center;
+            padding: 0.85rem;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
+            font-size: 0.95rem;
             transition: all 0.2s;
         }
 
-        .btn-outline:hover {
-            background: rgba(0, 212, 255, 0.15);
-        }
-
-        .pricing-card.featured {
-            background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-            border: 1px solid var(--primary);
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.15);
-            transform: scale(1.05);
-            z-index: 10;
-        }
-
-        .pricing-card.featured:hover {
-            transform: scale(1.05) translateY(-4px);
-        }
-
-        .btn-primary-full {
-            display: block;
-            width: 100%;
-            padding: 0.8rem;
-            border-radius: 12px;
+        .btn-price.primary {
             background: var(--primary);
-            color: #0a0f1a;
-            text-decoration: none;
-            font-weight: 700;
-            transition: opacity 0.2s;
+            color: white;
         }
 
-        .btn-primary-full:hover {
+        .btn-price.primary:hover {
             opacity: 0.9;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
 
-        /* ========== FOOTER ========== */
-        footer {
-            margin-top: 5rem;
-            padding: 3rem 5%;
-            border-top: 1px solid var(--glass-border);
-            background: rgba(10, 15, 26, 0.5);
-        }
-
-        .footer-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 3rem;
-            align-items: start;
-        }
-
-        .footer-links h4 {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-gray);
-            margin-bottom: 1rem;
-        }
-
-        .footer-links ul {
-            list-style: none;
-        }
-
-        .footer-links a {
-            color: var(--text-gray);
-            text-decoration: none;
-            font-size: 0.9rem;
-            display: block;
-            margin-bottom: 0.5rem;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: var(--primary);
-        }
-
-        .footer-bottom {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding-top: 2rem;
-            margin-top: 2rem;
-            border-top: 1px solid var(--glass-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .footer-bottom p {
-            color: var(--text-gray);
-            font-size: 0.85rem;
-        }
-
-        .footer-legal {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .footer-legal a {
-            color: var(--text-gray);
-            text-decoration: none;
-            font-size: 0.85rem;
-        }
-
-        .footer-legal a:hover {
-            color: var(--primary);
-        }
-
-        .btn-theme-toggle {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
+        .btn-price.outline {
+            background: transparent;
+            border: 1px solid var(--border-dark);
             color: var(--text-white);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1.2rem;
         }
 
-        .btn-theme-toggle:hover {
-            background: var(--glass-border);
-            transform: rotate(15deg);
+        .btn-price.outline:hover {
+            border-color: var(--text-white);
+            background: var(--bg-alt);
         }
 
-        @media (max-width: 900px) {
+        /* Comparison Table */
+        .comparison-section {
+            padding: 0 5% 6rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+
+        .feature-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 800px;
+        }
+
+        .feature-table th,
+        .feature-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-dark);
+        }
+
+        .feature-table th {
+            font-weight: 700;
+            color: var(--text-white);
+            width: 18%;
+            text-align: center;
+        }
+
+        .feature-table th:first-child {
+            width: 28%;
+            color: var(--text-gray);
+            text-align: left;
+        }
+
+        .feature-table td {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        .feature-table td:first-child {
+            text-align: left;
+        }
+
+        .check-icon {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .x-icon {
+            color: #cbd5e1;
+        }
+
+        @media (max-width: 1100px) {
+            .pricing-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 600px) {
             .pricing-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .pricing-card.featured {
-                transform: none;
-            }
-
-            .footer-inner {
-                grid-template-columns: 1fr;
-            }
-
-            .nav-links {
-                display: none;
             }
         }
     </style>
@@ -397,145 +238,299 @@
 
     <!-- HEADER -->
     <header class="navbar">
-        <a href="index.html" class="logo">CiaoCV</a>
+        <a href="index.html" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
+
         <nav class="nav-links">
-            <a href="index.html#features">Solution RH</a>
-            <a href="index.html#comment">Comment ça marche</a>
-            <a href="tarifs.html" class="active">Tarifs</a>
-            <a href="emplois.html" style="opacity:0.7; font-size: 0.9em;">Espace Candidats</a>
+            <a href="tarifs.html" style="color:var(--primary); font-weight:700;" data-i18n="nav.service">Notre
+                service</a>
+            <a href="guide-candidat.html" data-i18n="nav.guide">Préparez votre entrevue</a>
         </nav>
+
         <div class="nav-actions">
-            <button class="btn-theme-toggle" id="themeToggle" title="Changer de thème" aria-label="Changer de thème">
-                <!-- Icon will be injected by JS -->
+            <!-- Language Toggle -->
+            <a href="#" id="langToggle"
+                style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
+
+            <!-- Dual Login Strategy -->
+            <a href="onboarding/signup.php" class="btn-header-secondary" data-i18n="nav.recruiter">
+                Espace Recruteur
+            </a>
+            <a href="onboarding/register-candidate.php" class="btn-header-primary" data-i18n="nav.candidate">
+                Espace Candidat
+            </a>
+
+            <button class="hamburger" aria-label="Menu" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
             </button>
-            <a href="https://app.ciaocv.com" class="btn-login">Connexion</a>
         </div>
     </header>
 
-    <div class="tarifs-hero">
-        <h1>Nos offres</h1>
-        <p>Des solutions adaptées aux candidats et aux entreprises de toutes tailles.</p>
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%; display:flex;"
+            onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <a href="tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
+        <a href="guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
+        <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
+            <a href="onboarding/register-candidate.php" class="btn-header-primary"
+                style="font-size:1.1rem; padding:1rem;" data-i18n="nav.candidate">Espace Candidat</a>
+            <a href="onboarding/signup.php" class="btn-header-secondary"
+                style="font-size:1.1rem; padding:1rem; color:var(--text-gray);" data-i18n="nav.recruiter">Espace
+                Recruteur</a>
+        </div>
+    </div>
+
+    <div class="pricing-hero">
+        <h1 data-i18n="pricing.title">Investissez dans l'humain.</h1>
+        <p data-i18n="pricing.subtitle">Des tarifs simples et transparents pour moderniser votre processus de
+            recrutement. Commencez gratuitement,
+            évoluez selon vos besoins.</p>
     </div>
 
     <!-- TARIFS -->
+    <!-- TARIFS -->
     <section class="pricing-section">
         <div class="pricing-grid">
-            <!-- STARTER -->
+            <!-- GRATUIT -->
             <div class="pricing-card">
-                <h3>Starter</h3>
-                <div class="price">Gratuit</div>
-                <div class="price-desc">Idéal pour découvrir le recrutement vidéo</div>
-                <ul class="pricing-features">
-                    <li>Profil candidat complet</li>
-                    <li>1 vidéo de présentation (60s)</li>
-                    <li>Visibilité auprès des recruteurs</li>
-                    <li>Alertes emplois basiques</li>
+                <div class="price-header">
+                    <h3 data-i18n="pricing.card.free.title">Découverte</h3>
+                    <div class="price-amount" data-i18n="pricing.card.free.price">Gratuit</div>
+                    <div class="price-desc" data-i18n="pricing.card.free.desc">Pour essayer sans risque</div>
+                </div>
+                <ul class="features-list">
+                    <li data-i18n="pricing.card.free.feat.1">1 Affichage actif</li>
+                    <li data-i18n="pricing.card.free.feat.2">20 Candidats max</li>
+                    <li data-i18n="pricing.card.free.feat.3">Questions standards</li>
+                    <li data-i18n="pricing.card.free.feat.4">Page carrière basique</li>
                 </ul>
-                <a href="https://app.ciaocv.com" class="btn-outline">S'inscrire gratuitement</a>
+                <a href="onboarding/signup.php" class="btn-price outline" data-i18n="pricing.card.free.btn">Créer un
+                    compte</a>
+            </div>
+
+            <!-- UNITAIRE -->
+            <div class="pricing-card">
+                <div class="price-header">
+                    <h3 data-i18n="pricing.card.one.title">À la carte</h3>
+                    <div class="price-amount">79$</div>
+                    <div class="price-desc" data-i18n="pricing.card.one.desc">paiement unique</div>
+                </div>
+                <ul class="features-list">
+                    <li data-i18n="pricing.card.one.feat.1">1 Affichage de poste</li>
+                    <li data-i18n="pricing.card.one.feat.2">Accès 30 jours</li>
+                    <li data-i18n="pricing.card.one.feat.3">Candidats Illimités</li>
+                    <li data-i18n="pricing.card.one.feat.4">Questions personnalisées</li>
+                </ul>
+                <a href="onboarding/signup.php" class="btn-price outline" data-i18n="pricing.card.one.btn">Acheter un
+                    poste</a>
             </div>
 
             <!-- PRO -->
             <div class="pricing-card featured">
-                <h3>Pro</h3>
-                <div class="price">29€<span style="font-size:1rem;font-weight:400;color:var(--text-gray)">/mois</span>
+                <div class="pricing-badge">Populaire</div>
+                <div class="price-header">
+                    <h3 data-i18n="pricing.card.pro.title">Pro</h3>
+                    <div class="price-amount">99$ <span class="price-period"
+                            data-i18n="pricing.card.pro.period">/mois</span></div>
+                    <div class="price-desc" style="color:var(--primary); font-weight:600;"
+                        data-i18n="pricing.card.pro.desc.1">Facturé annuellement</div>
+                    <div class="price-desc" style="font-size:0.85rem;" data-i18n="pricing.card.pro.desc.2">ou 139$ si
+                        mensuel</div>
                 </div>
-                <div class="price-desc">Pour les recruteurs actifs et PME</div>
-                <ul class="pricing-features">
-                    <li>Publication d'offres illimitées</li>
-                    <li>Accès à la CVthèque vidéo</li>
-                    <li>Matching intelligent par IA</li>
-                    <li>Outils de tri avancés</li>
-                    <li>Support prioritaire</li>
+                <ul class="features-list">
+                    <li data-i18n="pricing.card.pro.feat.1">5 Affichages simultanés</li>
+                    <li data-i18n="pricing.card.pro.feat.2">40 Candidats /affichage</li>
+                    <li data-i18n="pricing.card.pro.feat.3">Outils collaboratifs</li>
+                    <li data-i18n="pricing.card.pro.feat.4">Marque employeur</li>
                 </ul>
-                <a href="#" class="btn-primary-full">Commencer l'essai</a>
+                <a href="onboarding/signup.php" class="btn-price primary" data-i18n="pricing.card.pro.btn">Démarrer
+                    maintenant</a>
             </div>
 
-            <!-- ELITE -->
+            <!-- EXPERT -->
             <div class="pricing-card">
-                <h3>Elite</h3>
-                <div class="price">Sur devis</div>
-                <div class="price-desc">Pour les grandes entreprises et agences</div>
-                <ul class="pricing-features">
-                    <li>Toutes les fonctionnalités Pro</li>
-                    <li>Accès API & Intégrations ATS</li>
-                    <li>Marque employeur personnalisée</li>
-                    <li>Account manager dédié</li>
-                    <li>Facturation centralisée</li>
+                <div class="price-header">
+                    <h3 data-i18n="pricing.card.expert.title">Expert</h3>
+                    <div class="price-amount">149$ <span class="price-period"
+                            data-i18n="pricing.card.expert.period">/mois</span></div>
+                    <div class="price-desc" style="color:var(--primary); font-weight:600;"
+                        data-i18n="pricing.card.expert.desc.1">Facturé annuellement</div>
+                    <div class="price-desc" style="font-size:0.85rem;" data-i18n="pricing.card.expert.desc.2">ou 199$ si
+                        mensuel</div>
+                </div>
+                <ul class="features-list">
+                    <li data-i18n="pricing.card.expert.feat.1">10 Affichages simultanés</li>
+                    <li data-i18n="pricing.card.expert.feat.2">60 Candidats /affichage</li>
+                    <li data-i18n="pricing.card.expert.feat.3">Support prioritaire</li>
+                    <li data-i18n="pricing.card.expert.feat.4">Accès API & Webhooks</li>
                 </ul>
-                <a href="#" class="btn-outline">Contacter l'équipe</a>
+                <a href="onboarding/signup.php" class="btn-price outline" data-i18n="pricing.card.expert.btn">Démarrer
+                    maintenant</a>
             </div>
         </div>
     </section>
+
+    <!-- COMPARISON TABLE -->
+    <section class="comparison-section">
+        <h2 style="text-align:center; font-size:2rem; font-weight:800; margin-bottom: 3rem; color:var(--text-white);"
+            data-i18n="compare.title">
+            Comparatif des fonctionnalités</h2>
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th data-i18n="compare.col.feature">Fonctionnalité</th>
+                    <th data-i18n="compare.col.free">Gratuit</th>
+                    <th data-i18n="compare.col.one">À la carte</th>
+                    <th data-i18n="compare.col.pro">Pro</th>
+                    <th data-i18n="compare.col.expert">Expert</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td data-i18n="compare.row.active">Affichages actifs</td>
+                    <td>1</td>
+                    <td data-i18n="compare.val.one_30">1 (30 jours)</td>
+                    <td>5</td>
+                    <td>10</td>
+                </tr>
+                <tr>
+                    <td data-i18n="compare.row.candidates">Candidats par affichage</td>
+                    <td>20</td>
+                    <td data-i18n="compare.val.unlimited">Illimité</td>
+                    <td>40</td>
+                    <td>60</td>
+                </tr>
+                <tr>
+                    <td data-i18n="compare.row.questions">Questions personnalisées</td>
+                    <td><span class="x-icon">—</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                </tr>
+                <tr>
+                    <td data-i18n="compare.row.invite">Inviter des collègues</td>
+                    <td><span class="x-icon">—</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                </tr>
+                <tr>
+                    <td data-i18n="compare.row.branding">Marque blanche</td>
+                    <td><span class="x-icon">—</span></td>
+                    <td><span class="x-icon">—</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                </tr>
+                <tr>
+                    <td data-i18n="compare.row.api">Accès API / ATS</td>
+                    <td><span class="x-icon">—</span></td>
+                    <td><span class="x-icon">—</span></td>
+                    <td><span class="x-icon">—</span></td>
+                    <td><span class="check-icon">✓</span></td>
+                </tr>
+                <tr>
+                    <td data-i18n="compare.row.support">Support</td>
+                    <td>Email</td>
+                    <td>Email</td>
+                    <td data-i18n="compare.val.chat">Chat & Email</td>
+                    <td data-i18n="compare.val.dedicated">Dédié (Téléphone)</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- FAQ Section -->
+    <section style="max-width:800px; margin:0 auto 6rem; padding:0 5%;">
+        <h2 style="text-align:center; margin-bottom:3rem; font-size:2rem; color:var(--text-white); font-weight:800;"
+            data-i18n="faq.title">
+            Questions Fréquentes</h2>
+        <div style="display:grid; gap:2rem;">
+            <div>
+                <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.5rem; color:var(--text-white);"
+                    data-i18n="faq.q1">Puis-je
+                    annuler à tout moment ?</h3>
+                <p style="color:var(--text-gray);" data-i18n="faq.a1">Oui, l'offre Pro est sans engagement. Vous pouvez
+                    arrêter votre
+                    abonnement en un clic depuis votre espace. Aucun frais caché.</p>
+            </div>
+            <div>
+                <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.5rem; color:var(--text-white);"
+                    data-i18n="faq.q2">Qu'est-ce
+                    qu'une candidature vidéo ?</h3>
+                <p style="color:var(--text-gray);" data-i18n="faq.a2">C'est une réponse enregistrée par le candidat via
+                    sa webcam ou son
+                    téléphone. Vous définissez les questions, ils répondent quand ils veulent. Vous gagnez un temps
+                    précieux en évitant les premiers appels téléphoniques.</p>
+            </div>
+        </div>
+    </section>
+
 
     <!-- FOOTER -->
     <footer>
         <div class="footer-inner">
             <div class="footer-links">
-                <h4>Entreprise</h4>
+                <h4>CIAOCV</h4>
                 <ul>
-                    <li><a href="index.html#publier">Publier un poste</a></li>
-                    <li><a href="tarifs.html">Tarifs</a></li>
-                    <li><a href="#">Packs d'entreprise</a></li>
-                    <li><a href="index.html#comment">Comment ça marche</a></li>
+                    <li><a href="tarifs.html" data-i18n="footer.service">Notre Service</a></li>
+                    <li><a href="guide-candidat.html" data-i18n="footer.guide">Préparez votre entrevue</a></li>
                 </ul>
             </div>
             <div class="footer-links">
-                <h4>Candidat</h4>
+                <h4 data-i18n="footer.legal">Légal</h4>
                 <ul>
-                    <li><a href="#">Conditions d’utilisation</a></li>
-                    <li><a href="#">Confidentialité</a></li>
+                    <li><a href="#" data-i18n="footer.privacy">Politique de confidentialité</a></li>
+                    <li><a href="#" data-i18n="footer.terms">Conditions d’utilisation</a></li>
+                    <li><a href="#">EFVP</a></li>
                 </ul>
             </div>
             <div class="footer-links">
-                <h4>Candidat</h4>
+                <h4 data-i18n="footer.contact">Contact</h4>
                 <ul>
-                    <li><a href="index.html#recherche">Trouver un emploi</a></li>
-                    <li><a href="#">Opportunités</a></li>
-                    <li><a href="#">Conseils</a></li>
-                    <li><a href="index.html#comment">Comment ça marche</a></li>
+                    <li><a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 3.0.24 CiaoCV</p>
-            <div class="footer-legal">
-                <a href="#">A propos</a>
-                <a href="#">Contact</a>
-                <a href="#">Conditions</a>
-                <a href="#">Confidentialité</a>
-            </div>
+            <p>
+                © 2026 CiaoCV
+                <span style="margin: 0 10px; opacity: 0.4;">•</span>
+                <span data-i18n="footer.project">Un projet de <a href="https://3wlabz.com" target="_blank"
+                        style="color:white; text-decoration:none; font-weight:500;">3W Capital</a></span>
+            </p>
+            <p style="margin-top: 0.5rem; opacity: 0.8;" data-i18n="footer.proudly">
+                Fièrement humain ❤️
+            </p>
         </div>
     </footer>
 
     <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const html = document.documentElement;
+        // Hamburger Menu
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const hamburger = document.querySelector('.hamburger');
 
-        // Icons
-        const iconMoon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
-        const iconSun = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+            // Toggle active class on menu
+            if (menu.classList.contains('active')) {
+                menu.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            } else {
+                menu.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
 
-        // Set Icon function
-        const setIcon = (theme) => {
-            themeToggle.innerHTML = theme === 'light' ? iconSun : iconMoon;
-        };
-
-        // Check saved preference
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        if (savedTheme === 'light') {
-            html.setAttribute('data-theme', 'light');
+            // Sync all hamburger buttons
+            document.querySelectorAll('.hamburger').forEach(btn => {
+                btn.classList.toggle('active');
+            });
         }
-        setIcon(savedTheme);
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-            html.setAttribute('data-theme', newTheme);
-            setIcon(newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
     </script>
+    <script src="assets/js/i18n.js"></script>
 
 </body>
 
