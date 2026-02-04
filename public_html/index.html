@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="assets/css/design-system.css?v=1.2">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         /* Homepage Specific Adjustments */
 
@@ -253,8 +254,8 @@
         </nav>
 
         <div class="nav-actions">
-            <!-- Language Toggle -->
-            <a href="#" id="langToggle"
+            <!-- Language Toggle (Desktop) -->
+            <a href="#" class="lang-toggle" id="langToggleDesktop"
                 style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
 
             <!-- Dual Login Strategy -->
@@ -280,13 +281,19 @@
             <span></span>
             <span></span>
         </button>
-        <a href="tarifs.html" onclick="toggleMenu()">Notre service</a>
-        <a href="guide-candidat.html" onclick="toggleMenu()">Préparez votre entrevue</a>
+
+        <!-- Language Toggle (Mobile) -->
+        <a href="#" class="lang-toggle" id="langToggleMobile"
+            style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
+
+        <a href="tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
+        <a href="guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
         <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
             <a href="onboarding/register-candidate.php" class="btn-header-primary"
-                style="font-size:1.1rem; padding:1rem;">Espace Candidat</a>
+                style="font-size:1.1rem; padding:1rem;" data-i18n="nav.candidate">Espace Candidat</a>
             <a href="onboarding/signup.php" class="btn-header-secondary"
-                style="font-size:1.1rem; padding:1rem; color:var(--text-gray);">Espace Recruteur</a>
+                style="font-size:1.1rem; padding:1rem; color:var(--text-gray);" data-i18n="nav.recruiter">Espace
+                Recruteur</a>
         </div>
     </div>
 

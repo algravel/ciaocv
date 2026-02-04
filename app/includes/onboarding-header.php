@@ -13,7 +13,7 @@ $progress = ($currentStep / $totalSteps) * 100;
 
 <header class="onboarding-header">
     <div class="header-top">
-        <a href="../index.php" class="logo">CiaoCV</a>
+        <a href="../index.php" class="logo">ciao<span>cv</span></a>
         <span class="step-indicator"><?= $currentStep ?> / <?= $totalSteps ?></span>
     </div>
     <div class="progress-bar">

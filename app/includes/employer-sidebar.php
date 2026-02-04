@@ -15,13 +15,15 @@ if (isset($_SESSION['user_id'], $db)) {
     if ($rowU) {
         $sidebarPhotoUrl = !empty($rowU['photo_url']) ? trim($rowU['photo_url']) : null;
         $fn = trim($rowU['first_name'] ?? '');
-        if ($fn !== '') $sidebarInitial = strtoupper(mb_substr($fn, 0, 1));
+        if ($fn !== '')
+            $sidebarInitial = strtoupper(mb_substr($fn, 0, 1));
     }
 }
 ?>
 <div class="app-sidebar-backdrop" id="appSidebarBackdrop" aria-hidden="true"></div>
 <aside class="app-sidebar">
-    <a href="employer.php" class="app-sidebar-logo">CiaoCV</a>
+    <a href="employer.php" class="logo"
+        style="margin-bottom: 2rem; display: block; text-align: center;">ciao<span>cv</span></a>
     <nav class="app-sidebar-nav">
         <a href="employer-profile.php" class="app-sidebar-link <?= $sidebarActive === 'profile' ? 'active' : '' ?>">
             <span class="app-sidebar-link-icon">🏢</span>

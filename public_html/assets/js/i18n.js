@@ -60,11 +60,11 @@ const translations = {
 
         "pricing.card.one.title": "À la carte",
         "pricing.card.one.desc": "paiement unique",
-        "pricing.card.one.feat.1": "1 Affichage de poste",
+        "pricing.card.one.feat.1": "1 Affichage",
         "pricing.card.one.feat.2": "Accès 30 jours",
         "pricing.card.one.feat.3": "Candidats Illimités",
         "pricing.card.one.feat.4": "Questions personnalisées",
-        "pricing.card.one.btn": "Acheter un poste",
+        "pricing.card.one.btn": "Acheter un affichage",
 
         "pricing.card.pro.title": "Pro",
         "pricing.card.pro.period": "/mois",
@@ -328,25 +328,17 @@ function updateContent() {
         }
     });
 
-    // Update toggle text
-    const toggle = document.getElementById('langToggle');
-    if (toggle) {
+    // Update toggles text
+    const toggles = document.querySelectorAll('.lang-toggle');
+    toggles.forEach(toggle => {
         toggle.textContent = lang === 'fr' ? 'EN' : 'FR';
-    }
+    });
 }
 
 function toggleLanguage() {
     const current = getLanguage();
     const next = current === 'fr' ? 'en' : 'fr';
     setLanguage(next);
-}
-
-function updateToggleState() {
-    const toggle = document.getElementById('langToggle');
-    if (toggle) {
-        const current = getLanguage();
-        toggle.textContent = current === 'fr' ? 'EN' : 'FR';
-    }
 }
 
 // Init
@@ -356,13 +348,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.lang = lang;
     updateContent();
 
-    // Add event listener to toggle button if it exists
-    const toggleBtn = document.getElementById('langToggle');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', (e) => {
+    // Add event listeners to all toggle buttons
+    document.querySelectorAll('.lang-toggle').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             e.preventDefault();
             toggleLanguage();
         });
-        updateToggleState();
-    }
+    });
 });

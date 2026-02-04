@@ -1,91 +1,70 @@
-# Design System - CiaoCV
+# Design System - CiaoCV (Vitrine & Showcase)
 
-Ce document définit les normes visuelles et ergonomiques pour l'application CiaoCV, basées sur l'interface "Blue & Clean" (style moderne, arrondi, épuré).
+Ce document définit les normes visuelles, ergonomiques et techniques de la vitrine (site public) et de l'identité visuelle globale de CiaoCV. Le design est inspiré d'une esthétique moderne, épurée et "premium" (style SaaS/Tech).
 
-## 1. Global / Design System
+## 1. Identité Visuelle (Design Tokens)
 
 ### Palette de Couleurs
-- **Primaire (Bleu Royal)** : `#2563EB` (Utilisé pour : Header, Boutons principaux, Icônes actives)..
-- **Secondaire (Violet/Gradient)** : `#7C3AED` (Utilisé pour : Accents, Barres de progression, Gradients).
-- **Arrière-plan (App)** : `#F3F4F6` (Gris très clair, pour faire ressortir les cartes).
-- **Surface (Cartes)** : `#FFFFFF` (Blanc pur).
-- **Texte Principal** : `#111827` (Presque noir).
-- **Texte Secondaire** : `#6B7280` (Gris moyen).
-- **Succès/Validation** : `#10B981` (Vert).
-- **Erreur/Danger** : `#EF4444` (Rouge).
+- **Primaire (Bleu Tech)** : `#2563EB` (Utilisé pour : Logos, boutons principaux, titres forts).
+- **Accent (Violet)** : `#8B5CF6` (Utilisé pour : Dégradés, micro-interactions).
+- **Texte Principal** : `#0F172A` (Bleu nuit très foncé pour une lisibilité optimale).
+- **Texte Secondaire** : `#64748B` (Gris ardoise pour les sous-titres et descriptions).
+- **Gris Muet** : `#94A3B8`.
+- **Fond de page** : `#FFFFFF` (Blanc pur) avec des sections alternées en `#F8FAFC`.
+- **Succès** : `#10B981` (Vert émeraude).
+- **Erreur** : `#EF4444` (Rouge vif).
 
 ### Typographie
-- **Font Family** : `Inter`, `Roboto`, ou `System UI`. Sans-serif, moderne et lisible.
-- **Titres** : Gras (Bold 700), Grande taille.
-- **Corps** : Regular (400) ou Medium (500).
-- **Labels/Boutons** : Semi-Bold (600).
+- **Police (Font Family)** : `Montserrat` (Google Fonts). Un sans-serif géométrique, moderne et professionnel.
+- **Titres (h1, h2)** : Gras (800) avec un `letter-spacing: -0.025em`.
+- **Corps de texte** : Regular (400) ou Medium (500). Taille de base : `16px`.
+- **Navigation/Boutons** : Semi-Bold (600) ou Bold (700).
 
-### Formes et Espacement
+### Formes et Style "Glassmorphism"
 - **Arrondis (Border Radius)** :
-  - **Cartes** : `16px` à `24px` (Très arrondi).
-  - **Boutons** : `50px` (Pill shape) ou `12px` (Arrondi standard).
-  - **Header** : Arrondi spécifique en bas (`border-bottom-left-radius: 30px`, `border-bottom-right-radius: 30px`).
-- **Ombres (Box Shadow)** :
-  - Douces et diffusées : `0 10px 15px -3px rgba(0, 0, 0, 0.1)`.
-- **Espacement** : Aéré (`padding: 20px`), séparation claire entre les sections.
+  - **Boutons** : `50px` (Pill shape) pour un look moderne et amical.
+  - **Cartes** : `16px` à `24px` (Large radius).
+- **Glassmorphism** :
+  - Utilisation de `backdrop-filter: blur(10px)`.
+  - Backgrounds semi-transparents : `rgba(255, 255, 255, 0.9)`.
+  - Bordures subtiles : `1px solid rgba(226, 232, 240, 0.8)`.
+- **Ombres (Shadows)** : Très diffuses et légères (`rgba(0, 0, 0, 0.05)`).
 
 ---
 
-## 2. App Côté Candidat (Client)
+## 2. Architecture de la Vitrine
 
-L'interface candidat se concentre sur la découverte, la recherche et le profil.
+Le site est composé de quatre pages principales partageant la même structure de navigation et de pied de page :
+1. **Accueil (`index.html`)** : Présentation de la proposition de valeur, stats et bénéfices.
+2. **Notre Service (`tarifs.html`)** : Table de prix et comparatif détaillé des fonctionnalités.
+3. **Guide Candidat (`guide-candidat.html`)** : Page de conseils pour réussir l'entrevue vidéo (checklists, astuces).
+4. **Espace Candidat (`emplois.html`)** : Portail de connexion pour les candidats.
 
-### Header "Hero"
-- Fond bleu (`Primary`).
-- Contient : Avatar utilisateur, Salutation ("Bonjour, [Nom]"), Icône de notification.
-- **Barre de Recherche** : Intégrée dans le header (fond semi-transparent ou blanc, icône loupe).
+### Header (Navigation)
+- **Sticky** : Reste fixé en haut de l'écran avec un fond "glass" au défilement.
+- **Actions** : Toggle de langue (FR/EN) et boutons de connexion doubles (Espace Recruteur vs Espace Candidat).
+- **Mobile** : Menu hamburger avec navigation plein écran et toggle de langue intégré.
 
-### Navigation
-- **Bottom Tab Bar** : Fixe en bas, fond blanc.
-- Icônes : Home, Candidatures, Favoris, Profil.
-- Indicateur actif : Icône bleue + point ou fond subtil.
-
-### Composants Clés
-- **Carte "Compléter Profil"** :
-  - Visuel attractif (Illustration 3D ou photo pro).
-  - Barre de progression (ex: "Profil complété à 40%").
-  - CTA : "Ajouter expérience" ou "Voir jobs".
-- **Liste des Jobs** :
-  - Carte blanche.
-  - Logo entreprise (Carré arrondi).
-  - Titre du poste (Gras) + Entreprise (Gris).
-  - Tags : "Remote", "Full time", "Junior" (Fond bleu pâle, texte bleu).
-  - Bouton d'action rapide (Favori, Postuler).
-- **Vue Détail (Offre)** :
-  - En-tête avec Logo centré.
-  - Cartes de stats (Salaire, Expérience, Type).
-  - Onglets : "Description", "Entreprise", "Avis".
-  - Bouton sticky en bas : "Postuler maintenant" (Large, Bleu).
+### Footer (Pied de page)
+- **Couleur** : Fond `#2563EB` (Bleu Primaire) avec texte en blanc.
+- **Contenu** : Liens rapides, mentions légales, branding "Un projet de 3W Capital" et signature "Fièrement humain ❤️".
 
 ---
 
-## 3. App Côté Employeur (Entreprise)
+## 3. Système International (i18n)
 
-L'interface employeur reprend les codes visuels mais avec une densité d'information adaptée à la gestion.
+La vitrine est entièrement bilingue (**Français** par défaut, **Anglais**) via un système client-side léger (`assets/js/i18n.js`).
 
-### Dashboard
-- **Header** : Similaire (Bleu), mais avec des actions rapides (ex: "Publier une offre").
-- **Cartes "Statistiques"** :
-  - Nombre de vues, Candidatures reçues, Entretiens prévus.
-  - Graphiques simples (Ligne ou Barres) sur fond blanc.
+- **Détection** : Automatique via la langue du navigateur.
+- **Persistance** : Sauvegarde dans le `localStorage`.
+- **Implémentation** : Attributs `data-i18n="clé.traduction"` sur les éléments HTML.
+- **Switch** : Bascule instantanée sans rechargement de page.
 
-### Gestion des Candidats (ATS Simplifié)
-- **Liste des Candidats** :
-  - Format "Carte" par candidat.
-  - Photo/Vidéo Preview (Rond ou rectangle).
-  - Nom + Poste visé.
-  - Actions : "Voir le pitch vidéo", "Accepter" (Vert), "Refuser" (Rouge/Gris).
-- **Vue "Pitch Vidéo"** :
-  - Lecteur vidéo central (Format portrait 9:16 ou paysage optimisé).
-  - Infos candidat en dessous (CV résumé, Compétences).
-  - Boutons d'action flottants ou fixes en bas.
+---
 
-### Création d'Offre
-- Formulaire par étapes (Wizard).
-- Champs input arrondis (`border-radius: 12px`, fond gris clair `#F9FAFB`).
-- Enregistrement du "Pitch Vidéo Entreprise" (Interface caméra similaire à celle du candidat).
+## 4. Composants UX Clés
+
+- **Hero CTAs** : Pas de détour, le bouton principal ("Commencer maintenant") dirige directement vers la page des tarifs/services.
+- **Checklists interactives** : Utilisées dans le guide candidat pour engager l'utilisateur.
+- **Tableau comparatif** : Design clair sur fond gris (`#F1F5F9`) pour une lecture facilitée des offres B2B.
+- **Favicon** : Logo minimaliste "c" bleu sur fond blanc arrondi.

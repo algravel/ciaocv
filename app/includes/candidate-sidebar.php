@@ -12,8 +12,8 @@ if ((!isset($onboardingCompleted) || !isset($onboardingStep)) && isset($db, $_SE
     $stmt->execute([$_SESSION['user_id']]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) {
-        $onboardingStep = (int)($row['onboarding_step'] ?? 1);
-        $onboardingCompleted = (bool)($row['onboarding_completed'] ?? false);
+        $onboardingStep = (int) ($row['onboarding_step'] ?? 1);
+        $onboardingCompleted = (bool) ($row['onboarding_completed'] ?? false);
         $profilePercent = $onboardingCompleted ? 100 : round((($onboardingStep - 1) / 9) * 100);
     }
 }
@@ -31,24 +31,28 @@ if (isset($_SESSION['user_id'], $db)) {
     if ($rowU) {
         $sidebarPhotoUrl = !empty($rowU['photo_url']) ? trim($rowU['photo_url']) : null;
         $fn = trim($rowU['first_name'] ?? '');
-        if ($fn !== '') $sidebarInitial = strtoupper(mb_substr($fn, 0, 1));
+        if ($fn !== '')
+            $sidebarInitial = strtoupper(mb_substr($fn, 0, 1));
     }
 }
 ?>
 <div class="app-sidebar-backdrop" id="appSidebarBackdrop" aria-hidden="true"></div>
 <aside class="app-sidebar">
-    <a href="candidate-jobs.php" class="app-sidebar-logo">CiaoCV</a>
+    <a href="candidate-jobs.php" class="logo"
+        style="margin-bottom: 2rem; display: block; text-align: center;">ciao<span>cv</span></a>
     <nav class="app-sidebar-nav">
         <div class="app-sidebar-link-wrapper">
             <?php if (!$onboardingCompleted): ?>
-                <span class="notification-badge"><?= (int)$profilePercent ?>%</span>
+                <span class="notification-badge"><?= (int) $profilePercent ?>%</span>
             <?php endif; ?>
-            <a href="candidate-profile.php" class="app-sidebar-link <?= $sidebarActive === 'profile' ? 'active' : '' ?> <?= !$onboardingCompleted ? 'profile-incomplete' : '' ?>">
+            <a href="candidate-profile.php"
+                class="app-sidebar-link <?= $sidebarActive === 'profile' ? 'active' : '' ?> <?= !$onboardingCompleted ? 'profile-incomplete' : '' ?>">
                 <span class="app-sidebar-link-icon">👤</span>
                 <span>Mon profil</span>
             </a>
         </div>
-        <a href="candidate-applications.php" class="app-sidebar-link <?= $sidebarActive === 'applications' ? 'active' : '' ?>">
+        <a href="candidate-applications.php"
+            class="app-sidebar-link <?= $sidebarActive === 'applications' ? 'active' : '' ?>">
             <span class="app-sidebar-link-icon">📋</span>
             <span>Mes candidatures</span>
         </a>
