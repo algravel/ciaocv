@@ -282,12 +282,10 @@ if ($loginType === 'candidat') {
             <a href="#" class="lang-toggle" id="langToggleDesktop"
                 style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
 
-            <!-- Dual Login Strategy -->
-            <a href="https://app.ciaocv.com/index.php?type=entreprise" class="btn-header-secondary"
-                data-i18n="nav.recruiter">Espace Recruteur</a>
-            <a href="https://app.ciaocv.com/index.php?type=candidat" class="btn-header-primary"
-                data-i18n="nav.candidate">Espace
-                Candidat</a>
+            <!-- Single Login Button -->
+            <a href="index.php" class="btn-header-primary" data-i18n="nav.login">
+                Se connecter
+            </a>
 
             <button class="hamburger" aria-label="Menu" onclick="toggleMenu()">
                 <span></span>
@@ -313,12 +311,9 @@ if ($loginType === 'candidat') {
         <a href="https://www.ciaocv.com/tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
         <a href="https://www.ciaocv.com/guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre
             entrevue</a>
-        <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
-            <a href="https://app.ciaocv.com/index.php?type=candidat" class="btn-header-primary"
-                style="font-size:1.1rem; padding:1rem;" data-i18n="nav.candidate">Espace Candidat</a>
-            <a href="https://app.ciaocv.com/index.php?type=entreprise" class="btn-header-secondary"
-                style="font-size:1.1rem; padding:1rem; color:var(--text-gray);" data-i18n="nav.recruiter">Espace
-                Recruteur</a>
+        <div style="margin-top:2rem; width:80%;">
+             <a href="index.php" class="btn-header-primary"
+                style="display:block; text-align:center; padding:1rem;" data-i18n="nav.login">Se connecter</a>
         </div>
     </div>
 
@@ -469,6 +464,52 @@ if ($loginType === 'candidat') {
             }
             hamburgers.forEach(h => h.classList.toggle('active'));
         }
+
+        // Modal Logic for Missing Type
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const type = urlParams.get('type');
+
+            if (!type) {
+                // Show modal overlay
+                const modal = document.createElement('div');
+                modal.id = 'type-selection-modal';
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100vw';
+                modal.style.height = '100vh';
+                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Darker for better focus
+                modal.style.backdropFilter = 'blur(8px)';
+                modal.style.zIndex = '9999';
+                modal.style.display = 'flex';
+                modal.style.alignItems = 'center';
+                modal.style.justifyContent = 'center';
+
+                // Get current language for initial render logic (though i18n.js handles text)
+                const lang = getLanguage();
+
+                modal.innerHTML = `
+                    <div style="background: var(--card-bg); padding: 3rem 2rem; border-radius: var(--radius-xl); text-align: center; max-width: 500px; width: 90%; border: 1px solid var(--border); box-shadow: var(--shadow-xl);">
+                        <h2 data-i18n="login.modal.title" style="margin-bottom: 2rem; font-size: 1.8rem; font-weight: 800; color: var(--text);">Vous êtes ?</h2>
+                        <div style="display: flex; gap: 1.5rem; flex-direction: column;">
+                            <a href="?type=candidat" class="btn-primary" style="padding: 1rem 1.5rem; font-size: 1.1rem; text-decoration: none; justify-content: center; display: flex;" data-i18n="login.modal.candidate">
+                                Un Candidat
+                            </a>
+                            <a href="?type=entreprise" class="btn-secondary" style="padding: 1rem 1.5rem; font-size: 1.1rem; text-decoration: none; border: 2px solid var(--border); border-radius: var(--radius); color: var(--text); background: var(--bg); display: flex; justify-content: center; font-weight: 600;" data-i18n="login.modal.recruiter">
+                                Un Recruteur
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+
+                // Trigger translation update for the new modal content
+                updateContent();
+            }
+        });
     </script>
 </body>
 

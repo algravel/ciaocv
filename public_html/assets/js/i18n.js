@@ -4,6 +4,7 @@ const translations = {
         "nav.guide": "Préparez votre entrevue de présélection",
         "nav.recruiter": "Espace Recruteur",
         "nav.candidate": "Espace Candidat",
+        "nav.login": "Se connecter",
 
         "hero.title": "L'entrevue vidéo de présélection <br><span class=\"highlight\">simplifiée</span> pour tous.",
         "hero.subtitle": "Gagnez du temps sur vos recrutements. Invitez les candidats à des entrevues de présélection en vidéo, recevez leurs réponses, et choisissez les meilleurs talents en quelques minutes.",
@@ -52,7 +53,7 @@ const translations = {
         "pricing.card.free.title": "Découverte",
         "pricing.card.free.desc": "Pour essayer sans risque",
         "pricing.card.free.feat.1": "1 Affichage actif",
-        "pricing.card.free.feat.2": "20 Candidats max",
+        "pricing.card.free.feat.2": "5 Candidats max",
         "pricing.card.free.feat.3": "Questions standards",
         "pricing.card.free.feat.4": "Page carrière basique",
         "pricing.card.free.btn": "Créer un compte",
@@ -168,6 +169,7 @@ const translations = {
         "nav.guide": "Prepare your pre-selection interview",
         "nav.recruiter": "Recruiter Login",
         "nav.candidate": "Candidate Login",
+        "nav.login": "Log In",
 
         "hero.title": "Pre-selection video interviewing <br><span class=\"highlight\">made simple</span> for everyone.",
         "hero.subtitle": "Save time on recruiting. Invite candidates to pre-selection video interviews, receive their responses, and choose the best talent in minutes.",
@@ -216,7 +218,7 @@ const translations = {
         "pricing.card.free.title": "Discovery",
         "pricing.card.free.desc": "To try risk-free",
         "pricing.card.free.feat.1": "1 Active Listing",
-        "pricing.card.free.feat.2": "20 Candidates max",
+        "pricing.card.free.feat.2": "5 Candidates max",
         "pricing.card.free.feat.3": "Standard Questions",
         "pricing.card.free.feat.4": "Basic Career Page",
         "pricing.card.free.btn": "Create Account",
