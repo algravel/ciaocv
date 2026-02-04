@@ -629,7 +629,7 @@
                             <span>💰 ${job.salary || 'À discuter'}</span>
                         </div>
                         <p style="font-size:0.9rem; color:var(--text-gray); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${job.description}</p>
-                        <a href="#" class="btn-apply">Postuler en vidéo</a>
+                        <a href="offre.php?id=${job.id}" class="btn-apply">Voir l'offre</a>
                     `;
                     container.appendChild(card);
                 });
