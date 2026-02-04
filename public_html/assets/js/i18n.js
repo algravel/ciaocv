@@ -145,7 +145,24 @@ const translations = {
         "nav.brand": "Solution RH",
         "nav.how": "Comment ça marche",
         "nav.pricing": "Tarifs",
-        "nav.space": "Espace Candidats"
+        "nav.space": "Espace Candidats",
+
+        "login.hero.title": "Content de vous <br><span class=\"highlight\">revoir !</span>",
+        "login.hero.subtitle": "Accédez à votre espace pour gérer vos entrevues vidéo et vos candidatures en toute simplicité.",
+        "login.hero.usp.fast": "Rapide",
+        "login.hero.usp.secure": "Sécurisé",
+        "login.hero.usp.human": "Humain",
+        "login.title": "Connexion",
+        "login.email.label": "Courriel",
+        "login.email.placeholder": "ton@email.com",
+        "login.password.label": "Mot de passe",
+        "login.password.placeholder": "••••••••",
+        "login.submit": "Se connecter",
+        "login.forgot_password": "Mot de passe oublié ?",
+        "login.signup_prompt": "Pas encore de compte ?",
+        "login.signup_link": "S'inscrire gratuitement",
+        "login.oauth.divider": "ou",
+        "login.oauth.google": "Continuer avec Google"
     },
     en: {
         "nav.service": "Our Service",
@@ -293,7 +310,24 @@ const translations = {
         "nav.brand": "HR Solution",
         "nav.how": "How it works",
         "nav.pricing": "Pricing",
-        "nav.space": "Candidate Space"
+        "nav.space": "Candidate Space",
+
+        "login.hero.title": "Good to see you <br><span class=\"highlight\">again!</span>",
+        "login.hero.subtitle": "Access your space to manage your video interviews and applications with ease.",
+        "login.hero.usp.fast": "Fast",
+        "login.hero.usp.secure": "Secure",
+        "login.hero.usp.human": "Human",
+        "login.title": "Login",
+        "login.email.label": "Email",
+        "login.email.placeholder": "your@email.com",
+        "login.password.label": "Password",
+        "login.password.placeholder": "••••••••",
+        "login.submit": "Log In",
+        "login.forgot_password": "Forgot password?",
+        "login.signup_prompt": "Don't have an account?",
+        "login.signup_link": "Sign up for free",
+        "login.oauth.divider": "or",
+        "login.oauth.google": "Continue with Google"
     }
 };
 
