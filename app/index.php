@@ -272,8 +272,8 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
                 style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
 
             <!-- Dual Login Strategy -->
-            <a href="onboarding/signup.php" class="btn-header-secondary" data-i18n="nav.recruiter">Espace Recruteur</a>
-            <a href="onboarding/register-candidate.php" class="btn-header-primary" data-i18n="nav.candidate">Espace
+            <a href="https://app.ciaocv.com/" class="btn-header-secondary" data-i18n="nav.recruiter">Espace Recruteur</a>
+            <a href="https://app.ciaocv.com/" class="btn-header-primary" data-i18n="nav.candidate">Espace
                 Candidat</a>
 
             <button class="hamburger" aria-label="Menu" onclick="toggleMenu()">
@@ -300,9 +300,9 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
         <a href="https://www.ciaocv.com/tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
         <a href="https://www.ciaocv.com/guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
         <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
-            <a href="onboarding/register-candidate.php" class="btn-header-primary"
+            <a href="https://app.ciaocv.com/" class="btn-header-primary"
                 style="font-size:1.1rem; padding:1rem;" data-i18n="nav.candidate">Espace Candidat</a>
-            <a href="onboarding/signup.php" class="btn-header-secondary"
+            <a href="https://app.ciaocv.com/" class="btn-header-secondary"
                 style="font-size:1.1rem; padding:1rem; color:var(--text-gray);" data-i18n="nav.recruiter">Espace
                 Recruteur</a>
         </div>
