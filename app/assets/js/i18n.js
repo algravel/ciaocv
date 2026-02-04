@@ -10,6 +10,8 @@ const translations = {
         "nav.candidate": "Espace Candidat",
         "login.hero.title": "Content de vous <br><span class=\"highlight\">revoir !</span>",
         "login.hero.subtitle": "Accédez à votre espace pour gérer vos entrevues vidéo de présélection et vos candidatures en toute simplicité.",
+        "login.hero.subtitle.candidat": "Accédez à votre espace candidat pour gérer vos entrevues vidéo et vos candidatures.",
+        "login.hero.subtitle.entreprise": "Accédez à votre espace recruteur pour gérer vos affichages de postes et évaluer les candidats.",
         "login.title": "Connexion",
         "login.email.label": "Courriel",
         "login.email.placeholder": "ton@email.com",
@@ -37,6 +39,8 @@ const translations = {
         "nav.candidate": "Candidate Login",
         "login.hero.title": "Good to see you <br><span class=\"highlight\">again!</span>",
         "login.hero.subtitle": "Access your space to manage your pre-selection video interviews and applications with ease.",
+        "login.hero.subtitle.candidat": "Access your candidate space to manage your video interviews and applications.",
+        "login.hero.subtitle.entreprise": "Access your recruiter space to manage your job postings and evaluate candidates.",
         "login.title": "Login",
         "login.email.label": "Email",
         "login.email.placeholder": "your@email.com",
@@ -75,7 +79,7 @@ function setLanguage(lang) {
 
 function updateToggleState() {
     const lang = getLanguage();
-    document.querySelectorAll('.lang-toggle').forEach(function(toggle) {
+    document.querySelectorAll('.lang-toggle').forEach(function (toggle) {
         toggle.textContent = lang === 'fr' ? 'EN' : 'FR';
     });
 }
@@ -83,7 +87,7 @@ function updateToggleState() {
 function updateContent() {
     const lang = getLanguage();
     const elements = document.querySelectorAll('[data-i18n]');
-    elements.forEach(function(element) {
+    elements.forEach(function (element) {
         const key = element.getAttribute('data-i18n');
         if (translations[lang] && translations[lang][key]) {
             if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
@@ -103,11 +107,11 @@ function toggleLanguage(e) {
     setLanguage(next);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     var lang = getLanguage();
     document.documentElement.lang = lang;
     updateContent();
-    document.querySelectorAll('.lang-toggle').forEach(function(btn) {
+    document.querySelectorAll('.lang-toggle').forEach(function (btn) {
         btn.addEventListener('click', toggleLanguage);
     });
 });

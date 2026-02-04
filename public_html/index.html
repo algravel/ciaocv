@@ -220,19 +220,22 @@
             gap: 4rem;
             width: 100%;
         }
-        
+
         @media (max-width: 900px) {
             .hero-body-wrapper {
                 flex-direction: column-reverse;
                 gap: 3rem;
                 text-align: center;
             }
+
             .hero-text {
                 align-items: center;
             }
+
             .hero-ctas {
                 justify-content: center;
             }
+
             /* Adjust hero search margin on mobile */
             .hero-search-form {
                 margin-bottom: 2rem !important;
@@ -248,12 +251,14 @@
             display: flex;
             flex-direction: row;
             gap: 0.5rem;
-            margin: 2rem auto; /* Centered */
-            max-width: 800px; /* Wider */
+            margin: 2rem auto;
+            /* Centered */
+            max-width: 800px;
+            /* Wider */
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             align-items: center;
         }
-        
+
         .search-inputs {
             display: flex;
             flex-direction: row;
@@ -262,7 +267,7 @@
             width: auto;
             position: relative;
         }
-        
+
         /* Divider */
         .search-inputs::after {
             content: '';
@@ -286,7 +291,7 @@
             padding: 0.8rem 1.5rem;
             transition: all 0.2s;
         }
-        
+
         .input-group:focus-within {
             background: #f8fafc;
             border-radius: 50px;
@@ -294,8 +299,13 @@
             border-color: transparent;
         }
 
-        .input-group .icon { margin-right: 0.8rem; font-size: 1.1rem; color: var(--primary); opacity: 0.8; }
-        
+        .input-group .icon {
+            margin-right: 0.8rem;
+            font-size: 1.1rem;
+            color: var(--primary);
+            opacity: 0.8;
+        }
+
         .input-group input {
             background: transparent;
             border: none;
@@ -306,8 +316,12 @@
             font-weight: 500;
             font-family: inherit;
         }
-        .input-group input::placeholder { color: #64748b; font-weight: 400; }
-        
+
+        .input-group input::placeholder {
+            color: #64748b;
+            font-weight: 400;
+        }
+
         .btn-search {
             background: var(--primary);
             color: white;
@@ -327,31 +341,51 @@
             letter-spacing: normal;
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
         }
-        .btn-search:hover { 
-            opacity: 1; 
+
+        .btn-search:hover {
+            opacity: 1;
             background: #1d4ed8;
             transform: translateY(-1px);
             box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
         }
-        
+
         @media (max-width: 768px) {
-            .hero-search-form { 
-                border-radius: 20px; 
-                flex-direction: column; 
+            .hero-search-form {
+                border-radius: 20px;
+                flex-direction: column;
                 padding: 1rem;
                 gap: 1rem;
                 max-width: 100%;
             }
-            .search-inputs { flex-direction: column; width: 100%; }
-            .search-inputs::after { display: none; }
-            .input-group { 
-                padding: 0.8rem 0; 
+
+            .search-inputs {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-inputs::after {
+                display: none;
+            }
+
+            .input-group {
+                padding: 0.8rem 0;
                 border-bottom: 1px solid #e2e8f0;
                 width: 100%;
             }
-            .input-group:last-child { border-bottom: none; }
-            .input-group:focus-within { background: transparent; }
-            .btn-search { width: 100%; padding: 1rem; margin: 0; }
+
+            .input-group:last-child {
+                border-bottom: none;
+            }
+
+            .input-group:focus-within {
+                background: transparent;
+            }
+
+            .btn-search {
+                width: 100%;
+                padding: 1rem;
+                margin: 0;
+            }
         }
 
         .search-wrapper {
@@ -401,10 +435,12 @@
                 style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
 
             <!-- Dual Login Strategy -->
-            <a href="https://app.ciaocv.com/" class="btn-header-secondary" data-i18n="nav.recruiter">
+            <a href="https://app.ciaocv.com/index.php?type=entreprise" class="btn-header-secondary"
+                data-i18n="nav.recruiter">
                 Espace Recruteur
             </a>
-            <a href="https://app.ciaocv.com/" class="btn-header-primary" data-i18n="nav.candidate">
+            <a href="https://app.ciaocv.com/index.php?type=candidat" class="btn-header-primary"
+                data-i18n="nav.candidate">
                 Espace Candidat
             </a>
 
@@ -432,9 +468,9 @@
         <a href="tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
         <a href="guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
         <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
-            <a href="https://app.ciaocv.com/" class="btn-header-primary"
+            <a href="https://app.ciaocv.com/index.php?type=candidat" class="btn-header-primary"
                 style="font-size:1.1rem; padding:1rem;" data-i18n="nav.candidate">Espace Candidat</a>
-            <a href="https://app.ciaocv.com/" class="btn-header-secondary"
+            <a href="https://app.ciaocv.com/index.php?type=entreprise" class="btn-header-secondary"
                 style="font-size:1.1rem; padding:1rem; color:var(--text-gray);" data-i18n="nav.recruiter">Espace
                 Recruteur</a>
         </div>
@@ -442,9 +478,10 @@
 
     <!-- HERO -->
     <section class="hero" style="display: flex; flex-direction: column; align-items: center;">
-        
+
         <!-- BARRE DE RECHERCHE (Full Width Top) -->
-        <form action="emplois.html" method="GET" class="hero-search-form" style="width: 100%; max-width: 900px; margin: 0 auto 3rem auto;">
+        <form action="emplois.html" method="GET" class="hero-search-form"
+            style="width: 100%; max-width: 900px; margin: 0 auto 3rem auto;">
             <div class="search-inputs">
                 <div class="input-group">
                     <span class="icon">🔍</span>
@@ -461,9 +498,11 @@
         <!-- CONTENT SPLIT (Text + Image) -->
         <div class="hero-body-wrapper">
             <div class="hero-text">
-                <h1 data-i18n="hero.title">L'entrevue vidéo de présélection <br><span class="highlight">simplifiée</span> pour tous.</h1>
+                <h1 data-i18n="hero.title">L'entrevue vidéo de présélection <br><span
+                        class="highlight">simplifiée</span> pour tous.</h1>
                 <p class="subtitle" data-i18n="hero.subtitle">
-                    Gagnez du temps sur vos recrutements. Invitez les candidats à des entrevues de présélection en vidéo, recevez leurs réponses, et choisissez les meilleurs talents en quelques minutes.
+                    Gagnez du temps sur vos recrutements. Invitez les candidats à des entrevues de présélection en
+                    vidéo, recevez leurs réponses, et choisissez les meilleurs talents en quelques minutes.
                 </p>
 
                 <div class="hero-ctas">
@@ -479,15 +518,18 @@
                         <span
                             style="display:inline-block; width:30px; height:30px; background:#64748b; border-radius:50%; border:2px solid white; margin-left:-10px;"></span>
                     </div>
-                    <span style="font-size: 0.9rem; color: var(--text-gray); font-weight: 500;" data-i18n="hero.trust">+2000
+                    <span style="font-size: 0.9rem; color: var(--text-gray); font-weight: 500;"
+                        data-i18n="hero.trust">+2000
                         recruteurs nous font
                         confiance</span>
                 </div>
             </div>
 
             <div class="hero-visual">
-                <div style="position: relative; width: 100%; max-width: 500px; aspect-ratio: 4/3; border-radius: 12px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.1); border: 1px solid var(--border-dark); overflow: hidden;">
-                    <img src="assets/img/hero-laptop.png" alt="Interface CiaoCV - vidéo de présentation" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                <div
+                    style="position: relative; width: 100%; max-width: 500px; aspect-ratio: 4/3; border-radius: 12px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.1); border: 1px solid var(--border-dark); overflow: hidden;">
+                    <img src="assets/img/hero-laptop.png" alt="Interface CiaoCV - vidéo de présentation"
+                        style="width: 100%; height: 100%; object-fit: cover; display: block;">
                 </div>
             </div>
         </div>
@@ -511,7 +553,8 @@
             </div>
             <div>
                 <div style="font-size:2.5rem; font-weight:800; color:var(--primary)">Video</div>
-                <div style="color:var(--text-gray); font-size:0.9rem;" data-i18n="stats.video">Entrevues de présélection</div>
+                <div style="color:var(--text-gray); font-size:0.9rem;" data-i18n="stats.video">Entrevues de présélection
+                </div>
             </div>
         </div>
     </section>
@@ -533,7 +576,9 @@
                     </svg>
                 </div>
                 <h3 data-i18n="benefit.1.title">Entrevue de présélection en vidéo</h3>
-                <p data-i18n="benefit.1.text">Définissez 3 questions clés. Les candidats y répondent en vidéo dans le cadre d'une entrevue de présélection, vous permettant de juger l'aisance et le fit culturel immédiatement.</p>
+                <p data-i18n="benefit.1.text">Définissez 3 questions clés. Les candidats y répondent en vidéo dans le
+                    cadre d'une entrevue de présélection, vous permettant de juger l'aisance et le fit culturel
+                    immédiatement.</p>
             </div>
             <!-- 2 -->
             <div class="benefit-card">

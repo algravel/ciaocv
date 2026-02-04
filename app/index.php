@@ -67,6 +67,17 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
         }
     }
 }
+// =====================
+// DYNAMIC SUBTITLE LOGIC
+// =====================
+$loginType = $_GET['type'] ?? '';
+$subtitleKey = 'login.hero.subtitle'; // default
+
+if ($loginType === 'candidat') {
+    $subtitleKey = 'login.hero.subtitle.candidat';
+} elseif ($loginType === 'entreprise') {
+    $subtitleKey = 'login.hero.subtitle.entreprise';
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -247,7 +258,7 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
                 padding: 1.5rem;
             }
 
-            .page-login footer > div:first-of-type {
+            .page-login footer>div:first-of-type {
                 grid-template-columns: 1fr !important;
                 gap: 2rem !important;
                 text-align: center !important;
@@ -272,8 +283,10 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
                 style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
 
             <!-- Dual Login Strategy -->
-            <a href="https://app.ciaocv.com/" class="btn-header-secondary" data-i18n="nav.recruiter">Espace Recruteur</a>
-            <a href="https://app.ciaocv.com/" class="btn-header-primary" data-i18n="nav.candidate">Espace
+            <a href="https://app.ciaocv.com/index.php?type=entreprise" class="btn-header-secondary"
+                data-i18n="nav.recruiter">Espace Recruteur</a>
+            <a href="https://app.ciaocv.com/index.php?type=candidat" class="btn-header-primary"
+                data-i18n="nav.candidate">Espace
                 Candidat</a>
 
             <button class="hamburger" aria-label="Menu" onclick="toggleMenu()">
@@ -298,11 +311,12 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
             style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
 
         <a href="https://www.ciaocv.com/tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
-        <a href="https://www.ciaocv.com/guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
+        <a href="https://www.ciaocv.com/guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre
+            entrevue</a>
         <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
-            <a href="https://app.ciaocv.com/" class="btn-header-primary"
+            <a href="https://app.ciaocv.com/index.php?type=candidat" class="btn-header-primary"
                 style="font-size:1.1rem; padding:1rem;" data-i18n="nav.candidate">Espace Candidat</a>
-            <a href="https://app.ciaocv.com/" class="btn-header-secondary"
+            <a href="https://app.ciaocv.com/index.php?type=entreprise" class="btn-header-secondary"
                 style="font-size:1.1rem; padding:1rem; color:var(--text-gray);" data-i18n="nav.recruiter">Espace
                 Recruteur</a>
         </div>
@@ -313,7 +327,7 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
         <div class="login-container">
             <div class="hero-text">
                 <h1 data-i18n="login.hero.title">Content de vous <br><span class="highlight">revoir !</span></h1>
-                <p class="hero-subtitle" data-i18n="login.hero.subtitle">Accédez à votre espace pour gérer vos entrevues
+                <p class="hero-subtitle" data-i18n="<?= $subtitleKey ?>">Accédez à votre espace pour gérer vos entrevues
                     vidéo et vos candidatures en toute simplicité.</p>
             </div>
 
@@ -381,10 +395,10 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
                         </a>
                         <a href="oauth-microsoft.php?action=login" class="btn-oauth">
                             <svg width="20" height="20" viewBox="0 0 23 23">
-                                <path fill="#f35325" d="M1 1h10v10H1z"/>
-                                <path fill="#81bc06" d="M12 1h10v10H12z"/>
-                                <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                                <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                                <path fill="#f35325" d="M1 1h10v10H1z" />
+                                <path fill="#81bc06" d="M12 1h10v10H12z" />
+                                <path fill="#05a6f0" d="M1 12h10v10H1z" />
+                                <path fill="#ffba08" d="M12 12h10v10H12z" />
                             </svg>
                             <span data-i18n="login.oauth.microsoft">Continuer avec Microsoft</span>
                         </a>
