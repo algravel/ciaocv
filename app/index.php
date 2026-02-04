@@ -81,149 +81,182 @@ if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
     <link rel="stylesheet"
         href="assets/css/design-system.css?v=<?= defined('ASSET_VERSION') ? ASSET_VERSION : '1.2' ?>">
     <style>
-        /* Spécificités pour la page de connexion */
-        .hero {
-            min-height: calc(100vh - 80px - 200px);
-            /* Ajustement pour header/footer */
+        /* Page de connexion – mise en page et couleurs */
+        .page-login .hero {
+            min-height: calc(100vh - 80px - 180px);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 4rem 5%;
+            padding: 2rem 5%;
+            box-sizing: border-box;
         }
 
-        .login-container {
+        .page-login .login-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4rem;
+            gap: 3rem;
             align-items: center;
-            max-width: 1200px;
+            max-width: 1100px;
             width: 100%;
+            margin: 0 auto;
         }
 
-        .hero-text h1 {
-            font-size: 3.5rem;
+        .page-login .hero-text h1 {
+            font-size: clamp(1.75rem, 4vw, 3.5rem);
             font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
+            line-height: 1.15;
+            margin-bottom: 1.25rem;
             letter-spacing: -0.025em;
+            color: var(--text);
         }
 
-        .hero-text .highlight {
+        .page-login .hero-text .highlight {
             color: var(--primary);
             position: relative;
             z-index: 1;
         }
 
-        .hero-text .highlight::after {
+        .page-login .hero-text .highlight::after {
             content: '';
             position: absolute;
-            bottom: 5px;
+            bottom: 4px;
             left: 0;
             width: 100%;
-            height: 15px;
-            background: rgba(37, 99, 235, 0.15);
+            height: 12px;
+            background: rgba(37, 99, 235, 0.2);
             z-index: -1;
-            transform: rotate(-2deg);
+            transform: rotate(-1.5deg);
         }
 
-        .hero-subtitle {
-            font-size: 1.25rem;
-            color: var(--text-gray);
-            margin-bottom: 2rem;
+        .page-login .hero-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
             line-height: 1.6;
         }
 
-        .login-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
+        .page-login .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
             border-radius: var(--radius-xl);
-            padding: 2.5rem;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
             width: 100%;
-            max-width: 480px;
+            max-width: 420px;
+            margin: 0 auto;
         }
 
-        .form-group label {
+        .page-login .form-group label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 600;
             font-size: 0.9rem;
-            color: var(--text-white);
+            color: var(--text);
         }
 
-        .form-control {
+        .page-login .form-control {
             width: 100%;
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-dark);
-            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--bg);
             font-family: inherit;
+            font-size: 1rem;
             transition: border-color 0.2s;
+            box-sizing: border-box;
         }
 
-        .form-control:focus {
+        .page-login .form-control:focus {
             outline: none;
             border-color: var(--primary);
         }
 
-        .oauth-divider {
-            margin: 2rem 0;
+        .page-login .oauth-divider {
+            margin: 1.5rem 0;
             display: flex;
             align-items: center;
             gap: 1rem;
             color: var(--text-muted);
         }
 
-        .oauth-divider::before,
-        .oauth-divider::after {
+        .page-login .oauth-divider::before,
+        .page-login .oauth-divider::after {
             content: "";
             flex: 1;
             height: 1px;
-            background: var(--border-dark);
+            background: var(--border);
         }
 
-        .btn-oauth {
+        .page-login .btn-oauth {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.75rem;
             width: 100%;
-            padding: 0.85rem;
-            border-radius: 12px;
-            background: white;
-            border: 1px solid var(--border-dark);
-            color: var(--text-white);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
             font-weight: 600;
             font-size: 0.95rem;
             text-decoration: none;
-            transition: background 0.2s;
+            transition: background 0.2s, border-color 0.2s;
         }
 
-        .btn-oauth:hover {
+        .page-login .btn-oauth:hover {
             background: var(--bg-alt);
+            border-color: var(--text-muted);
+        }
+
+        .page-login .login-footer a {
+            color: var(--primary);
+        }
+
+        .page-login footer {
+            flex-shrink: 0;
         }
 
         @media (max-width: 900px) {
-            .login-container {
+            .page-login .login-container {
                 grid-template-columns: 1fr;
-                text-align: center;
                 gap: 2rem;
+                text-align: center;
             }
 
-            .hero-text h1 {
-                font-size: 2.5rem;
+            .page-login .hero-text h1 {
+                font-size: 1.75rem;
             }
 
-            .login-card {
-                margin: 0 auto;
+            .page-login .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .page-login .login-card {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .page-login .hero {
+                padding: 1.5rem 1rem;
+                min-height: auto;
+            }
+
+            .page-login .login-card {
+                padding: 1.5rem;
+            }
+
+            .page-login footer > div:first-of-type {
+                grid-template-columns: 1fr !important;
+                gap: 2rem !important;
+                text-align: center !important;
             }
         }
     </style>
 </head>
 
-<body>
+<body class="page-login">
     <!-- HEADER -->
     <header class="navbar">
         <a href="../index.html" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
