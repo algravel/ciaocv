@@ -14,26 +14,6 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
-// Si connecté : afficher directement l'espace candidat (pas de page d'accueil)
-$isLoggedIn = isset($_SESSION['user_id']);
-if ($isLoggedIn) {
-    header('Location: candidate-jobs.php');
-    exit;
-}
-
-// =====================
-// TRAITEMENT CONNEXION - BYPASS: redirige directement vers employer.php
-// =====================
-$error = null;
-$errorHtml = false;
-
-if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'connexion') {
-        // BYPASS: Redirection directe vers employer.php sans validation
-        header('Location: employer.php');
-        exit;
-    }
-}
 // =====================
 // DYNAMIC SUBTITLE LOGIC
 // =====================
