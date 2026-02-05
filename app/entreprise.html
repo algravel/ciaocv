@@ -137,6 +137,18 @@
             margin-bottom: 1.5rem;
         }
 
+        .user-avatar-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
         /* Tabs */
         .view-tabs {
             display: flex;
@@ -455,13 +467,16 @@
                         <button class="lang-btn active" data-lang="fr">FR</button>
                         <button class="lang-btn" data-lang="en">EN</button>
                     </div>
-                    <button class="icon-btn"><i class="fa-solid fa-gear"></i></button>
+                    <button class="icon-btn"
+                        onclick="document.querySelector('a[data-section=\'parametres\']').click()"><i
+                            class="fa-solid fa-gear"></i></button>
                     <button class="icon-btn">
                         <i class="fa-regular fa-bell"></i>
                     </button>
                     <div class="user-profile">
-                        <img src="https://ui-avatars.com/api/?name=Entreprise&background=3B82F6&color=fff" alt="User"
-                            class="avatar">
+                        <div class="user-avatar-icon">
+                            <i class="fa-regular fa-user"></i>
+                        </div>
                         <i class="fa-solid fa-caret-down" style="font-size: 0.75rem; color: var(--text-secondary);"></i>
                     </div>
                 </div>
@@ -469,44 +484,7 @@
 
             <!-- Content Area -->
             <div class="content-area">
-                <!-- DASHBOARD Section -->
-                <div id="statistiques-section" class="content-section active">
-                    <div class="page-header">
-                        <h1 class="page-title" data-i18n="statistiques_title">Tableau de bord</h1>
-                    </div>
 
-                    <div
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                        <!-- Card 1 -->
-                        <div
-                            style="background: white; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid var(--border-color); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                            <div style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;"
-                                data-i18n="stat_active_jobs">Postes actifs</div>
-                            <div style="font-size: 1.875rem; font-weight: 700; color: var(--text-primary);">3</div>
-                        </div>
-                        <!-- Card 2 -->
-                        <div
-                            style="background: white; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid var(--border-color); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                            <div style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;"
-                                data-i18n="stat_total_candidates">Candidats totaux</div>
-                            <div style="font-size: 1.875rem; font-weight: 700; color: var(--text-primary);">128</div>
-                        </div>
-                        <!-- Card 3 -->
-                        <div
-                            style="background: white; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid var(--border-color); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                            <div style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;"
-                                data-i18n="stat_pending_review">En attente</div>
-                            <div style="font-size: 1.875rem; font-weight: 700; color: var(--text-primary);">12</div>
-                        </div>
-                    </div>
-
-                    <div class="empty-state">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;"
-                            data-i18n="performance_title">Performance par poste</h3>
-                        <p style="color: var(--text-secondary);">Les données détaillées seront disponibles bientôt.</p>
-                    </div>
-                </div>
 
                 <!-- POSTES Section -->
                 <div id="postes-section" class="content-section">
@@ -889,7 +867,7 @@
                 </div>
 
                 <!-- STATISTIQUES Section -->
-                <div id="statistiques-section" class="content-section">
+                <div id="statistiques-section" class="content-section active">
                     <div class="page-header">
                         <h1 class="page-title" data-i18n="statistiques_title">Statistiques</h1>
                     </div>
@@ -1412,7 +1390,7 @@
             en: {
                 nav_dashboard: 'Dashboard',
                 nav_postes: 'Positions',
-                nav_affichages: 'Postings',
+                nav_affichages: 'Job Postings',
                 nav_candidats: 'Candidates',
                 nav_parametres: 'Settings',
                 search: 'Search...',
