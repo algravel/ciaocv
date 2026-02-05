@@ -1,8 +1,1 @@
-DirectoryIndex index.php
-
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    # Rediriger la racine vers index.php pour que l'URL affichée soit toujours .../index.php
-    RewriteCond %{REQUEST_URI} ^/?$
-    RewriteRule ^$ index.php [R=301,L]
-</IfModule>
+DirectoryIndex index.php index.html

@@ -6,7 +6,7 @@ const translations = {
         "nav.candidate": "Espace Candidat",
         "nav.login": "Se connecter",
 
-        "hero.title": "L'entrevue vidéo de présélection <br><span class=\"highlight\">simplifiée</span> pour tous.",
+        "hero.title": "L'entrevue de présélection <br><span class=\"highlight\">simplifiée</span> pour tous.",
         "hero.subtitle": "Gagnez du temps sur vos recrutements. Invitez les candidats à des entrevues de présélection en vidéo, recevez leurs réponses, et choisissez les meilleurs talents en quelques minutes.",
         "hero.cta.start": "Commencer maintenant",
         "hero.cta.demo": "Voir la démo",

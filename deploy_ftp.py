@@ -44,7 +44,7 @@ def upload_directory(ftp, local_dir, remote_dir):
 
         # Upload files
         for f in files:
-            if f.startswith('.'): continue # Skip hidden files like .DS_Store
+            if f == '.DS_Store': continue # Skip .DS_Store but allow .htaccess
             
             local_file = os.path.join(root, f)
             remote_file = os.path.join(remote_path, f)
