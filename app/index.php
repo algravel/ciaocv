@@ -3,6 +3,10 @@
  * Page de connexion uniquement.
  * Si connecté : redirection directe vers l'espace candidat (candidate-jobs.php).
  */
+// TEMPORARY REDIRECT TO ENTREPRISE DASHBOARD
+header('Location: entreprise.html');
+exit;
+
 session_start();
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/includes/functions.php';
@@ -22,49 +26,16 @@ if ($isLoggedIn) {
 }
 
 // =====================
-// TRAITEMENT CONNEXION (si non connecté)
+// TRAITEMENT CONNEXION - BYPASS: redirige directement vers employer.php
 // =====================
 $error = null;
 $errorHtml = false;
 
 if (!$isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'connexion') {
-        if (!$db) {
-            $error = 'Service temporairement indisponible.';
-        } else {
-            $email = strtolower(trim($_POST['email'] ?? ''));
-            $password = $_POST['password'] ?? '';
-
-            if (empty($email) || empty($password)) {
-                $error = 'Veuillez entrer votre courriel et mot de passe.';
-            } else {
-                try {
-                    $stmt = $db->prepare('SELECT id, email, first_name, password_hash, email_verified, onboarding_step, onboarding_completed FROM users WHERE email = ?');
-                    $stmt->execute([$email]);
-                    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                    if (!$user) {
-                        $error = 'Courriel ou mot de passe incorrect.';
-                    } elseif (!password_verify($password, $user['password_hash'])) {
-                        $error = 'Courriel ou mot de passe incorrect.';
-                    } elseif (!$user['email_verified']) {
-                        $error = 'Compte non confirmé. <a href="onboarding/confirm.php?email=' . urlencode($email) . '">Confirmer</a>';
-                        $errorHtml = true;
-                    } else {
-                        // Connexion réussie
-                        $_SESSION['user_id'] = $user['id'];
-                        $_SESSION['user_email'] = $user['email'];
-                        $firstName = trim($user['first_name'] ?? '');
-                        $_SESSION['user_first_name'] = $firstName !== '' ? $firstName : (strstr($user['email'], '@', true) ?: $user['email']);
-
-                        header('Location: candidate-jobs.php');
-                        exit;
-                    }
-                } catch (PDOException $e) {
-                    $error = 'Erreur. Réessayez plus tard.';
-                }
-            }
-        }
+        // BYPASS: Redirection directe vers employer.php sans validation
+        header('Location: employer.php');
+        exit;
     }
 }
 // =====================
@@ -312,8 +283,8 @@ if ($loginType === 'candidat') {
         <a href="https://www.ciaocv.com/guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre
             entrevue</a>
         <div style="margin-top:2rem; width:80%;">
-             <a href="index.php" class="btn-header-primary"
-                style="display:block; text-align:center; padding:1rem;" data-i18n="nav.login">Se connecter</a>
+            <a href="index.php" class="btn-header-primary" style="display:block; text-align:center; padding:1rem;"
+                data-i18n="nav.login">Se connecter</a>
         </div>
     </div>
 
@@ -338,18 +309,17 @@ if ($loginType === 'candidat') {
                         </div>
                     <?php endif; ?>
 
-                    <form method="POST">
-                        <input type="hidden" name="action" value="connexion">
+                    <!-- Formulaire sans validation - redirige directement vers entreprise.html -->
+                    <form action="entreprise.html" method="GET">
                         <div class="form-group" style="margin-bottom: 1.25rem;">
                             <label for="email" data-i18n="login.email.label">Courriel</label>
                             <input type="email" id="email" name="email" class="form-control" placeholder="ton@email.com"
-                                data-i18n="login.email.placeholder" required
-                                value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                                data-i18n="login.email.placeholder">
                         </div>
                         <div class="form-group" style="margin-bottom: 1.75rem;">
                             <label for="password" data-i18n="login.password.label">Mot de passe</label>
                             <input type="password" id="password" name="password" class="form-control"
-                                placeholder="••••••••" data-i18n="login.password.placeholder" required>
+                                placeholder="••••••••" data-i18n="login.password.placeholder">
                         </div>
                         <button type="submit" class="btn-primary"
                             style="width: 100%; border: none; cursor: pointer; font-size: 1.05rem; padding: 1rem;"
