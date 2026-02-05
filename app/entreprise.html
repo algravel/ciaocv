@@ -7,7 +7,7 @@
     <title>Espace Entreprise - CiaoCV</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Override logo colors to match CiaoCV branding */
         :root {
@@ -376,12 +376,108 @@
         .submenu-arrow {
             transition: transform 0.3s ease;
         }
+
+        /* Feedback FAB */
+        .feedback-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            cursor: pointer;
+            z-index: 2000;
+            transition: all 0.2s ease;
+        }
+
+        .feedback-fab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+        }
+
+        .feedback-fab i {
+            font-size: 1.25rem;
+        }
+
+        /* Candidate Modal Styles */
+        .modal-split-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background-color: #000;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .timeline-container {
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background: #F9FAFB;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .star-rating-input {
+            display: flex;
+            gap: 0.25rem;
+            color: #D1D5DB;
+            /* Gray-300 */
+            cursor: pointer;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .star-rating-input i.active {
+            color: #F59E0B;
+            /* Amber-500 */
+        }
     </style>
 </head>
 
 <body>
 
     <div class="app-container">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
@@ -403,7 +499,7 @@
                     <span>Postes</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                 </a>
-                <div class="nav-submenu open" data-parent="postes">
+                <div class="nav-submenu" data-parent="postes">
                     <div class="nav-submenu-inner">
                         <a href="#postes-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
                         <a href="#postes-actifs" class="nav-subitem" data-i18n="filter_active">Actifs</a>
@@ -455,6 +551,9 @@
             <!-- Top Bar -->
             <header class="top-bar">
                 <!-- Search Bar Removed -->
+                <button class="hamburger-btn" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
 
                 <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
                     <span style="font-weight: 700; font-size: 1.25rem; color: var(--text-primary);">OLYMEL</span>
@@ -522,14 +621,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr onclick="showPosteDetail('frontend')" style="cursor: pointer;">
                                 <td><strong>Développeur Frontend</strong></td>
                                 <td>Technologie</td>
                                 <td>Montréal, QC</td>
                                 <td><span class="status-badge status-active" data-i18n="status_active">Actif</span></td>
                                 <td>12</td>
                                 <td>2026-01-15</td>
-                                <td>
+                                <td onclick="event.stopPropagation()">
                                     <button class="btn-icon" title="Modifier" data-i18n-title="action_edit"><i
                                             class="fa-solid fa-pen"></i></button>
                                     <button class="btn-icon" title="Voir" data-i18n-title="action_view"><i
@@ -538,14 +637,14 @@
                                             class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="showPosteDetail('manager')" style="cursor: pointer;">
                                 <td><strong>Chef de projet</strong></td>
                                 <td>Gestion</td>
                                 <td>Toronto, ON</td>
                                 <td><span class="status-badge status-active" data-i18n="status_active">Actif</span></td>
                                 <td>8</td>
                                 <td>2026-01-20</td>
-                                <td>
+                                <td onclick="event.stopPropagation()">
                                     <button class="btn-icon" title="Modifier" data-i18n-title="action_edit"><i
                                             class="fa-solid fa-pen"></i></button>
                                     <button class="btn-icon" title="Voir" data-i18n-title="action_view"><i
@@ -554,14 +653,14 @@
                                             class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="showPosteDetail('designer')" style="cursor: pointer;">
                                 <td><strong>Designer UX/UI</strong></td>
                                 <td>Design</td>
                                 <td>Télétravail</td>
                                 <td><span class="status-badge status-paused" data-i18n="status_paused">Pausé</span></td>
                                 <td>5</td>
                                 <td>2026-01-10</td>
-                                <td>
+                                <td onclick="event.stopPropagation()">
                                     <button class="btn-icon" title="Modifier" data-i18n-title="action_edit"><i
                                             class="fa-solid fa-pen"></i></button>
                                     <button class="btn-icon" title="Voir" data-i18n-title="action_view"><i
@@ -570,14 +669,14 @@
                                             class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="showPosteDetail('analyst')" style="cursor: pointer;">
                                 <td><strong>Analyste d'affaires</strong></td>
                                 <td>Stratégie</td>
                                 <td>Vancouver, BC</td>
                                 <td><span class="status-badge status-closed" data-i18n="status_closed">Fermé</span></td>
                                 <td>15</td>
                                 <td>2025-12-01</td>
-                                <td>
+                                <td onclick="event.stopPropagation()">
                                     <button class="btn-icon" title="Modifier" data-i18n-title="action_edit"><i
                                             class="fa-solid fa-pen"></i></button>
                                     <button class="btn-icon" title="Voir" data-i18n-title="action_view"><i
@@ -588,6 +687,133 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- POSTE DETAIL Section -->
+                <div id="poste-detail-section" class="content-section" style="padding-top: 1rem;">
+                    <div class="page-header" style="justify-content: flex-start; gap: 1rem; align-items: center;">
+                        <button class="btn-icon" onclick="goBackToPostes()" style="font-size: 1.25rem;">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h1 class="page-title" id="detail-poste-title">Titre du Poste</h1>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);" id="detail-poste-dept-loc">
+                                Département • Lieu</div>
+                        </div>
+                        <span class="status-badge" id="detail-poste-status" style="margin-left: auto;">Statut</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                        <!-- Left Column: Description & Questions -->
+                        <div>
+                            <div class="card" style="margin-bottom: 2rem;">
+                                <h3 style="font-size: 1.125rem; margin-bottom: 1rem;">Description</h3>
+                                <div id="detail-poste-description"
+                                    style="color: var(--text-primary); line-height: 1.6;">
+                                    Description goes here...
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <h3 style="font-size: 1.125rem; margin-bottom: 1rem;">Questions de présélection</h3>
+                                <ul id="detail-poste-questions"
+                                    style="list-style-type: disc; padding-left: 1.5rem; color: var(--text-primary); line-height: 1.6;">
+                                    <!-- Questions injected here -->
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Meta Info -->
+                        <div>
+                            <div class="card">
+                                <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-secondary);">
+                                    Informations</h3>
+
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="font-size: 0.875rem; color: var(--text-secondary);">Candidats</div>
+                                    <div style="font-size: 1.25rem; font-weight: 600;" id="detail-poste-candidates">0
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="font-size: 0.875rem; color: var(--text-secondary);">Créé le</div>
+                                    <div style="font-size: 1rem;" id="detail-poste-date">2026-01-01</div>
+                                </div>
+
+                                <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <button class="btn btn-primary" style="justify-content: center;">Modifier le
+                                        poste</button>
+                                    <button class="btn btn-secondary" style="justify-content: center;">Voir les
+                                        candidats</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AFFICHAGE DETAIL Section -->
+                <div id="affichage-detail-section" class="content-section" style="padding-top: 1rem;">
+                    <div class="page-header" style="justify-content: flex-start; gap: 1rem; align-items: center;">
+                        <button class="btn-icon" onclick="goBackToAffichages()" style="font-size: 1.25rem;">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h1 class="page-title" id="detail-affichage-title">Titre de l'Affichage</h1>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);"
+                                id="detail-affichage-platform">Plateforme</div>
+                        </div>
+                        <span class="status-badge" id="detail-affichage-status" style="margin-left: auto;">Statut</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                        <!-- Left: Preview -->
+                        <div class="card"
+                            style="min-height: 400px; display: flex; align-items: center; justify-content: center; background-color: #F8FAFC; border: 2px dashed #CBD5E1;">
+                            <div style="text-align: center; color: var(--text-secondary);">
+                                <i class="fa-regular fa-image" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <p>Aperçu de la publicité</p>
+                            </div>
+                        </div>
+
+                        <!-- Right: Info -->
+                        <div>
+                            <div class="card">
+                                <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-secondary);">
+                                    Performances</h3>
+                                <div
+                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                                    <div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Vues</div>
+                                        <div style="font-size: 1.5rem; font-weight: 700;" id="detail-affichage-views">0
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Candidatures
+                                        </div>
+                                        <div style="font-size: 1.5rem; font-weight: 700;" id="detail-affichage-apps">0
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h3
+                                    style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-secondary); margin-top: 1.5rem;">
+                                    Détails</h3>
+                                <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-secondary);">Début</span>
+                                    <span style="font-weight: 500;" id="detail-affichage-start">2026-01-01</span>
+                                </div>
+                                <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-secondary);">Fin</span>
+                                    <span style="font-weight: 500;" id="detail-affichage-end">2026-02-01</span>
+                                </div>
+
+                                <div style="margin-top: 2rem;">
+                                    <button class="btn btn-primary"
+                                        style="width: 100%; justify-content: center;">Modifier l'affichage</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- AFFICHAGES Section -->
@@ -628,7 +854,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr onclick="showAffichageDetail('frontend-linkedin')" style="cursor: pointer;">
                                 <td><strong>Développeur Frontend</strong></td>
                                 <td><i class="fa-brands fa-linkedin" style="color: #0A66C2;"></i> LinkedIn</td>
                                 <td>2026-01-15</td>
@@ -636,7 +862,7 @@
                                 <td><span class="status-badge status-active" data-i18n="status_active">Actif</span></td>
                                 <td>1,245</td>
                                 <td>12</td>
-                                <td>
+                                <td onclick="event.stopPropagation()">
                                     <button class="btn-icon" title="Modifier" data-i18n-title="action_edit"><i
                                             class="fa-solid fa-pen"></i></button>
                                     <button class="btn-icon" title="Voir" data-i18n-title="action_view"><i
@@ -645,7 +871,7 @@
                                             class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="showAffichageDetail('frontend-site')" style="cursor: pointer;">
                                 <td><strong>Développeur Frontend</strong></td>
                                 <td><i class="fa-solid fa-globe" style="color: var(--primary-color);"></i> Site carrière
                                 </td>
@@ -654,7 +880,7 @@
                                 <td><span class="status-badge status-active" data-i18n="status_active">Actif</span></td>
                                 <td>458</td>
                                 <td>6</td>
-                                <td>
+                                <td onclick="event.stopPropagation()">
                                     <button class="btn-icon" title="Modifier" data-i18n-title="action_edit"><i
                                             class="fa-solid fa-pen"></i></button>
                                     <button class="btn-icon" title="Voir" data-i18n-title="action_view"><i
@@ -663,7 +889,7 @@
                                             class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="showAffichageDetail('manager-linkedin')" style="cursor: pointer;">
                                 <td><strong>Chef de projet</strong></td>
                                 <td><i class="fa-brands fa-linkedin" style="color: #0A66C2;"></i> LinkedIn</td>
                                 <td>2026-01-20</td>
@@ -671,7 +897,7 @@
                                 <td><span class="status-badge status-active" data-i18n="status_active">Actif</span></td>
                                 <td>892</td>
                                 <td>8</td>
-                                <td>
+                                <td onclick="event.stopPropagation()">
                                     <button class="btn-icon" title="Modifier" data-i18n-title="action_edit"><i
                                             class="fa-solid fa-pen"></i></button>
                                     <button class="btn-icon" title="Voir" data-i18n-title="action_view"><i
@@ -742,7 +968,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr onclick="showCandidateDetail('sophie')" style="cursor: pointer;">
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                                         <img src="https://ui-avatars.com/api/?name=Sophie+Martin&background=3B82F6&color=fff"
@@ -769,14 +995,15 @@
                                 </td>
                                 <td>2026-02-01</td>
                                 <td>
-                                    <button class="btn-icon" title="Voir vidéo"><i
+                                    <button class="btn-icon" title="Voir vidéo" onclick="event.stopPropagation()"><i
                                             class="fa-solid fa-play"></i></button>
-                                    <button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>
-                                    <button class="btn-icon" title="Mettre en favoris"
+                                    <button class="btn-icon" title="Profil" onclick="event.stopPropagation()"><i
+                                            class="fa-solid fa-user"></i></button>
+                                    <button class="btn-icon" title="Mettre en favoris" onclick="event.stopPropagation()"
                                         data-i18n-title="action_shortlist"><i class="fa-regular fa-star"></i></button>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="showCandidateDetail('jean')" style="cursor: pointer;">
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                                         <img src="https://ui-avatars.com/api/?name=Jean+Dupont&background=10B981&color=fff"
@@ -803,14 +1030,15 @@
                                 </td>
                                 <td>2026-01-28</td>
                                 <td>
-                                    <button class="btn-icon" title="Voir vidéo"><i
+                                    <button class="btn-icon" title="Voir vidéo" onclick="event.stopPropagation()"><i
                                             class="fa-solid fa-play"></i></button>
-                                    <button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>
-                                    <button class="btn-icon" title="Mettre en favoris"
+                                    <button class="btn-icon" title="Profil" onclick="event.stopPropagation()"><i
+                                            class="fa-solid fa-user"></i></button>
+                                    <button class="btn-icon" title="Mettre en favoris" onclick="event.stopPropagation()"
                                         data-i18n-title="action_shortlist"><i class="fa-regular fa-star"></i></button>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="showCandidateDetail('marie')" style="cursor: pointer;">
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                                         <img src="https://ui-avatars.com/api/?name=Marie+Tremblay&background=8B5CF6&color=fff"
@@ -837,14 +1065,15 @@
                                 </td>
                                 <td>2026-01-25</td>
                                 <td>
-                                    <button class="btn-icon" title="Voir vidéo"><i
+                                    <button class="btn-icon" title="Voir vidéo" onclick="event.stopPropagation()"><i
                                             class="fa-solid fa-play"></i></button>
-                                    <button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>
-                                    <button class="btn-icon" title="Mettre en favoris"
+                                    <button class="btn-icon" title="Profil" onclick="event.stopPropagation()"><i
+                                            class="fa-solid fa-user"></i></button>
+                                    <button class="btn-icon" title="Mettre en favoris" onclick="event.stopPropagation()"
                                         data-i18n-title="action_shortlist"><i class="fa-regular fa-star"></i></button>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="showCandidateDetail('pierre')" style="cursor: pointer;">
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                                         <img src="https://ui-avatars.com/api/?name=Pierre+Lavoie&background=EC4899&color=fff"
@@ -871,15 +1100,102 @@
                                 </td>
                                 <td>2026-01-22</td>
                                 <td>
-                                    <button class="btn-icon" title="Voir vidéo"><i
+                                    <button class="btn-icon" title="Voir vidéo" onclick="event.stopPropagation()"><i
                                             class="fa-solid fa-play"></i></button>
-                                    <button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>
-                                    <button class="btn-icon" title="Mettre en favoris"
-                                        data-i18n-title="action_shortlist"><i class="fa-regular fa-star"></i></button>
+                                    <button class="btn-icon" title="Profil" onclick="event.stopPropagation()"><i
+                                            class="fa-solid fa-user"></i></button>
+                                    <button class="btn-icon" title="Mettre en favoris" onclick="event.stopPropagation()"
+                                        data-i18n-title="action_shortlist"><i class="fa-solid fa-star"
+                                            style="color: #F59E0B;"></i></button>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Candidate Detail Section -->
+                <div id="candidate-detail-section" class="content-section" style="padding-top: 1rem;">
+                    <div class="page-header" style="justify-content: flex-start; gap: 1rem; align-items: center;">
+                        <button class="btn-icon" onclick="goBackToCandidates()" style="font-size: 1.25rem;">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h1 class="page-title" id="detail-candidate-name">Nom du Candidat</h1>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);"
+                                id="detail-candidate-role-source">Poste • Source</div>
+                        </div>
+                        <div class="action-group">
+                            <button class="favorite-btn" id="detail-candidate-favorite" onclick="toggleFavorite()"><i
+                                    class="fa-regular fa-star"></i></button>
+                            <select class="status-select" id="detail-candidate-status-select"
+                                onchange="updateCandidateStatus(this.value)">
+                                <option value="new">Nouveau</option>
+                                <option value="reviewed">Évalué</option>
+                                <option value="shortlisted">Favori</option>
+                                <option value="interview">Entretien</option>
+                                <option value="rejected">Refusé</option>
+                                <option value="hired">Embauché</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-split-view" style="margin-top: 1.5rem;">
+                        <!-- Left Column: Video & Info -->
+                        <div class="modal-left">
+                            <div class="video-container">
+                                <video controls style="display:none;" id="detail-candidate-video-player">
+                                    <source src="" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                                <div id="detail-video-placeholder" style="text-align: center;">
+                                    <i class="fa-solid fa-play-circle" style="font-size: 3rem; opacity: 0.8;"></i>
+                                    <div style="margin-top: 0.5rem;" data-i18n="video_preview">Aperçu vidéo</div>
+                                </div>
+                            </div>
+
+                            <div class="card" style="padding: 1rem; border: 1px solid var(--border-color);">
+                                <h3
+                                    style="font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-regular fa-envelope"></i> Email
+                                </h3>
+                                <p id="detail-candidate-email"
+                                    style="color: var(--text-secondary); margin-bottom: 1rem;">email@example.com</p>
+
+                                <h3
+                                    style="font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-phone"></i> <span data-i18n="form_phone">Téléphone</span>
+                                </h3>
+                                <p id="detail-candidate-phone" style="color: var(--text-secondary);">+1 514 555-0199</p>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Ratings & Timeline -->
+                        <div class="modal-right">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.5rem;" data-i18n="th_rating">Note</h3>
+                            <div class="star-rating-input" id="detail-star-rating">
+                                <i class="fa-solid fa-star" data-value="1" onclick="setRating(1)"></i>
+                                <i class="fa-solid fa-star" data-value="2" onclick="setRating(2)"></i>
+                                <i class="fa-solid fa-star" data-value="3" onclick="setRating(3)"></i>
+                                <i class="fa-solid fa-star" data-value="4" onclick="setRating(4)"></i>
+                                <i class="fa-solid fa-star" data-value="5" onclick="setRating(5)"></i>
+                            </div>
+
+                            <h3 style="font-size: 1rem; margin-bottom: 0.5rem;" data-i18n="comments_title">Commentaires
+                            </h3>
+                            <div class="timeline-container" id="detail-timeline-list">
+                                <!-- Timeline items will be injected here -->
+                            </div>
+
+                            <div style="display: flex; gap: 0.5rem;">
+                                <textarea class="form-input" id="detail-new-comment-input" rows="1"
+                                    placeholder="Ajouter une note..." style="resize: none;"
+                                    data-i18n-placeholder="add_note_placeholder"></textarea>
+                                <button class="btn btn-primary" onclick="addComment()">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- STATISTIQUES Section -->
@@ -1364,6 +1680,44 @@
         </div>
     </div>
 
+    <!-- Modal for Feedback -->
+    <div class="modal-overlay" id="feedback-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" data-i18n="modal_feedback_title">Feedback</h2>
+                <button class="btn-icon" onclick="closeModal('feedback')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="sendFeedback(event)">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="label_type">Type de retour</label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="feedback_type" value="problem" checked>
+                            <span data-i18n="option_problem">Signaler un problème</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="feedback_type" value="idea">
+                            <span data-i18n="option_idea">Soumettre une idée</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="label_message">Votre message</label>
+                    <textarea class="form-input" rows="4" style="resize: vertical;"
+                        data-i18n-placeholder="feedback_placeholder" placeholder="Dites-nous en plus..."
+                        required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('feedback')"
+                        data-i18n="btn_cancel">Annuler</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="btn_send">Envoyer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
     <script>
         // i18n translations
         const translations = {
@@ -1461,7 +1815,22 @@
                 form_address: 'Adresse',
                 form_description: "Description de l'entreprise",
                 form_logo: "Logo de l'entreprise",
-                btn_upload: 'Téléverser'
+                btn_upload: 'Téléverser',
+                form_brand_color: 'Couleur de la marque',
+                // Feedback
+                nav_feedback: 'Feedback',
+                modal_feedback_title: 'Feedback',
+                label_type: 'Type de retour',
+                option_problem: 'Signaler un problème',
+                option_idea: 'Soumettre une idée',
+                label_message: 'Votre message',
+                feedback_placeholder: 'Dites-nous en plus...',
+                btn_send: 'Envoyer',
+                feedback_success: 'Merci pour votre retour !',
+                // Candidate Modal
+                video_preview: 'Aperçu vidéo',
+                comments_title: 'Commentaires',
+                add_note_placeholder: 'Ajouter une note...'
             },
             en: {
                 nav_dashboard: 'Dashboard',
@@ -1571,7 +1940,21 @@
                 settings_branding: 'Employer Branding',
                 settings_branding_title: 'Brand Customization',
                 logo_help: 'Displayed on your profile and postings.',
-                form_brand_color: 'Brand Color'
+                form_brand_color: 'Brand Color',
+                // Feedback
+                nav_feedback: 'Feedback',
+                modal_feedback_title: 'Feedback',
+                label_type: 'Feedback Type',
+                option_problem: 'Report a Problem',
+                option_idea: 'Submit an Idea',
+                label_message: 'Your Message',
+                feedback_placeholder: 'Tell us more...',
+                btn_send: 'Send',
+                feedback_success: 'Thank you for your feedback!',
+                // Candidate Modal
+                video_preview: 'Video Preview',
+                comments_title: 'Comments',
+                add_note_placeholder: 'Add a note...'
             }
         };
 
@@ -1617,58 +2000,101 @@
             });
         });
 
-        // Navigation avec accordion pour les sous-menus
+        // Navigation logic
+        function activateNavItem(item) {
+            // Update active nav
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+
+            // Accordion: close others
+            document.querySelectorAll('.nav-submenu').forEach(submenu => {
+                if (item.dataset.section !== submenu.dataset.parent) {
+                    submenu.classList.remove('open');
+                }
+            });
+            document.querySelectorAll('.submenu-arrow').forEach(arrow => {
+                if (!item.contains(arrow)) {
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            });
+
+            // Open own submenu
+            if (item.classList.contains('has-submenu')) {
+                const section = item.dataset.section;
+                const submenu = document.querySelector(`.nav-submenu[data-parent="${section}"]`);
+                if (submenu) submenu.classList.add('open');
+
+                const arrow = item.querySelector('.submenu-arrow');
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            }
+
+            // Show section
+            const section = item.dataset.section;
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            const sectionElement = document.getElementById(`${section}-section`);
+            if (sectionElement) {
+                sectionElement.classList.add('active');
+            }
+        }
+
         document.querySelectorAll('.nav-item[data-section]').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-
-                // Update active nav
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-
-                // Accordion: fermer tous les sous-menus
-                document.querySelectorAll('.nav-submenu').forEach(submenu => {
-                    // Si ce n'est pas le sous-menu de l'item cliqué, on le ferme
-                    if (item.dataset.section !== submenu.dataset.parent) {
-                        submenu.classList.remove('open');
-                    }
-                });
-                document.querySelectorAll('.submenu-arrow').forEach(arrow => {
-                    // Reset arrows not in current item
-                    if (!item.contains(arrow)) {
-                        arrow.style.transform = 'rotate(0deg)';
-                    }
-                });
-
-                // Ouvrir le sous-menu correspondant si c'est un menu avec sous-menu
-                if (item.classList.contains('has-submenu')) {
-                    const section = item.dataset.section;
-                    const submenu = document.querySelector(`.nav-submenu[data-parent="${section}"]`);
-
-                    if (submenu) {
-                        submenu.classList.toggle('open');
-                    }
-
-                    const arrow = item.querySelector('.submenu-arrow');
-                    if (arrow) {
-                        // Toggle logic for arrow based on submenu state
-                        if (submenu && submenu.classList.contains('open')) {
-                            arrow.style.transform = 'rotate(180deg)';
-                        } else {
-                            arrow.style.transform = 'rotate(0deg)';
-                        }
-                    }
-                }
-
-                // Show section
-                const section = item.dataset.section;
-                document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-                const sectionElement = document.getElementById(`${section}-section`);
-                if (sectionElement) {
-                    sectionElement.classList.add('active');
+                activateNavItem(item);
+                // Update URL
+                const href = item.getAttribute('href');
+                if (href) {
+                    history.pushState(null, null, href);
                 }
             });
         });
+
+        // Hash Navigation
+        function handleHashNavigation() {
+            const hash = window.location.hash || '#dashboard';
+
+            // 1. Check for specific subitem map (filter)
+            const subitem = document.querySelector(`.nav-subitem[href="${hash}"]`);
+            if (subitem) {
+                // Find parent section
+                const submenu = subitem.closest('.nav-submenu');
+                if (submenu) {
+                    const parentSection = submenu.dataset.parent;
+                    const parentNavItem = document.querySelector(`.nav-item[data-section="${parentSection}"]`);
+                    if (parentNavItem) {
+                        activateNavItem(parentNavItem);
+                        // No pushState, preserve specific hash
+                    }
+                }
+
+                // Activate Tab
+                const i18nKey = subitem.getAttribute('data-i18n');
+                if (i18nKey) {
+                    // Slight delay to ensure section is visible if needed
+                    setTimeout(() => {
+                        const activeSection = document.querySelector('.content-section.active');
+                        if (activeSection) {
+                            const tab = activeSection.querySelector(`.view-tab[data-i18n="${i18nKey}"]`);
+                            if (tab) tab.click();
+                        }
+                    }, 0);
+                }
+                return;
+            }
+
+            // 2. Check main nav items
+            const navItem = document.querySelector(`.nav-item[href="${hash}"]`);
+            if (navItem) {
+                activateNavItem(navItem);
+            } else {
+                // Fallback to dashboard
+                const dashboard = document.querySelector('.nav-item[href="#dashboard"]');
+                if (dashboard) activateNavItem(dashboard);
+            }
+        }
+
+        window.addEventListener('hashchange', handleHashNavigation);
+        window.addEventListener('load', handleHashNavigation);
 
         // Modal functions
         function openModal(type) {
@@ -1737,9 +2163,442 @@
             });
         });
 
+        // Send Feedback
+        function sendFeedback(e) {
+            e.preventDefault();
+            // In a real app, this would send data to the server
+
+            // Get current language to show appropriate success message
+            const successMsg = translations[currentLang]['feedback_success'];
+
+
+
+            function showAffichageDetail(id) {
+                const data = affichagesData[id];
+                if (!data) return;
+
+                document.getElementById('detail-affichage-title').textContent = data.title;
+                document.getElementById('detail-affichage-platform').textContent = data.platform;
+
+                const statusBadge = document.getElementById('detail-affichage-status');
+                statusBadge.textContent = data.status;
+                statusBadge.className = `status-badge ${data.statusClass}`;
+
+                document.getElementById('detail-affichage-views').textContent = data.views;
+                document.getElementById('detail-affichage-apps').textContent = data.apps;
+                document.getElementById('detail-affichage-start').textContent = data.start;
+                document.getElementById('detail-affichage-end').textContent = data.end;
+
+
+                // Switch views
+                document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('affichage-detail-section').classList.add('active');
+                window.scrollTo(0, 0);
+            }
+
+
+            alert(successMsg);
+
+            closeModal('feedback');
+            e.target.reset();
+        }
+
+        // --- JOB DETAIL VISIBILITY LOGIC ---
+
+        const postesData = {
+            'frontend': {
+                title: 'Développeur Frontend',
+                dept: 'Technologie',
+                location: 'Montréal, QC',
+                status: 'Actif',
+                statusClass: 'status-active',
+                date: '2026-01-15',
+                candidates: 12,
+                description: "Nous recherchons un développeur frontend passionné pour rejoindre notre équipe. Vous travaillerez avec React, Tailwind et TypeScript pour créer des expériences utilisateur exceptionnelles.",
+                questions: [
+                    "Combien d'années d'expérience avez-vous avec React ?",
+                    "Avez-vous déjà travaillé avec TypeScript ?",
+                    "Pouvez-vous fournir un lien vers votre portfolio ?"
+                ]
+            },
+            'manager': {
+                title: 'Chef de projet',
+                dept: 'Gestion',
+                location: 'Toronto, ON',
+                status: 'Actif',
+                statusClass: 'status-active',
+                date: '2026-01-20',
+                candidates: 8,
+                description: "Nous cherchons un chef de projet expérimenté pour mener à bien nos initiatives technologiques. Expérience en Agile/Scrum requise.",
+                questions: [
+                    "Avez-vous une certification PMP ?",
+                    "Décrivez un projet complexe que vous avez géré.",
+                    "Quel est votre style de leadership ?"
+                ]
+            },
+            'designer': {
+                title: 'Designer UX/UI',
+                dept: 'Design',
+                location: 'Télétravail',
+                status: 'Pausé',
+                statusClass: 'status-paused',
+                date: '2026-01-10',
+                candidates: 5,
+                description: "Rejoignez notre équipe créative pour concevoir des interfaces intuitives et esthétiques. Figma est notre outil principal.",
+                questions: [
+                    "Lien vers votre portfolio Dribbble/Behance ?",
+                    "Racontez-nous un défi UX que vous avez résolu.",
+                    "Maîtrisez-vous les design systems ?"
+                ]
+            },
+            'analyst': {
+                title: 'Analyste d\'affaires',
+                dept: 'Stratégie',
+                location: 'Vancouver, BC',
+                status: 'Fermé',
+                statusClass: 'status-closed',
+                date: '2025-12-01',
+                candidates: 15,
+                description: "Poste comblé. Merci de votre intérêt.",
+                questions: []
+            }
+        };
+
+        function showPosteDetail(id) {
+            const data = postesData[id];
+            if (!data) return;
+
+            document.getElementById('detail-poste-title').textContent = data.title;
+            document.getElementById('detail-poste-dept-loc').textContent = `${data.dept} • ${data.location}`;
+
+            const statusBadge = document.getElementById('detail-poste-status');
+            statusBadge.textContent = data.status;
+            statusBadge.className = `status-badge ${data.statusClass}`;
+
+            document.getElementById('detail-poste-description').textContent = data.description;
+            document.getElementById('detail-poste-candidates').textContent = data.candidates;
+            document.getElementById('detail-poste-date').textContent = data.date;
+
+            const questionsList = document.getElementById('detail-poste-questions');
+            questionsList.innerHTML = '';
+            if (data.questions.length > 0) {
+                data.questions.forEach(q => {
+                    const li = document.createElement('li');
+                    li.textContent = q;
+                    li.style.marginBottom = '0.5rem';
+                    questionsList.appendChild(li);
+                });
+            } else {
+                questionsList.innerHTML = '<li style="list-style:none; margin-left:-1.5rem; color:var(--text-secondary);">Aucune question définie.</li>';
+            }
+
+            // Switch views
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('poste-detail-section').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function goBackToPostes() {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('postes-section').classList.add('active');
+        }
+
+        // --- CANDIDATE MODAL LOGIC ---
+
+        // Mock Data for Candidates
+        const candidatesData = {
+            'sophie': {
+                name: 'Sophie Martin',
+                role: 'Développeur Frontend',
+                email: 'sophie.martin@email.com',
+                phone: '+1 514 555-0101',
+                status: 'new',
+                isFavorite: false,
+                rating: 4,
+                video: '',
+                comments: [
+                    { user: 'Jean R.', date: 'Il y a 2h', text: 'Très bon portfolio, à rencontrer rapidement.', avatar: 'bg-blue-500' },
+                    { user: 'Marie L.', date: 'Hier', text: 'CV intéressant, mais manque d\'expérience en React.', avatar: 'bg-green-500' }
+                ]
+            },
+            'jean': {
+                name: 'Jean Dupont',
+                role: 'Chef de projet',
+                email: 'jean.dupont@email.com',
+                phone: '+1 514 555-0202',
+                status: 'reviewed',
+                isFavorite: true,
+                rating: 5,
+                video: '',
+                comments: [
+                    { user: 'Paul D.', date: 'Il y a 1j', text: 'Excellent fit culturel.', avatar: 'bg-purple-500' }
+                ]
+            },
+            'marie': {
+                name: 'Marie Tremblay',
+                role: 'Designer UX/UI',
+                email: 'marie.t@email.com',
+                phone: '+1 514 555-0303',
+                status: 'rejected',
+                isFavorite: false,
+                rating: 2,
+                video: '',
+                comments: [
+                    { user: 'Sophie M.', date: 'Il y a 3j', text: 'Portfolio trop junior pour le poste senior.', avatar: 'bg-red-500' }
+                ]
+            },
+            'pierre': {
+                name: 'Pierre Lavoie',
+                role: 'Développeur Frontend',
+                email: 'pierre.l@email.com',
+                phone: '+1 514 555-0404',
+                status: 'shortlisted',
+                isFavorite: true,
+                rating: 5,
+                video: '',
+                comments: [
+                    { user: 'Jean R.', date: 'Il y a 4h', text: 'Candidat coup de coeur !', avatar: 'bg-blue-500' }
+                ]
+            }
+        };
+
+        let currentCandidateId = null;
+
+        function showCandidateDetail(id) {
+            currentCandidateId = id;
+            const data = candidatesData[id];
+            if (!data) return;
+
+            // Populate Info
+            document.getElementById('detail-candidate-name').textContent = data.name;
+            document.getElementById('detail-candidate-role-source').textContent = `${data.role} • LinkedIn`;
+            document.getElementById('detail-candidate-email').textContent = data.email;
+            document.getElementById('detail-candidate-phone').textContent = data.phone;
+
+            // Status Selector
+            const statusSelect = document.getElementById('detail-candidate-status-select');
+            statusSelect.value = data.status;
+            statusSelect.className = `status-select status-${data.status}`;
+
+            // Favorite Button
+            const favBtn = document.getElementById('detail-candidate-favorite');
+            if (data.isFavorite) {
+                favBtn.innerHTML = '<i class="fa-solid fa-star"></i>';
+                favBtn.classList.add('active');
+            } else {
+                favBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
+                favBtn.classList.remove('active');
+            }
+
+
+            // Video (Mock logic)
+            const videoPlayer = document.getElementById('detail-candidate-video-player');
+            const placeholder = document.getElementById('detail-video-placeholder');
+            if (data.video) {
+                videoPlayer.style.display = 'block';
+                placeholder.style.display = 'none';
+                videoPlayer.src = data.video;
+            } else {
+                videoPlayer.style.display = 'none';
+                placeholder.style.display = 'block';
+            }
+
+            // Set Rating
+            setRatingUI(data.rating);
+
+            // Render Timeline
+            renderTimeline(data.comments);
+
+            // Hide other sections and show detail
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('candidate-detail-section').classList.add('active');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function toggleFavorite() {
+            if (!currentCandidateId) return;
+            const data = candidatesData[currentCandidateId];
+            data.isFavorite = !data.isFavorite;
+
+            const favBtn = document.getElementById('detail-candidate-favorite');
+            if (data.isFavorite) {
+                favBtn.innerHTML = '<i class="fa-solid fa-star"></i>';
+                favBtn.classList.add('active');
+            } else {
+                favBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
+                favBtn.classList.remove('active');
+            }
+        }
+
+        function updateCandidateStatus(newStatus) {
+            if (!currentCandidateId) return;
+            const data = candidatesData[currentCandidateId];
+            data.status = newStatus;
+
+            const statusSelect = document.getElementById('detail-candidate-status-select');
+            statusSelect.className = `status-select status-${newStatus}`;
+        }
+
+
+        function goBackToCandidates() {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('candidats-section').classList.add('active');
+        }
+
+        function setRating(rating) {
+            if (!currentCandidateId) return;
+            candidatesData[currentCandidateId].rating = rating;
+            setRatingUI(rating);
+        }
+
+        function setRatingUI(rating) {
+            const stars = document.querySelectorAll('#detail-star-rating i');
+            stars.forEach(star => {
+                const val = parseInt(star.getAttribute('data-value'));
+                if (val <= rating) {
+                    star.classList.add('active');
+                    star.style.color = '#F59E0B';
+                } else {
+                    star.classList.remove('active');
+                    star.style.color = '#D1D5DB';
+                }
+            });
+        }
+
+        function renderTimeline(comments) {
+            const container = document.getElementById('detail-timeline-list');
+            container.innerHTML = '';
+
+            comments.forEach(comment => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                // Random color generator for avatar if not set, or just use gray
+                const avatarColor = comment.avatar ? comment.avatar : 'bg-gray-400';
+                // Simple avatar circle
+                const avatarHtml = `<div style="width: 32px; height: 32px; background-color: #E5E7EB; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #4B5563;">${comment.user.charAt(0)}</div>`;
+
+                item.innerHTML = `
+                    ${avatarHtml}
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                            <strong style="font-size: 0.875rem;">${comment.user}</strong>
+                            <span class="timeline-date">${comment.date}</span>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-primary); margin-top: 0.25rem;">${comment.text}</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addComment() {
+            const input = document.getElementById('detail-new-comment-input');
+            const text = input.value.trim();
+            if (!text || !currentCandidateId) return;
+
+            // Add to mock data
+            candidatesData[currentCandidateId].comments.unshift({
+                user: 'Moi',
+                date: 'À l\'instant',
+                text: text,
+                avatar: ''
+            });
+
+            renderTimeline(candidatesData[currentCandidateId].comments);
+            input.value = '';
+        }
+
         // Initialize
         applyTranslations('fr');
+
+        // Sidebar logic for mobile
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        // Close sidebar when clicking a link on mobile
+        document.querySelectorAll('.nav-item, .nav-subitem').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    document.querySelector('.sidebar').classList.remove('active');
+                    document.querySelector('.sidebar-overlay').classList.remove('active');
+                }
+            });
+        });
+
+        // --- AFFICHAGE DETAIL VISIBILITY LOGIC ---
+
+        const affichagesData = {
+            'frontend-linkedin': {
+                title: 'Développeur Frontend',
+                platform: 'LinkedIn',
+                start: '2026-01-15',
+                end: '2026-02-15',
+                status: 'Actif',
+                statusClass: 'status-active',
+                views: '1,245',
+                apps: '12'
+            },
+            'frontend-site': {
+                title: 'Développeur Frontend',
+                platform: 'Site carrière',
+                start: '2026-01-15',
+                end: '2026-03-15',
+                status: 'Actif',
+                statusClass: 'status-active',
+                views: '458',
+                apps: '6'
+            },
+            'manager-linkedin': {
+                title: 'Chef de projet',
+                platform: 'LinkedIn',
+                start: '2026-01-20',
+                end: '2026-02-20',
+                status: 'Actif',
+                statusClass: 'status-active',
+                views: '892',
+                apps: '8'
+            }
+        };
+
+        function showAffichageDetail(id) {
+            const data = affichagesData[id];
+            if (!data) return;
+
+            document.getElementById('detail-affichage-title').textContent = data.title;
+            document.getElementById('detail-affichage-platform').textContent = data.platform;
+
+            const statusBadge = document.getElementById('detail-affichage-status');
+            statusBadge.textContent = data.status;
+            statusBadge.className = `status-badge ${data.statusClass}`;
+
+            document.getElementById('detail-affichage-views').textContent = data.views;
+            document.getElementById('detail-affichage-apps').textContent = data.apps;
+            document.getElementById('detail-affichage-start').textContent = data.start;
+            document.getElementById('detail-affichage-end').textContent = data.end;
+
+
+            // Switch views
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('affichage-detail-section').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function goBackToAffichages() {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('affichages-section').classList.add('active');
+        }
+
     </script>
+
+    <!-- Feedback FAB -->
+    <button class="feedback-fab" onclick="openModal('feedback')">
+        <i class="fa-solid fa-bug"></i>
+        <i class="fa-regular fa-lightbulb"></i>
+    </button>
 
 </body>
 
