@@ -1132,129 +1132,146 @@
                                             data-i18n="settings_branding">Marque employeur</a>
                                     </div>
                                 </div>
-                            </nav>
+                        </div>
+                        <a href="#" class="nav-item" style="padding: 0.75rem 1rem;">
+                            <i class="fa-solid fa-users"></i>
+                            <span data-i18n="settings_team">Équipe</span>
+                        </a>
+                        <a href="#" class="nav-item" style="padding: 0.75rem 1rem;">
+                            <i class="fa-solid fa-bell"></i>
+                            <span data-i18n="settings_notifications">Notifications</span>
+                        </a>
+                        <a href="#" class="nav-item" style="padding: 0.75rem 1rem;">
+                            <i class="fa-solid fa-credit-card"></i>
+                            <span data-i18n="settings_billing">Facturation</span>
+                        </a>
+                        <a href="#" class="nav-item" style="padding: 0.75rem 1rem;">
+                            <i class="fa-solid fa-plug"></i>
+                            <span data-i18n="settings_integrations">Intégrations</span>
+                        </a>
+                        </nav>
+                    </div>
+
+                    <div class="settings-content-wrapper" style="display:flex; flex-direction:column; gap:2rem;">
+                        <!-- Settings Content: Company Info -->
+                        <div class="card" id="settings-company">
+                            <div class="card-header"
+                                style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                                <h2 class="card-title" data-i18n="settings_company_info">Informations de
+                                    l'entreprise
+                                </h2>
+                            </div>
+
+                            <form style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label" data-i18n="form_company_name">Nom de
+                                            l'entreprise</label>
+                                        <input type="text" class="form-input" value="Acme Corporation">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" data-i18n="form_industry">Secteur
+                                            d'activité</label>
+                                        <select class="form-select">
+                                            <option>Technologie</option>
+                                            <option>Finance</option>
+                                            <option>Santé</option>
+                                            <option>Commerce</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label" data-i18n="form_email">Email de contact</label>
+                                        <input type="email" class="form-input" value="rh@acme.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" data-i18n="form_phone">Téléphone</label>
+                                        <input type="tel" class="form-input" value="+1 (514) 555-0123">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" data-i18n="form_address">Adresse</label>
+                                    <input type="text" class="form-input"
+                                        value="1234 Rue Principale, Montréal, QC H2X 1Y6">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" data-i18n="form_description">Description de
+                                        l'entreprise</label>
+                                    <textarea class="form-input" rows="4"
+                                        style="resize: vertical;">Acme Corporation est une entreprise leader dans le domaine de la technologie, spécialisée dans les solutions innovantes pour les entreprises.</textarea>
+                                </div>
+
+
+
+                                <div
+                                    style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-i18n="btn_cancel">Annuler</button>
+                                    <button type="submit" class="btn btn-primary"
+                                        data-i18n="btn_save">Enregistrer</button>
+                                </div>
+                            </form>
                         </div>
 
-                        <div class="settings-content-wrapper" style="display:flex; flex-direction:column; gap:2rem;">
-                            <!-- Settings Content: Company Info -->
-                            <div class="card" id="settings-company">
-                                <div class="card-header"
-                                    style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                                    <h2 class="card-title" data-i18n="settings_company_info">Informations de
-                                        l'entreprise
-                                    </h2>
-                                </div>
-
-                                <form style="display: flex; flex-direction: column; gap: 1.5rem;">
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                        <div class="form-group">
-                                            <label class="form-label" data-i18n="form_company_name">Nom de
-                                                l'entreprise</label>
-                                            <input type="text" class="form-input" value="Acme Corporation">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label" data-i18n="form_industry">Secteur
-                                                d'activité</label>
-                                            <select class="form-select">
-                                                <option>Technologie</option>
-                                                <option>Finance</option>
-                                                <option>Santé</option>
-                                                <option>Commerce</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                        <div class="form-group">
-                                            <label class="form-label" data-i18n="form_email">Email de contact</label>
-                                            <input type="email" class="form-input" value="rh@acme.com">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label" data-i18n="form_phone">Téléphone</label>
-                                            <input type="tel" class="form-input" value="+1 (514) 555-0123">
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="form_address">Adresse</label>
-                                        <input type="text" class="form-input"
-                                            value="1234 Rue Principale, Montréal, QC H2X 1Y6">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="form_description">Description de
-                                            l'entreprise</label>
-                                        <textarea class="form-input" rows="4"
-                                            style="resize: vertical;">Acme Corporation est une entreprise leader dans le domaine de la technologie, spécialisée dans les solutions innovantes pour les entreprises.</textarea>
-                                    </div>
-
-
-
-                                    <div
-                                        style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-i18n="btn_cancel">Annuler</button>
-                                        <button type="submit" class="btn btn-primary"
-                                            data-i18n="btn_save">Enregistrer</button>
-                                    </div>
-                                </form>
+                        <!-- Settings Content: Employer Branding -->
+                        <div class="card" id="settings-branding">
+                            <div class="card-header"
+                                style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                                <h2 class="card-title" data-i18n="settings_branding_title">Personnalisation de la
+                                    marque</h2>
                             </div>
 
-                            <!-- Settings Content: Employer Branding -->
-                            <div class="card" id="settings-branding">
-                                <div class="card-header"
-                                    style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                                    <h2 class="card-title" data-i18n="settings_branding_title">Personnalisation de la
-                                        marque</h2>
+                            <form style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                <!-- Logo Section (Moved here) -->
+                                <div class="form-group">
+                                    <label class="form-label" data-i18n="form_logo">Logo de l'entreprise</label>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;"
+                                        data-i18n="logo_help">Affiché sur votre profil et vos offres.</p>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div
+                                            style="width: 80px; height: 80px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; overflow:hidden;">
+                                            <img src="https://ui-avatars.com/api/?name=Acme&background=3B82F6&color=fff&size=80"
+                                                alt="Logo" style="width:100%; height:100%; object-fit:cover;">
+                                        </div>
+                                        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-i18n="btn_upload">Téléverser un logo</button>
+                                            <span style="font-size: 0.75rem; color: var(--text-secondary);">JPG, PNG
+                                                ou SVG. Max 2MB.</span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <form style="display: flex; flex-direction: column; gap: 1.5rem;">
-                                    <!-- Logo Section (Moved here) -->
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="form_logo">Logo de l'entreprise</label>
-                                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;"
-                                            data-i18n="logo_help">Affiché sur votre profil et vos offres.</p>
-                                        <div style="display: flex; align-items: center; gap: 1rem;">
-                                            <div
-                                                style="width: 80px; height: 80px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; overflow:hidden;">
-                                                <img src="https://ui-avatars.com/api/?name=Acme&background=3B82F6&color=fff&size=80"
-                                                    alt="Logo" style="width:100%; height:100%; object-fit:cover;">
-                                            </div>
-                                            <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-i18n="btn_upload">Téléverser un logo</button>
-                                                <span style="font-size: 0.75rem; color: var(--text-secondary);">JPG, PNG
-                                                    ou SVG. Max 2MB.</span>
-                                            </div>
-                                        </div>
+                                <!-- Brand Colors -->
+                                <div class="form-group">
+                                    <label class="form-label" data-i18n="form_brand_color">Couleur de la
+                                        marque</label>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <input type="color" class="form-input" value="#3B82F6"
+                                            style="width: 60px; height: 40px; padding: 0.25rem;">
+                                        <input type="text" class="form-input" value="#3B82F6" placeholder="#000000"
+                                            style="width: 120px;">
                                     </div>
+                                </div>
 
-                                    <!-- Brand Colors -->
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="form_brand_color">Couleur de la
-                                            marque</label>
-                                        <div style="display: flex; align-items: center; gap: 1rem;">
-                                            <input type="color" class="form-input" value="#3B82F6"
-                                                style="width: 60px; height: 40px; padding: 0.25rem;">
-                                            <input type="text" class="form-input" value="#3B82F6" placeholder="#000000"
-                                                style="width: 120px;">
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-i18n="btn_cancel">Annuler</button>
-                                        <button type="submit" class="btn btn-primary"
-                                            data-i18n="btn_save">Enregistrer</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div> <!-- End wrapper -->
-                    </div>
+                                <div
+                                    style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-i18n="btn_cancel">Annuler</button>
+                                    <button type="submit" class="btn btn-primary"
+                                        data-i18n="btn_save">Enregistrer</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div> <!-- End wrapper -->
                 </div>
             </div>
-        </main>
+    </div>
+    </main>
     </div>
 
     <!-- Modal for Poste -->
