@@ -1131,157 +1131,236 @@
                                         style="padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between;"
                                         onclick="toggleSettingsSubmenu(this)">
                                         <div style="display:flex; align-items:center; gap:0.75rem;">
-                                            <i class="fa-solid fa-building"></i>
-                                            <span data-i18n="settings_company">Entreprise</span>
-                                        </div>
-                                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i>
-                                    </a>
-                                    <div class="settings-submenu"
-                                        style="display: flex; flex-direction: column; padding-left: 2.5rem; background: #f8fafc;">
-                                        <a href="#company" class="nav-link active"
-                                            onclick="switchSettingsTab('settings-company', this)"
-                                            style="padding: 0.5rem 0; color: var(--text-primary); font-size: 0.9rem; text-decoration:none;">Profil</a>
-                                        <a href="#branding" class="nav-link"
-                                            onclick="switchSettingsTab('settings-branding', this)"
-                                            style="padding: 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem; text-decoration:none;"
-                                            data-i18n="settings_branding">Marque employeur</a>
-                                    </div>
-                                </div>
-                        </div>
-                        <a href="#" class="nav-item" style="padding: 0.75rem 1rem;">
-                            <i class="fa-solid fa-users"></i>
-                            <span data-i18n="settings_team">Équipe</span>
-                        </a>
-                        <a href="#" class="nav-item" style="padding: 0.75rem 1rem;">
-                            <i class="fa-solid fa-bell"></i>
-                            <span data-i18n="settings_notifications">Notifications</span>
-                        </a>
-                        <a href="#" class="nav-item" style="padding: 0.75rem 1rem;">
-                            <i class="fa-solid fa-credit-card"></i>
-                            <span data-i18n="settings_billing">Facturation</span>
-                        </a>
-                        <a href="#" class="nav-item" style="padding: 0.75rem 1rem;">
-                            <i class="fa-solid fa-plug"></i>
-                            <span data-i18n="settings_integrations">Intégrations</span>
-                        </a>
-                        </nav>
+                                            <!-- Settings Layout Restructured -->
+                                            <div class="settings-layout"
+                                                style="display: flex; gap: 2rem; align-items: flex-start;">
+                                                <!-- Left Sidebar Navigation -->
+                                                <aside class="settings-sidebar" style="width: 260px; flex-shrink: 0;">
+                                                    <div class="card" style="padding: 0; overflow: hidden;">
+                                                        <div class="card-header"
+                                                            style="border-bottom: 1px solid var(--border-color); padding: 1rem;">
+                                                            <h2 class="card-title" data-i18n="nav_parametres">Paramètres
+                                                            </h2>
+                                                        </div>
+                                                        <nav class="settings-nav-vertical"
+                                                            style="display: flex; flex-direction: column;">
+                                                            <a href="#" class="settings-nav-item active"
+                                                                data-target="settings-company"
+                                                                style="padding: 0.75rem 1rem; text-decoration: none; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem; border-left: 2px solid transparent; transition: all 0.2s;">
+                                                                <i class="fa-regular fa-building"
+                                                                    style="width: 20px;"></i>
+                                                                <span data-i18n="settings_company">Entreprise</span>
+                                                            </a>
+                                                            <a href="#" class="settings-nav-item"
+                                                                data-target="settings-branding"
+                                                                style="padding: 0.75rem 1rem; text-decoration: none; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem; border-left: 2px solid transparent; transition: all 0.2s;">
+                                                                <i class="fa-solid fa-palette" style="width: 20px;"></i>
+                                                                <span data-i18n="settings_branding">Marque
+                                                                    employeur</span>
+                                                            </a>
+                                                            <a href="#" class="settings-nav-item"
+                                                                data-target="settings-team"
+                                                                style="padding: 0.75rem 1rem; text-decoration: none; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem; border-left: 2px solid transparent; transition: all 0.2s;">
+                                                                <i class="fa-solid fa-users" style="width: 20px;"></i>
+                                                                <span data-i18n="settings_team">Équipe</span>
+                                                            </a>
+                                                            <a href="#" class="settings-nav-item"
+                                                                data-target="settings-notifications"
+                                                                style="padding: 0.75rem 1rem; text-decoration: none; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem; border-left: 2px solid transparent; transition: all 0.2s;">
+                                                                <i class="fa-solid fa-bell" style="width: 20px;"></i>
+                                                                <span
+                                                                    data-i18n="settings_notifications">Notifications</span>
+                                                            </a>
+                                                            <a href="#" class="settings-nav-item"
+                                                                data-target="settings-billing"
+                                                                style="padding: 0.75rem 1rem; text-decoration: none; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem; border-left: 2px solid transparent; transition: all 0.2s;">
+                                                                <i class="fa-solid fa-credit-card"
+                                                                    style="width: 20px;"></i>
+                                                                <span data-i18n="settings_billing">Facturation</span>
+                                                            </a>
+                                                            <a href="#" class="settings-nav-item"
+                                                                data-target="settings-integrations"
+                                                                style="padding: 0.75rem 1rem; text-decoration: none; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem; border-left: 2px solid transparent; transition: all 0.2s;">
+                                                                <i class="fa-solid fa-plug" style="width: 20px;"></i>
+                                                                <span
+                                                                    data-i18n="settings_integrations">Intégrations</span>
+                                                            </a>
+                                                        </nav>
+                                                    </div>
+                                                </aside>
 
-                        <!-- Content Wrapper was here effectively -->
-                    </div> <!-- Closing card -->
+                                                <!-- Right Content Area -->
+                                                <main class="settings-content" style="flex-grow: 1;">
 
-                    <!-- Settings Content: Company Info -->
-                    <div class="card" id="settings-company">
-                        <div class="card-header"
-                            style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                            <h2 class="card-title" data-i18n="settings_company_info">Informations de
-                                l'entreprise
-                            </h2>
-                        </div>
+                                                    <!-- Settings Content: Company Info -->
+                                                    <div class="card settings-pane" id="settings-company">
+                                                        <div class="card-header"
+                                                            style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                                                            <h2 class="card-title" data-i18n="settings_company_info">
+                                                                Informations de l'entreprise</h2>
+                                                        </div>
 
-                        <form style="display: flex; flex-direction: column; gap: 1.5rem;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="form_company_name">Nom de
-                                        l'entreprise</label>
-                                    <input type="text" class="form-input" value="Acme Corporation">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="form_industry">Secteur
-                                        d'activité</label>
-                                    <select class="form-select">
-                                        <option>Technologie</option>
-                                        <option>Finance</option>
-                                        <option>Santé</option>
-                                        <option>Commerce</option>
-                                    </select>
-                                </div>
-                            </div>
+                                                        <form
+                                                            style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                                            <div
+                                                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                                                <div class="form-group">
+                                                                    <label class="form-label"
+                                                                        data-i18n="form_company_name">Nom de
+                                                                        l'entreprise</label>
+                                                                    <input type="text" class="form-input"
+                                                                        value="Acme Corporation">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label class="form-label"
+                                                                        data-i18n="form_industry">Secteur
+                                                                        d'activité</label>
+                                                                    <select class="form-select">
+                                                                        <option>Technologie</option>
+                                                                        <option>Finance</option>
+                                                                        <option>Santé</option>
+                                                                        <option>Commerce</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
 
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="form_email">Email de contact</label>
-                                    <input type="email" class="form-input" value="rh@acme.com">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="form_phone">Téléphone</label>
-                                    <input type="tel" class="form-input" value="+1 (514) 555-0123">
-                                </div>
-                            </div>
+                                                            <div
+                                                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                                                <div class="form-group">
+                                                                    <label class="form-label"
+                                                                        data-i18n="form_email">Email de contact</label>
+                                                                    <input type="email" class="form-input"
+                                                                        value="rh@acme.com">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label class="form-label"
+                                                                        data-i18n="form_phone">Téléphone</label>
+                                                                    <input type="tel" class="form-input"
+                                                                        value="+1 (514) 555-0123">
+                                                                </div>
+                                                            </div>
 
-                            <div class="form-group">
-                                <label class="form-label" data-i18n="form_address">Adresse</label>
-                                <input type="text" class="form-input" value="1234 Rue Principale, Montréal, QC H2X 1Y6">
-                            </div>
+                                                            <div class="form-group">
+                                                                <label class="form-label"
+                                                                    data-i18n="form_address">Adresse</label>
+                                                                <input type="text" class="form-input"
+                                                                    value="1234 Rue Principale, Montréal, QC H2X 1Y6">
+                                                            </div>
 
-                            <div class="form-group">
-                                <label class="form-label" data-i18n="form_description">Description de
-                                    l'entreprise</label>
-                                <textarea class="form-input" rows="4"
-                                    style="resize: vertical;">Acme Corporation est une entreprise leader dans le domaine de la technologie, spécialisée dans les solutions innovantes pour les entreprises.</textarea>
-                            </div>
+                                                            <div class="form-group">
+                                                                <label class="form-label"
+                                                                    data-i18n="form_description">Description de
+                                                                    l'entreprise</label>
+                                                                <textarea class="form-input" rows="4"
+                                                                    style="resize: vertical;">Acme Corporation est une entreprise leader dans le domaine de la technologie, spécialisée dans les solutions innovantes pour les entreprises.</textarea>
+                                                            </div>
 
+                                                            <div
+                                                                style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-i18n="btn_cancel">Annuler</button>
+                                                                <button type="submit" class="btn btn-primary"
+                                                                    data-i18n="btn_save">Enregistrer</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
 
+                                                    <!-- Settings Content: Employer Branding -->
+                                                    <div class="card settings-pane" id="settings-branding"
+                                                        style="display: none;">
+                                                        <div class="card-header"
+                                                            style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                                                            <h2 class="card-title" data-i18n="settings_branding_title">
+                                                                Personnalisation de la
+                                                                marque</h2>
+                                                        </div>
 
-                            <div
-                                style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                                <button type="button" class="btn btn-secondary" data-i18n="btn_cancel">Annuler</button>
-                                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
-                            </div>
-                        </form>
-                    </div>
+                                                        <form
+                                                            style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                                            <!-- Logo Section -->
+                                                            <div class="form-group">
+                                                                <label class="form-label" data-i18n="form_logo">Logo de
+                                                                    l'entreprise</label>
+                                                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;"
+                                                                    data-i18n="logo_help">Affiché sur votre profil et
+                                                                    vos offres.</p>
+                                                                <div
+                                                                    style="display: flex; align-items: center; gap: 1rem;">
+                                                                    <div
+                                                                        style="width: 80px; height: 80px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; overflow:hidden;">
+                                                                        <img src="https://ui-avatars.com/api/?name=Acme&background=3B82F6&color=fff&size=80"
+                                                                            alt="Logo"
+                                                                            style="width:100%; height:100%; object-fit:cover;">
+                                                                    </div>
+                                                                    <div
+                                                                        style="display:flex; flex-direction:column; gap:0.5rem;">
+                                                                        <button type="button" class="btn btn-secondary"
+                                                                            data-i18n="btn_upload">Téléverser un
+                                                                            logo</button>
+                                                                        <span
+                                                                            style="font-size: 0.75rem; color: var(--text-secondary);">JPG,
+                                                                            PNG
+                                                                            ou SVG. Max 2MB.</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
 
-                    <!-- Settings Content: Employer Branding -->
-                    <div class="card" id="settings-branding">
-                        <div class="card-header"
-                            style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                            <h2 class="card-title" data-i18n="settings_branding_title">Personnalisation de la
-                                marque</h2>
-                        </div>
+                                                            <!-- Brand Colors -->
+                                                            <div class="form-group">
+                                                                <label class="form-label"
+                                                                    data-i18n="form_brand_color">Couleur de la
+                                                                    marque</label>
+                                                                <div
+                                                                    style="display: flex; align-items: center; gap: 1rem;">
+                                                                    <input type="color" class="form-input"
+                                                                        value="#3B82F6"
+                                                                        style="width: 60px; height: 40px; padding: 0.25rem;">
+                                                                    <input type="text" class="form-input"
+                                                                        value="#3B82F6" placeholder="#000000"
+                                                                        style="width: 120px;">
+                                                                </div>
+                                                            </div>
 
-                        <form style="display: flex; flex-direction: column; gap: 1.5rem;">
-                            <!-- Logo Section (Moved here) -->
-                            <div class="form-group">
-                                <label class="form-label" data-i18n="form_logo">Logo de l'entreprise</label>
-                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;"
-                                    data-i18n="logo_help">Affiché sur votre profil et vos offres.</p>
-                                <div style="display: flex; align-items: center; gap: 1rem;">
-                                    <div
-                                        style="width: 80px; height: 80px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; overflow:hidden;">
-                                        <img src="https://ui-avatars.com/api/?name=Acme&background=3B82F6&color=fff&size=80"
-                                            alt="Logo" style="width:100%; height:100%; object-fit:cover;">
-                                    </div>
-                                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-i18n="btn_upload">Téléverser un logo</button>
-                                        <span style="font-size: 0.75rem; color: var(--text-secondary);">JPG, PNG
-                                            ou SVG. Max 2MB.</span>
-                                    </div>
-                                </div>
-                            </div>
+                                                            <div
+                                                                style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-i18n="btn_cancel">Annuler</button>
+                                                                <button type="submit" class="btn btn-primary"
+                                                                    data-i18n="btn_save">Enregistrer</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
 
-                            <!-- Brand Colors -->
-                            <div class="form-group">
-                                <label class="form-label" data-i18n="form_brand_color">Couleur de la
-                                    marque</label>
-                                <div style="display: flex; align-items: center; gap: 1rem;">
-                                    <input type="color" class="form-input" value="#3B82F6"
-                                        style="width: 60px; height: 40px; padding: 0.25rem;">
-                                    <input type="text" class="form-input" value="#3B82F6" placeholder="#000000"
-                                        style="width: 120px;">
-                                </div>
-                            </div>
+                                                    <!-- Placeholders for other sections -->
+                                                    <div class="card settings-pane" id="settings-team"
+                                                        style="display: none;">
+                                                        <h2 class="card-title" data-i18n="settings_team">Équipe</h2>
+                                                        <p>Gestion de l'équipe...</p>
+                                                    </div>
+                                                    <div class="card settings-pane" id="settings-notifications"
+                                                        style="display: none;">
+                                                        <h2 class="card-title" data-i18n="settings_notifications">
+                                                            Notifications</h2>
+                                                        <p>Préférences de notifications...</p>
+                                                    </div>
+                                                    <div class="card settings-pane" id="settings-billing"
+                                                        style="display: none;">
+                                                        <h2 class="card-title" data-i18n="settings_billing">Facturation
+                                                        </h2>
+                                                        <p>Historique et méthodes de paiement...</p>
+                                                    </div>
+                                                    <div class="card settings-pane" id="settings-integrations"
+                                                        style="display: none;">
+                                                        <h2 class="card-title" data-i18n="settings_integrations">
+                                                            Intégrations</h2>
+                                                        <p>Connectez vos outils...</p>
+                                                    </div>
 
-                            <div
-                                style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                                <button type="button" class="btn btn-secondary" data-i18n="btn_cancel">Annuler</button>
-                                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
-                            </div>
-                        </form>
-                    </div>
-                </div> <!-- End wrapper -->
-            </div> <!-- End Grid -->
-    </div> <!-- End Settings Section -->
-    </main>
+                                                </main>
+                                            </div> <!-- End Settings Layout -->
+                                        </div> <!-- End Grid (Settings Section main div) -->
+                                </div> <!-- End Settings Section -->
+        </main>
     </div>
 
     <!-- Modal for Poste -->
