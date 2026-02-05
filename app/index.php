@@ -3,10 +3,6 @@
  * Page de connexion uniquement.
  * Si connecté : redirection directe vers l'espace candidat (candidate-jobs.php).
  */
-// TEMPORARY REDIRECT TO ENTREPRISE DASHBOARD
-header('Location: entreprise.html');
-exit;
-
 session_start();
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/includes/functions.php';
