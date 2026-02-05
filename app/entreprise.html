@@ -497,14 +497,16 @@
                             <button class="view-tab" data-i18n="filter_paused">Pausés</button>
                             <button class="view-tab" data-i18n="filter_closed">Fermés</button>
                         </div>
-                        <div class="search-bar" style="max-width: 300px; margin-right: 1rem;">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
-                        </div>
                         <button class="btn btn-primary" onclick="openModal('poste')">
                             <i class="fa-solid fa-plus"></i>
                             <span data-i18n="add_poste">Nouveau poste</span>
                         </button>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <div class="search-bar" style="max-width: 100%;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
+                        </div>
                     </div>
 
                     <table class="data-table" id="postes-table">
@@ -600,14 +602,16 @@
                             <button class="view-tab" data-i18n="filter_active">Actifs</button>
                             <button class="view-tab" data-i18n="filter_expired">Expirés</button>
                         </div>
-                        <div class="search-bar" style="max-width: 300px; margin-right: 1rem;">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
-                        </div>
                         <button class="btn btn-primary" onclick="openModal('affichage')">
                             <i class="fa-solid fa-plus"></i>
                             <span data-i18n="add_affichage">Nouvel affichage</span>
                         </button>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <div class="search-bar" style="max-width: 100%;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
+                        </div>
                     </div>
 
                     <table class="data-table" id="affichages-table">
@@ -709,10 +713,6 @@
                             <button class="view-tab" data-i18n="filter_reviewed">Évalués</button>
                             <button class="view-tab" data-i18n="filter_shortlisted">Favoris</button>
                         </div>
-                        <div class="search-bar" style="max-width: 300px;">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
-                        </div>
                         <div style="display: flex; gap: 0.5rem;">
                             <select class="form-select" style="width: auto;">
                                 <option data-i18n="filter_all_jobs">Tous les postes</option>
@@ -720,6 +720,12 @@
                                 <option>Chef de projet</option>
                                 <option>Designer UX/UI</option>
                             </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <div class="search-bar" style="max-width: 100%;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
                         </div>
                     </div>
 
