@@ -454,10 +454,7 @@
         <main class="main-content">
             <!-- Top Bar -->
             <header class="top-bar">
-                <div class="search-bar">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="searchInput" placeholder="Rechercher..." data-i18n-placeholder="search">
-                </div>
+                <!-- Search Bar Removed -->
 
                 <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
                     <span style="font-weight: 700; font-size: 1.25rem; color: var(--text-primary);">OLYMEL</span>
@@ -499,6 +496,10 @@
                             <button class="view-tab" data-i18n="filter_active">Actifs</button>
                             <button class="view-tab" data-i18n="filter_paused">Pausés</button>
                             <button class="view-tab" data-i18n="filter_closed">Fermés</button>
+                        </div>
+                        <div class="search-bar" style="max-width: 300px; margin-right: 1rem;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
                         </div>
                         <button class="btn btn-primary" onclick="openModal('poste')">
                             <i class="fa-solid fa-plus"></i>
@@ -598,6 +599,10 @@
                             <button class="view-tab active" data-i18n="filter_all">Tous</button>
                             <button class="view-tab" data-i18n="filter_active">Actifs</button>
                             <button class="view-tab" data-i18n="filter_expired">Expirés</button>
+                        </div>
+                        <div class="search-bar" style="max-width: 300px; margin-right: 1rem;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
                         </div>
                         <button class="btn btn-primary" onclick="openModal('affichage')">
                             <i class="fa-solid fa-plus"></i>
@@ -702,7 +707,11 @@
                             <button class="view-tab active" data-i18n="filter_all">Tous</button>
                             <button class="view-tab" data-i18n="filter_new">Nouveaux</button>
                             <button class="view-tab" data-i18n="filter_reviewed">Évalués</button>
-                            <button class="view-tab" data-i18n="filter_shortlisted">Shortlistés</button>
+                            <button class="view-tab" data-i18n="filter_shortlisted">Favoris</button>
+                        </div>
+                        <div class="search-bar" style="max-width: 300px;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
                         </div>
                         <div style="display: flex; gap: 0.5rem;">
                             <select class="form-select" style="width: auto;">
@@ -757,8 +766,8 @@
                                     <button class="btn-icon" title="Voir vidéo"><i
                                             class="fa-solid fa-play"></i></button>
                                     <button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>
-                                    <button class="btn-icon" title="Shortlister"><i
-                                            class="fa-solid fa-heart"></i></button>
+                                    <button class="btn-icon" title="Mettre en favoris"
+                                        data-i18n-title="action_shortlist"><i class="fa-regular fa-star"></i></button>
                                 </td>
                             </tr>
                             <tr>
@@ -791,8 +800,8 @@
                                     <button class="btn-icon" title="Voir vidéo"><i
                                             class="fa-solid fa-play"></i></button>
                                     <button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>
-                                    <button class="btn-icon" title="Shortlister"><i
-                                            class="fa-solid fa-heart"></i></button>
+                                    <button class="btn-icon" title="Mettre en favoris"
+                                        data-i18n-title="action_shortlist"><i class="fa-regular fa-star"></i></button>
                                 </td>
                             </tr>
                             <tr>
@@ -825,8 +834,8 @@
                                     <button class="btn-icon" title="Voir vidéo"><i
                                             class="fa-solid fa-play"></i></button>
                                     <button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>
-                                    <button class="btn-icon" title="Shortlister"><i
-                                            class="fa-solid fa-heart"></i></button>
+                                    <button class="btn-icon" title="Mettre en favoris"
+                                        data-i18n-title="action_shortlist"><i class="fa-regular fa-star"></i></button>
                                 </td>
                             </tr>
                             <tr>
@@ -843,7 +852,7 @@
                                 </td>
                                 <td>Développeur Frontend</td>
                                 <td><span class="status-badge" style="background: #D1FAE5; color: #065F46;"
-                                        data-i18n="status_shortlisted">Shortlisté</span></td>
+                                        data-i18n="status_shortlisted">Favori</span></td>
                                 <td><i class="fa-solid fa-circle-check" style="color: var(--success-color);"></i></td>
                                 <td>
                                     <div style="color: #F59E0B;">
@@ -859,8 +868,8 @@
                                     <button class="btn-icon" title="Voir vidéo"><i
                                             class="fa-solid fa-play"></i></button>
                                     <button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>
-                                    <button class="btn-icon" title="Shortlister"><i
-                                            class="fa-solid fa-heart"></i></button>
+                                    <button class="btn-icon" title="Mettre en favoris"
+                                        data-i18n-title="action_shortlist"><i class="fa-regular fa-star"></i></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -1150,127 +1159,122 @@
                             <span data-i18n="settings_integrations">Intégrations</span>
                         </a>
                         </nav>
+
+                        <!-- Content Wrapper was here effectively -->
+                    </div> <!-- Closing card -->
+
+                    <!-- Settings Content: Company Info -->
+                    <div class="card" id="settings-company">
+                        <div class="card-header"
+                            style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                            <h2 class="card-title" data-i18n="settings_company_info">Informations de
+                                l'entreprise
+                            </h2>
+                        </div>
+
+                        <form style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label" data-i18n="form_company_name">Nom de
+                                        l'entreprise</label>
+                                    <input type="text" class="form-input" value="Acme Corporation">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" data-i18n="form_industry">Secteur
+                                        d'activité</label>
+                                    <select class="form-select">
+                                        <option>Technologie</option>
+                                        <option>Finance</option>
+                                        <option>Santé</option>
+                                        <option>Commerce</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label" data-i18n="form_email">Email de contact</label>
+                                    <input type="email" class="form-input" value="rh@acme.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" data-i18n="form_phone">Téléphone</label>
+                                    <input type="tel" class="form-input" value="+1 (514) 555-0123">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="form_address">Adresse</label>
+                                <input type="text" class="form-input" value="1234 Rue Principale, Montréal, QC H2X 1Y6">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="form_description">Description de
+                                    l'entreprise</label>
+                                <textarea class="form-input" rows="4"
+                                    style="resize: vertical;">Acme Corporation est une entreprise leader dans le domaine de la technologie, spécialisée dans les solutions innovantes pour les entreprises.</textarea>
+                            </div>
+
+
+
+                            <div
+                                style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                <button type="button" class="btn btn-secondary" data-i18n="btn_cancel">Annuler</button>
+                                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
+                            </div>
+                        </form>
                     </div>
 
-                    <div class="settings-content-wrapper" style="display:flex; flex-direction:column; gap:2rem;">
-                        <!-- Settings Content: Company Info -->
-                        <div class="card" id="settings-company">
-                            <div class="card-header"
-                                style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                                <h2 class="card-title" data-i18n="settings_company_info">Informations de
-                                    l'entreprise
-                                </h2>
-                            </div>
-
-                            <form style="display: flex; flex-direction: column; gap: 1.5rem;">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="form_company_name">Nom de
-                                            l'entreprise</label>
-                                        <input type="text" class="form-input" value="Acme Corporation">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="form_industry">Secteur
-                                            d'activité</label>
-                                        <select class="form-select">
-                                            <option>Technologie</option>
-                                            <option>Finance</option>
-                                            <option>Santé</option>
-                                            <option>Commerce</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="form_email">Email de contact</label>
-                                        <input type="email" class="form-input" value="rh@acme.com">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="form_phone">Téléphone</label>
-                                        <input type="tel" class="form-input" value="+1 (514) 555-0123">
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="form_address">Adresse</label>
-                                    <input type="text" class="form-input"
-                                        value="1234 Rue Principale, Montréal, QC H2X 1Y6">
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="form_description">Description de
-                                        l'entreprise</label>
-                                    <textarea class="form-input" rows="4"
-                                        style="resize: vertical;">Acme Corporation est une entreprise leader dans le domaine de la technologie, spécialisée dans les solutions innovantes pour les entreprises.</textarea>
-                                </div>
-
-
-
-                                <div
-                                    style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-i18n="btn_cancel">Annuler</button>
-                                    <button type="submit" class="btn btn-primary"
-                                        data-i18n="btn_save">Enregistrer</button>
-                                </div>
-                            </form>
+                    <!-- Settings Content: Employer Branding -->
+                    <div class="card" id="settings-branding">
+                        <div class="card-header"
+                            style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                            <h2 class="card-title" data-i18n="settings_branding_title">Personnalisation de la
+                                marque</h2>
                         </div>
 
-                        <!-- Settings Content: Employer Branding -->
-                        <div class="card" id="settings-branding">
-                            <div class="card-header"
-                                style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                                <h2 class="card-title" data-i18n="settings_branding_title">Personnalisation de la
-                                    marque</h2>
+                        <form style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <!-- Logo Section (Moved here) -->
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="form_logo">Logo de l'entreprise</label>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;"
+                                    data-i18n="logo_help">Affiché sur votre profil et vos offres.</p>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div
+                                        style="width: 80px; height: 80px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; overflow:hidden;">
+                                        <img src="https://ui-avatars.com/api/?name=Acme&background=3B82F6&color=fff&size=80"
+                                            alt="Logo" style="width:100%; height:100%; object-fit:cover;">
+                                    </div>
+                                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-i18n="btn_upload">Téléverser un logo</button>
+                                        <span style="font-size: 0.75rem; color: var(--text-secondary);">JPG, PNG
+                                            ou SVG. Max 2MB.</span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <form style="display: flex; flex-direction: column; gap: 1.5rem;">
-                                <!-- Logo Section (Moved here) -->
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="form_logo">Logo de l'entreprise</label>
-                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;"
-                                        data-i18n="logo_help">Affiché sur votre profil et vos offres.</p>
-                                    <div style="display: flex; align-items: center; gap: 1rem;">
-                                        <div
-                                            style="width: 80px; height: 80px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; overflow:hidden;">
-                                            <img src="https://ui-avatars.com/api/?name=Acme&background=3B82F6&color=fff&size=80"
-                                                alt="Logo" style="width:100%; height:100%; object-fit:cover;">
-                                        </div>
-                                        <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                                            <button type="button" class="btn btn-secondary"
-                                                data-i18n="btn_upload">Téléverser un logo</button>
-                                            <span style="font-size: 0.75rem; color: var(--text-secondary);">JPG, PNG
-                                                ou SVG. Max 2MB.</span>
-                                        </div>
-                                    </div>
+                            <!-- Brand Colors -->
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="form_brand_color">Couleur de la
+                                    marque</label>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <input type="color" class="form-input" value="#3B82F6"
+                                        style="width: 60px; height: 40px; padding: 0.25rem;">
+                                    <input type="text" class="form-input" value="#3B82F6" placeholder="#000000"
+                                        style="width: 120px;">
                                 </div>
+                            </div>
 
-                                <!-- Brand Colors -->
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="form_brand_color">Couleur de la
-                                        marque</label>
-                                    <div style="display: flex; align-items: center; gap: 1rem;">
-                                        <input type="color" class="form-input" value="#3B82F6"
-                                            style="width: 60px; height: 40px; padding: 0.25rem;">
-                                        <input type="text" class="form-input" value="#3B82F6" placeholder="#000000"
-                                            style="width: 120px;">
-                                    </div>
-                                </div>
-
-                                <div
-                                    style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-i18n="btn_cancel">Annuler</button>
-                                    <button type="submit" class="btn btn-primary"
-                                        data-i18n="btn_save">Enregistrer</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div> <!-- End wrapper -->
-                </div>
-            </div>
-    </div>
+                            <div
+                                style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                <button type="button" class="btn btn-secondary" data-i18n="btn_cancel">Annuler</button>
+                                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div> <!-- End wrapper -->
+            </div> <!-- End Grid -->
+    </div> <!-- End Settings Section -->
     </main>
     </div>
 
@@ -1407,12 +1411,12 @@
                 action_delete: 'Supprimer',
                 action_video: 'Voir vidéo',
                 action_profile: 'Profil',
-                action_shortlist: 'Shortlister',
+                action_shortlist: 'Mettre en favoris',
                 // Candidats section
                 candidats_title: 'Candidats',
                 filter_new: 'Nouveaux',
                 filter_reviewed: 'Évalués',
-                filter_shortlisted: 'Shortlistés',
+                filter_shortlisted: 'Favoris',
                 filter_all_jobs: 'Tous les postes',
                 th_candidate: 'Candidat',
                 th_video: 'Vidéo',
@@ -1421,7 +1425,7 @@
                 status_new: 'Nouveau',
                 status_reviewed: 'Évalué',
                 status_rejected: 'Refusé',
-                status_shortlisted: 'Shortlisté',
+                status_shortlisted: 'Favori',
                 // Statistiques section
                 statistiques_title: 'Tableau de bord',
                 stat_active_jobs: 'Postes actifs',
@@ -1503,12 +1507,12 @@
                 action_delete: 'Delete',
                 action_video: 'Watch video',
                 action_profile: 'Profile',
-                action_shortlist: 'Shortlist',
+                action_shortlist: 'Mark as Favorite',
                 // Candidats section
                 candidats_title: 'Candidates',
                 filter_new: 'New',
                 filter_reviewed: 'Reviewed',
-                filter_shortlisted: 'Shortlisted',
+                filter_shortlisted: 'Favorites',
                 filter_all_jobs: 'All positions',
                 th_candidate: 'Candidate',
                 th_video: 'Video',
@@ -1517,7 +1521,7 @@
                 status_new: 'New',
                 status_reviewed: 'Reviewed',
                 status_rejected: 'Rejected',
-                status_shortlisted: 'Shortlisted',
+                status_shortlisted: 'Favorite',
                 // Statistiques section
                 // Statistiques section
                 statistiques_title: 'Dashboard',
