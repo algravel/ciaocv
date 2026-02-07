@@ -1,1 +1,19 @@
-DirectoryIndex index.php index.html
+# CiaoCV – Front Controller Routing
+# /app est accessible uniquement via app.ciaocv.com
+
+DirectoryIndex index.php
+
+RewriteEngine On
+
+# ─── Restreindre l'accès au domaine app.ciaocv.com ───
+# Toute requête venant d'un autre domaine (ex: ciaocv.com/app/) est bloquée.
+RewriteCond %{HTTP_HOST} !^app\.ciaocv\.com$ [NC]
+RewriteRule ^ - [F,L]
+
+# ─── Front Controller ───
+# Ne pas réécrire les fichiers et dossiers existants (assets, css, js, images…)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Router tout vers le front controller
+RewriteRule ^(.*)$ index.php [QSA,L]

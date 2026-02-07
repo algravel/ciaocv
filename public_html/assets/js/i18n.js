@@ -351,22 +351,33 @@ function setLanguage(lang) {
 
 function updateContent() {
     const lang = getLanguage();
-    const elements = document.querySelectorAll('[data-i18n]');
+    const dict = translations[lang] || translations.fr;
 
-    elements.forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (translations[lang] && translations[lang][key]) {
-            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-                element.placeholder = translations[lang][key];
-            } else {
-                element.innerHTML = translations[lang][key];
-            }
+    // data-i18n → innerHTML (ou placeholder pour input/textarea)
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        const key = el.getAttribute('data-i18n');
+        if (!dict[key]) return;
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = dict[key];
+        } else {
+            el.innerHTML = dict[key];
         }
     });
 
+    // data-i18n-placeholder → placeholder explicite
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (dict[key]) el.placeholder = dict[key];
+    });
+
+    // data-i18n-title → title
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+        const key = el.getAttribute('data-i18n-title');
+        if (dict[key]) el.title = dict[key];
+    });
+
     // Update toggles text
-    const toggles = document.querySelectorAll('.lang-toggle');
-    toggles.forEach(toggle => {
+    document.querySelectorAll('.lang-toggle').forEach(function (toggle) {
         toggle.textContent = lang === 'fr' ? 'EN' : 'FR';
     });
 }
