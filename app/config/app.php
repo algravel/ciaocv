@@ -15,6 +15,10 @@ if (file_exists($envFile)) {
         [$key, $value] = explode('=', $line, 2);
         $key   = trim($key);
         $value = trim($value);
+        // Retirer les guillemets entourant la valeur (ex: "valeur" ou 'valeur')
+        if (strlen($value) >= 2 && (($value[0] === '"' && $value[strlen($value) - 1] === '"') || ($value[0] === "'" && $value[strlen($value) - 1] === "'"))) {
+            $value = substr($value, 1, -1);
+        }
         putenv("{$key}={$value}");
         $_ENV[$key] = $value;
     }
@@ -32,6 +36,16 @@ define('MODELS_PATH',     BASE_PATH . '/models');
 
 // ─── Session ───────────────────────────────────────────────────────────────
 if (session_status() === PHP_SESSION_NONE) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'domain'   => '',
+        'secure'   => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
 }
 

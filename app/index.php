@@ -19,6 +19,7 @@ require_once __DIR__ . '/models/Poste.php';
 require_once __DIR__ . '/models/Affichage.php';
 require_once __DIR__ . '/models/Candidat.php';
 require_once __DIR__ . '/models/EmailTemplate.php';
+require_once __DIR__ . '/models/User.php';
 
 // ─── Fonctions partagées ───────────────────────────────────────────────
 require_once __DIR__ . '/includes/functions.php';
@@ -34,6 +35,9 @@ $router->get('/logout',     'AuthController', 'logout');
 
 // Dashboard employeur
 $router->get('/dashboard',  'DashboardController', 'index');
+
+// Page candidat – entrevue de présélection (app.ciaocv.com/rec/{longid})
+$router->getPattern('#^/rec/([a-f0-9]{16})$#', 'RecController', 'show');
 
 // ─── Dispatch ──────────────────────────────────────────────────────────
 $router->dispatch();

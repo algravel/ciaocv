@@ -174,14 +174,13 @@
                 <option value="archive">Archivé</option>
             </select>
             <button class="btn-icon" title="Notifier les candidats" onclick="openNotifyCandidatsModal()"><i class="fa-solid fa-envelope"></i></button>
-            <button class="btn btn-primary btn-sm" onclick="openAddCandidatModal()"><i class="fa-solid fa-user-plus"></i> Ajouter</button>
         </div>
     </div>
 
-    <!-- Alerte Terminé (30 jours) -->
+    <!-- Alerte Terminé (15 jours) -->
     <div class="alert-warning mb-4 hidden" id="affichage-termine-alert">
         <i class="fa-solid fa-triangle-exclamation"></i>
-        <span>Cet affichage est terminé. Les fichiers associés seront supprimés dans <strong>30 jours</strong> si le statut ne change pas.</span>
+        <span>Cet affichage est terminé. Les fichiers associés seront supprimés dans <strong>15 jours</strong> si le statut ne change pas.</span>
     </div>
 
     <div class="filters-bar">
@@ -192,8 +191,16 @@
             <button class="view-tab">Favoris</button>
         </div>
     </div>
-    <div class="search-row">
-        <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Rechercher..."></div>
+    <div class="search-row search-row--with-label">
+        <span class="search-row-label">Lien à partager</span>
+        <span class="search-row-url-wrap">
+            <?php
+            $firstAff = $affichages ? reset($affichages) : null;
+            $shareLongId = $firstAff['shareLongId'] ?? '0cb075d860fa55c4';
+            ?>
+            <a class="search-row-url" id="affichage-share-url" href="<?= APP_URL ?>/rec/<?= e($shareLongId) ?>" target="_blank" rel="noopener"><?= APP_URL ?>/rec/<?= e($shareLongId) ?></a>
+            <button type="button" class="btn-icon btn-icon--copy" title="Copier le lien" onclick="copyShareUrl()"><i class="fa-regular fa-copy"></i></button>
+        </span>
     </div>
     <table class="data-table">
         <thead><tr><th>Candidat</th><th>Statut</th><th>Vidéo</th><th>Note</th><th>Postulé le</th></tr></thead>
@@ -207,12 +214,11 @@
             <span class="subtitle-muted" id="affichage-evaluateurs-count">0 évaluateurs</span>
         </div>
         <div id="affichage-evaluateurs-list" class="evaluateurs-list"></div>
-        <div class="grid-2col mt-4 gap-2 evaluateurs-add-row">
-            <input type="text" id="eval-new-name" class="form-input" placeholder="Nom complet">
-            <div class="flex-center gap-2">
-                <input type="email" id="eval-new-email" class="form-input" placeholder="Courriel" onkeydown="if(event.key==='Enter'){addEvaluateur(); event.preventDefault();}">
-                <button class="btn btn-primary" onclick="addEvaluateur()" style="flex-shrink:0;"><i class="fa-solid fa-plus"></i></button>
-            </div>
+        <div class="evaluateurs-add-row mt-4">
+            <input type="text" id="eval-new-prenom" class="form-input" placeholder="Prénom">
+            <input type="text" id="eval-new-nom" class="form-input" placeholder="Nom">
+            <input type="email" id="eval-new-email" class="form-input" placeholder="Courriel" onkeydown="if(event.key==='Enter'){addEvaluateur(); event.preventDefault();}">
+            <button class="btn btn-primary" onclick="addEvaluateur()" style="flex-shrink:0;"><i class="fa-solid fa-plus"></i></button>
         </div>
     </div>
 </div>
@@ -235,18 +241,20 @@
         <thead>
             <tr>
                 <th data-i18n="th_poste">Poste</th>
+                <th data-i18n="th_department">Département</th>
                 <th data-i18n="th_start_date">Date début</th>
                 <th data-i18n="th_status">Statut</th>
-                <th data-i18n="th_applications">Candidatures</th>
+                <th data-i18n="th_interviews">Entrevues</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($affichages as $aId => $a): ?>
             <tr onclick="showAffichageDetail('<?= e($aId) ?>')" class="row-clickable">
                 <td><strong><?= e($a['title']) ?></strong></td>
+                <td><?= e($a['department'] ?? '') ?></td>
                 <td><?= e($a['start']) ?></td>
                 <td><span class="status-badge <?= e($a['statusClass']) ?>"><?= e($a['status']) ?></span></td>
-                <td><?= e($a['apps']) ?></td>
+                <td><strong><?= (int)($a['completed'] ?? 0) ?></strong> / <?= (int)($a['sent'] ?? 0) ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -371,7 +379,7 @@
                 <div>
                     <div class="kpi-label">Mon forfait</div>
                     <div class="kpi-value">20 <span class="kpi-suffix">/ 50</span></div>
-                    <div class="kpi-sub">candidats disponibles</div>
+                    <div class="kpi-sub">entrevues disponibles</div>
                 </div>
                 <div class="kpi-icon kpi-icon--blue"><i class="fa-solid fa-users"></i></div>
             </div>
@@ -380,22 +388,22 @@
         <div class="kpi-card">
             <div class="flex-between-start">
                 <div>
-                    <div class="kpi-label" data-i18n="stat_active_jobs">Postes actifs</div>
+                    <div class="kpi-label" data-i18n="stat_active_jobs">Affichages actifs</div>
                     <div class="kpi-value">3</div>
                 </div>
                 <div class="kpi-icon kpi-icon--gray"><i class="fa-solid fa-briefcase"></i></div>
             </div>
             <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 1</span> depuis le mois dernier</div>
         </div>
-        <div class="kpi-card">
+        <div class="kpi-card kpi-card--clickable" onclick="openModal('completer-profil')" role="button" tabindex="0">
             <div class="flex-between-start">
                 <div>
-                    <div class="kpi-label">Candidats en attente</div>
-                    <div class="kpi-value">7</div>
+                    <div class="kpi-label">Compléter votre profil</div>
+                    <div class="kpi-value">2</div>
                 </div>
-                <div class="kpi-icon kpi-icon--yellow"><i class="fa-solid fa-clock"></i></div>
+                <div class="kpi-icon kpi-icon--red"><i class="fa-solid fa-clipboard-check"></i></div>
             </div>
-            <div class="kpi-trend kpi-trend--warning"><i class="fa-solid fa-circle-exclamation"></i> En attente de réponse</div>
+            <div class="kpi-sub">tâches restantes</div>
         </div>
     </div>
 
@@ -441,11 +449,10 @@
     <div class="settings-tabs">
         <a href="#" class="settings-nav-item active" data-target="settings-company"><i class="fa-regular fa-building"></i><span data-i18n="settings_company">Entreprise</span></a>
         <a href="#" class="settings-nav-item" data-target="settings-branding"><i class="fa-solid fa-palette"></i><span data-i18n="settings_branding">Marque employeur</span></a>
+        <a href="#" class="settings-nav-item" data-target="settings-departments"><i class="fa-solid fa-sitemap"></i><span data-i18n="settings_departments">Départements</span></a>
         <a href="#" class="settings-nav-item" data-target="settings-team"><i class="fa-solid fa-users"></i><span data-i18n="settings_team">Équipe</span></a>
-        <a href="#" class="settings-nav-item" data-target="settings-notifications"><i class="fa-solid fa-bell"></i><span data-i18n="settings_notifications">Notifications</span></a>
-        <a href="#" class="settings-nav-item" data-target="settings-billing"><i class="fa-solid fa-credit-card"></i><span data-i18n="settings_billing">Forfaits</span></a>
+        <a href="#" class="settings-nav-item" data-target="settings-billing"><i class="fa-solid fa-credit-card"></i><span data-i18n="settings_billing">Facturation</span></a>
         <a href="#" class="settings-nav-item" data-target="settings-communications"><i class="fa-solid fa-envelope"></i><span>Communication</span></a>
-        <a href="#" class="settings-nav-item" data-target="settings-integrations"><i class="fa-solid fa-plug"></i><span data-i18n="settings_integrations">Intégrations</span></a>
     </div>
 
     <!-- Entreprise -->
@@ -491,9 +498,37 @@
         </form>
     </div>
 
-    <!-- Placeholders -->
-    <div class="card settings-pane hidden" id="settings-team"><h2 class="card-title" data-i18n="settings_team">Équipe</h2><p>Gestion de l'équipe...</p></div>
-    <div class="card settings-pane hidden" id="settings-notifications"><h2 class="card-title" data-i18n="settings_notifications">Notifications</h2><p>Préférences de notifications...</p></div>
+    <!-- Départements -->
+    <div class="card settings-pane hidden" id="settings-departments">
+        <div class="card-header card-header--bordered">
+            <h2 class="card-title" data-i18n="settings_departments">Départements</h2>
+            <span class="subtitle-muted" id="settings-departments-count">0 départements</span>
+        </div>
+        <div id="settings-departments-list" class="departments-list"></div>
+        <div class="departments-add-row mt-4">
+            <input type="text" id="dept-new-name" class="form-input" placeholder="Nom du département" onkeydown="if(event.key==='Enter'){addDepartment(); event.preventDefault();}">
+            <button class="btn btn-primary" onclick="addDepartment()" style="flex-shrink:0;"><i class="fa-solid fa-plus"></i></button>
+        </div>
+    </div>
+
+    <!-- Équipe -->
+    <div class="card settings-pane hidden" id="settings-team">
+        <div class="card-header card-header--bordered">
+            <h2 class="card-title" data-i18n="settings_team">Équipe</h2>
+            <span class="subtitle-muted" id="settings-team-count">0 utilisateurs</span>
+        </div>
+        <div id="settings-team-list" class="team-members-list"></div>
+        <div class="team-members-add-row mt-4">
+            <input type="text" id="team-new-prenom" class="form-input" placeholder="Prénom">
+            <input type="text" id="team-new-nom" class="form-input" placeholder="Nom">
+            <input type="email" id="team-new-email" class="form-input" placeholder="Courriel">
+            <select class="form-select form-select--role" id="team-new-role">
+                <option value="evaluateur">Évaluateur</option>
+                <option value="administrateur">Administrateur</option>
+            </select>
+            <button class="btn btn-primary" onclick="addTeamMember()" style="flex-shrink:0;"><i class="fa-solid fa-plus"></i></button>
+        </div>
+    </div>
 
     <!-- Forfaits -->
     <div class="settings-pane hidden" id="settings-billing">
@@ -505,7 +540,6 @@
         <?php require VIEWS_PATH . '/dashboard/_communications.php'; ?>
     </div>
 
-    <div class="card settings-pane hidden" id="settings-integrations"><h2 class="card-title" data-i18n="settings_integrations">Intégrations</h2><p>Connectez vos outils...</p></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════
@@ -518,8 +552,8 @@
         <div class="modal-header"><h2 class="modal-title" data-i18n="modal_add_poste">Nouveau poste</h2><button class="btn-icon" onclick="closeModal('poste')"><i class="fa-solid fa-xmark"></i></button></div>
         <form>
             <?= csrf_field() ?>
+            <div class="form-group"><label class="form-label" data-i18n="form_department">Département</label><select class="form-select"><option value="">— Sélectionner —</option><option value="Technologie">Technologie</option><option value="Gestion">Gestion</option><option value="Design">Design</option><option value="Stratégie">Stratégie</option><option value="Marketing">Marketing</option><option value="Ressources humaines">Ressources humaines</option><option value="Finance">Finance</option><option value="Opérations">Opérations</option></select></div>
             <div class="form-group"><label class="form-label" data-i18n="form_title">Titre du poste</label><input type="text" class="form-input" placeholder="Ex: Développeur Frontend"></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_department">Département</label><input type="text" class="form-input" placeholder="Ex: Technologie"></div>
             <div class="form-group"><label class="form-label" data-i18n="form_location">Lieu</label><input type="text" class="form-input" placeholder="Ex: Montréal, QC"></div>
             <div class="form-group"><label class="form-label" data-i18n="form_status">Statut</label><select class="form-select"><option value="active" data-i18n="status_active">Actif</option><option value="paused" data-i18n="status_paused">Pausé</option><option value="closed" data-i18n="status_closed">Fermé</option></select></div>
             <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal('poste')" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button></div>
@@ -533,10 +567,8 @@
         <div class="modal-header"><h2 class="modal-title" data-i18n="modal_add_affichage">Nouvel affichage</h2><button class="btn-icon" onclick="closeModal('affichage')"><i class="fa-solid fa-xmark"></i></button></div>
         <form>
             <?= csrf_field() ?>
+            <div class="form-group"><label class="form-label" data-i18n="form_department">Département</label><select class="form-select"><option value="">— Sélectionner —</option><option value="Technologie">Technologie</option><option value="Gestion">Gestion</option><option value="Design">Design</option><option value="Stratégie">Stratégie</option><option value="Marketing">Marketing</option><option value="Ressources humaines">Ressources humaines</option><option value="Finance">Finance</option><option value="Opérations">Opérations</option></select></div>
             <div class="form-group"><label class="form-label" data-i18n="form_poste">Poste</label><select class="form-select"><option>Développeur Frontend</option><option>Chef de projet</option><option>Designer UX/UI</option></select></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_platform">Plateforme</label><select class="form-select"><option>LinkedIn</option><option>Indeed</option><option>Site carrière</option><option>Autre</option></select></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_start_date">Date de début</label><input type="date" class="form-input"></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_end_date">Date de fin</label><input type="date" class="form-input"></div>
             <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal('affichage')" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button></div>
         </form>
     </div>
@@ -620,5 +652,41 @@
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ajouter</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal Compléter votre profil -->
+<div class="modal-overlay" id="completer-profil-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title"><i class="fa-solid fa-clipboard-check"></i> Compléter votre profil</h2>
+            <button class="btn-icon" onclick="closeModal('completer-profil')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="completer-profil-list">
+            <a href="#parametres" class="completer-profil-item" onclick="closeModal('completer-profil')">
+                <span class="completer-profil-num">1</span>
+                <div>
+                    <strong>Détail de votre organisation</strong>
+                    <span class="subtitle-muted">Paramètres de l'entreprise</span>
+                </div>
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            <a href="#postes" class="completer-profil-item" onclick="closeModal('completer-profil')">
+                <span class="completer-profil-num">2</span>
+                <div>
+                    <strong>Créer un poste</strong>
+                    <span class="subtitle-muted">Définir vos postes à pourvoir</span>
+                </div>
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            <a href="#affichages" class="completer-profil-item" onclick="closeModal('completer-profil')">
+                <span class="completer-profil-num">3</span>
+                <div>
+                    <strong>Créer un affichage</strong>
+                    <span class="subtitle-muted">Publier votre poste</span>
+                </div>
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
     </div>
 </div>

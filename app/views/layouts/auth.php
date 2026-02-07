@@ -238,12 +238,30 @@
         .login-footer {
             margin-top: 1.5rem;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
         .login-forgot-link {
             font-size: 0.85rem;
-            color: var(--text-gray);
+            color: var(--primary);
             text-decoration: none;
         }
+        .login-forgot-link:hover { text-decoration: underline; }
+        .login-footer-sep { color: var(--text-gray); font-size: 0.85rem; }
+        .login-demo-cta {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .login-demo-link {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .login-demo-link:hover { text-decoration: underline; }
         .oauth-divider-text {
             font-size: 0.75rem;
             text-transform: uppercase;

@@ -10,6 +10,8 @@
 var postesData      = {};
 var affichagesData  = {};
 var candidatsData   = {};
+var teamMembersData   = [];
+var departmentsData   = [];
 var affichageCandidats = {};
 var emailTemplates  = [];
 
@@ -33,11 +35,36 @@ var emailTemplates  = [];
 
     // Email templates
     emailTemplates = APP_DATA.emailTemplates || [];
+
+    // Départements
+    departmentsData = Array.isArray(APP_DATA.departments) ? APP_DATA.departments.slice() : [];
+
+    // Équipe (utilisateurs de l'entreprise)
+    teamMembersData = Array.isArray(APP_DATA.teamMembers) ? APP_DATA.teamMembers.slice() : [];
 })();
 
 /* ═══════════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════════ */
+function copyShareUrl() {
+    var el = document.getElementById('affichage-share-url');
+    if (!el) return;
+    var url = (el.href || el.textContent || '').trim();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { alert('Lien copié !'); }).catch(function () { fallbackCopy(url); });
+    } else {
+        fallbackCopy(url);
+    }
+}
+function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); alert('Lien copié !'); } catch (e) {}
+    document.body.removeChild(ta);
+}
 function escapeHtml(str) {
     var div = document.createElement('div');
     div.textContent = str;
@@ -185,6 +212,8 @@ document.querySelectorAll('.settings-nav-item').forEach(function (tab) {
         document.querySelectorAll('.settings-pane').forEach(function (pane) { pane.style.display = 'none'; });
         var targetPane = document.getElementById(targetId);
         if (targetPane) targetPane.style.display = 'block';
+        if (targetId === 'settings-team') renderTeamMembers();
+        if (targetId === 'settings-departments') renderDepartments();
     });
 });
 
@@ -469,9 +498,28 @@ function showAffichageDetail(id) {
 
     document.getElementById('affichage-candidats-title').textContent = data.title;
     document.getElementById('affichage-candidats-subtitle').textContent = data.platform + ' · ' + data.apps + ' candidatures · ' + data.views + ' vues';
-    var sb = document.getElementById('affichage-candidats-status');
-    sb.textContent = data.status;
-    sb.className = 'status-badge ' + data.statusClass;
+
+    var shareUrlEl = document.getElementById('affichage-share-url');
+    if (shareUrlEl && data.shareLongId) {
+        var baseUrl = (typeof APP_DATA !== 'undefined' && APP_DATA.appUrl) ? APP_DATA.appUrl : 'https://app.ciaocv.com';
+        var url = baseUrl + '/rec/' + data.shareLongId;
+        shareUrlEl.href = url;
+        shareUrlEl.textContent = url;
+    }
+
+    // Status select
+    var statusSelect = document.getElementById('affichage-status-select');
+    var statusKey = (data.status || 'Actif').toLowerCase().replace('é', 'e').replace('é', 'e');
+    if (statusKey === 'actif') statusSelect.value = 'actif';
+    else if (statusKey === 'termine') statusSelect.value = 'termine';
+    else if (statusKey === 'archive') statusSelect.value = 'archive';
+    else statusSelect.value = 'actif';
+    applyStatusSelectStyle(statusSelect);
+
+    // Alerte terminé
+    var alert = document.getElementById('affichage-termine-alert');
+    if (statusSelect.value === 'termine') alert.classList.remove('hidden');
+    else alert.classList.add('hidden');
 
     var candidates = affichageCandidats[id] || [];
     var tbody = document.getElementById('affichage-candidats-tbody');
@@ -497,18 +545,16 @@ function showAffichageDetail(id) {
             '<td><span class="status-badge" style="background:' + c.statusBg + '; color:' + c.statusColor + ';">' + escapeHtml(c.status) + '</span></td>' +
             '<td>' + videoIcon + '</td>' +
             '<td><div style="color: #F59E0B;">' + stars + '</div></td>' +
-            '<td>' + escapeHtml(c.date) + '</td>' +
-            '<td onclick="event.stopPropagation()">' +
-                '<button class="btn-icon" title="Voir vidéo"><i class="fa-solid fa-play"></i></button>' +
-                '<button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>' +
-                '<button class="btn-icon" title="Favori"><i class="fa-regular fa-star"></i></button>' +
-            '</td>';
+            '<td>' + escapeHtml(c.date) + '</td>';
         tbody.appendChild(row);
     });
 
     if (candidates.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #94A3B8;">Aucun candidat pour cet affichage.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #94A3B8;">Aucun candidat pour cet affichage.</td></tr>';
     }
+
+    // Render evaluateurs
+    renderEvaluateurs();
 
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
     document.getElementById('affichage-candidats-section').classList.add('active');
@@ -618,18 +664,49 @@ function addComment() {
 }
 
 /* ═══════════════════════════════════════════════
-   FERMER AFFICHAGE MODAL
+   STATUT AFFICHAGE
    ═══════════════════════════════════════════════ */
-var closeMessages = {
+function applyStatusSelectStyle(select) {
+    select.className = 'status-select';
+    if (select.value === 'actif') select.classList.add('status-select--actif');
+    else if (select.value === 'termine') select.classList.add('status-select--termine');
+    else if (select.value === 'archive') select.classList.add('status-select--archive');
+}
+
+function updateAffichageStatus(value) {
+    var id = window._currentAffichageId;
+    if (!id || !affichagesData[id]) return;
+
+    var select = document.getElementById('affichage-status-select');
+    applyStatusSelectStyle(select);
+
+    var alert = document.getElementById('affichage-termine-alert');
+    if (value === 'termine') {
+        alert.classList.remove('hidden');
+    } else {
+        alert.classList.add('hidden');
+    }
+
+    // Mettre à jour les données mock
+    var labels = { actif: 'Actif', termine: 'Terminé', archive: 'Archivé' };
+    var classes = { actif: 'status-active', termine: 'status-paused', archive: 'status-paused' };
+    affichagesData[id].status = labels[value] || 'Actif';
+    affichagesData[id].statusClass = classes[value] || 'status-active';
+}
+
+/* ═══════════════════════════════════════════════
+   NOTIFIER CANDIDATS MODAL
+   ═══════════════════════════════════════════════ */
+var notifyMessages = {
     polite: "Bonjour,\n\nNous vous remercions sincèrement pour l'intérêt que vous avez porté à notre offre. Après une analyse attentive de l'ensemble des candidatures reçues, nous avons décidé de poursuivre avec d'autres profils.\n\nCordialement,\nL'équipe de recrutement",
     filled: "Bonjour,\n\nNous tenons à vous informer que le poste pour lequel vous avez postulé a été comblé.\n\nMerci et bonne continuation,\nL'équipe de recrutement",
     custom: ""
 };
 
-function openCloseAffichageModal() {
+function openNotifyCandidatsModal() {
     var id = window._currentAffichageId;
     var candidates = affichageCandidats[id] || [];
-    var container = document.getElementById('close-affichage-candidates');
+    var container = document.getElementById('notify-candidats-list');
     container.innerHTML = '';
 
     candidates.forEach(function (c, i) {
@@ -637,7 +714,7 @@ function openCloseAffichageModal() {
         div.style.cssText = 'display:flex;align-items:center;gap:0.75rem;padding:0.6rem 1rem;border-bottom:1px solid var(--border-color);';
         if (i === candidates.length - 1) div.style.borderBottom = 'none';
         div.innerHTML =
-            '<input type="checkbox" class="close-candidate-cb" value="' + escapeHtml(c.id) + '" checked style="accent-color:var(--primary-color);">' +
+            '<input type="checkbox" class="notify-candidate-cb" value="' + escapeHtml(c.id) + '" checked style="accent-color:var(--primary-color);">' +
             '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff&size=32" style="width:32px;height:32px;border-radius:50%;" alt="">' +
             '<div style="flex:1;"><strong style="font-size:0.875rem;">' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
             '<span class="status-badge" style="background:' + c.statusBg + ';color:' + c.statusColor + ';font-size:0.7rem;">' + escapeHtml(c.status) + '</span>';
@@ -648,23 +725,241 @@ function openCloseAffichageModal() {
         container.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#94A3B8;font-size:0.85rem;">Aucun candidat à notifier.</div>';
     }
 
-    var selectAll = document.getElementById('close-select-all');
+    var selectAll = document.getElementById('notify-select-all');
     if (selectAll) selectAll.checked = true;
-    openModal('close-affichage');
+    document.getElementById('notify-candidats-message').value = '';
+    openModal('notify-candidats');
 }
 
-function toggleSelectAllClose(cb) {
-    document.querySelectorAll('.close-candidate-cb').forEach(function (box) { box.checked = cb.checked; });
+function toggleSelectAllNotify(cb) {
+    document.querySelectorAll('.notify-candidate-cb').forEach(function (box) { box.checked = cb.checked; });
 }
 
-function setCloseMessage(type) {
-    document.getElementById('close-affichage-message').value = closeMessages[type];
-    if (type === 'custom') document.getElementById('close-affichage-message').focus();
+function setNotifyMessage(type) {
+    document.getElementById('notify-candidats-message').value = notifyMessages[type];
+    if (type === 'custom') document.getElementById('notify-candidats-message').focus();
 }
 
-function confirmCloseAffichage() {
-    closeModal('close-affichage');
-    goBackToAffichages();
+function confirmNotifyCandidats() {
+    // En production : envoyer la requête API avec les candidats sélectionnés et le message
+    closeModal('notify-candidats');
+    alert('Notifications envoyées avec succès !');
+}
+
+/* ═══════════════════════════════════════════════
+   AJOUTER CANDIDAT MODAL
+   ═══════════════════════════════════════════════ */
+function openAddCandidatModal() {
+    document.getElementById('add-candidat-prenom').value = '';
+    document.getElementById('add-candidat-nom').value = '';
+    document.getElementById('add-candidat-email').value = '';
+    document.getElementById('add-candidat-phone').value = '';
+    openModal('add-candidat');
+}
+
+function submitAddCandidat(e) {
+    e.preventDefault();
+    var id = window._currentAffichageId;
+    if (!id) return;
+
+    var prenom = document.getElementById('add-candidat-prenom').value.trim();
+    var nom = document.getElementById('add-candidat-nom').value.trim();
+    var email = document.getElementById('add-candidat-email').value.trim();
+    var phone = document.getElementById('add-candidat-phone').value.trim();
+    if (!prenom || !nom || !email) return;
+
+    var fullName = prenom + ' ' + nom;
+    var colors = ['3B82F6', '8B5CF6', 'EC4899', '10B981', 'F59E0B', 'EF4444'];
+    var color = colors[Math.floor(Math.random() * colors.length)];
+
+    var newCandidat = {
+        id: 'candidat-' + Date.now(),
+        name: fullName,
+        email: email,
+        phone: phone,
+        color: color,
+        status: 'Nouveau',
+        statusBg: '#DBEAFE',
+        statusColor: '#1E40AF',
+        video: false,
+        stars: 0,
+        date: new Date().toISOString().split('T')[0]
+    };
+
+    if (!affichageCandidats[id]) affichageCandidats[id] = [];
+    affichageCandidats[id].push(newCandidat);
+
+    closeModal('add-candidat');
+    showAffichageDetail(id); // Re-render
+}
+
+/* ═══════════════════════════════════════════════
+   ÉVALUATEURS CRUD
+   ═══════════════════════════════════════════════ */
+function renderEvaluateurs() {
+    var id = window._currentAffichageId;
+    if (!id || !affichagesData[id]) return;
+
+    var evaluateurs = affichagesData[id].evaluateurs || [];
+    var container = document.getElementById('affichage-evaluateurs-list');
+    var countEl = document.getElementById('affichage-evaluateurs-count');
+    container.innerHTML = '';
+    countEl.textContent = evaluateurs.length + ' évaluateur' + (evaluateurs.length !== 1 ? 's' : '');
+
+    evaluateurs.forEach(function (ev, index) {
+        var initials = ev.name.split(' ').map(function (w) { return w.charAt(0).toUpperCase(); }).join('').substring(0, 2);
+
+        var div = document.createElement('div');
+        div.className = 'evaluateur-item';
+        div.innerHTML =
+            '<div class="evaluateur-avatar">' + escapeHtml(initials) + '</div>' +
+            '<div class="evaluateur-info">' +
+                '<div class="evaluateur-name">' + escapeHtml(ev.name) + '</div>' +
+                '<div class="evaluateur-email">' + escapeHtml(ev.email) + '</div>' +
+            '</div>' +
+            '<button class="btn-icon btn-icon--danger" title="Retirer" onclick="deleteEvaluateur(' + index + ')"><i class="fa-solid fa-trash"></i></button>';
+        container.appendChild(div);
+    });
+
+    if (evaluateurs.length === 0) {
+        container.innerHTML = '<div style="padding:1rem;text-align:center;color:#94A3B8;font-size:0.85rem;">Aucun évaluateur assigné.</div>';
+    }
+}
+
+function addEvaluateur() {
+    var id = window._currentAffichageId;
+    if (!id || !affichagesData[id]) return;
+
+    var prenomInput = document.getElementById('eval-new-prenom');
+    var nomInput = document.getElementById('eval-new-nom');
+    var emailInput = document.getElementById('eval-new-email');
+    var prenom = prenomInput.value.trim();
+    var nom = nomInput.value.trim();
+    var email = emailInput.value.trim();
+    if (!prenom || !nom || !email) return;
+
+    var name = prenom + ' ' + nom;
+    if (!affichagesData[id].evaluateurs) affichagesData[id].evaluateurs = [];
+    affichagesData[id].evaluateurs.push({ name: name, email: email });
+    prenomInput.value = '';
+    nomInput.value = '';
+    emailInput.value = '';
+    prenomInput.focus();
+    renderEvaluateurs();
+}
+
+function deleteEvaluateur(index) {
+    var id = window._currentAffichageId;
+    if (!id || !affichagesData[id] || !affichagesData[id].evaluateurs) return;
+    affichagesData[id].evaluateurs.splice(index, 1);
+    renderEvaluateurs();
+}
+
+/* ═══════════════════════════════════════════════
+   DÉPARTEMENTS
+   ═══════════════════════════════════════════════ */
+function renderDepartments() {
+    var container = document.getElementById('settings-departments-list');
+    var countEl = document.getElementById('settings-departments-count');
+    if (!container) return;
+
+    container.innerHTML = '';
+    countEl.textContent = departmentsData.length + ' département' + (departmentsData.length !== 1 ? 's' : '');
+
+    departmentsData.forEach(function (name, index) {
+        var div = document.createElement('div');
+        div.className = 'department-item';
+        div.innerHTML =
+            '<span class="department-name">' + escapeHtml(name) + '</span>' +
+            '<button class="btn-icon btn-icon--danger" title="Supprimer" onclick="deleteDepartment(' + index + ')"><i class="fa-solid fa-trash"></i></button>';
+        container.appendChild(div);
+    });
+
+    if (departmentsData.length === 0) {
+        container.innerHTML = '<div class="departments-empty">Aucun département. Ajoutez-en un ci-dessous.</div>';
+    }
+}
+
+function addDepartment() {
+    var input = document.getElementById('dept-new-name');
+    var name = input.value.trim();
+    if (!name) return;
+    if (departmentsData.indexOf(name) >= 0) return;
+
+    departmentsData.push(name);
+    input.value = '';
+    input.focus();
+    renderDepartments();
+}
+
+function deleteDepartment(index) {
+    if (index < 0 || index >= departmentsData.length) return;
+    departmentsData.splice(index, 1);
+    renderDepartments();
+}
+
+/* ═══════════════════════════════════════════════
+   ÉQUIPE (utilisateurs plateforme)
+   ═══════════════════════════════════════════════ */
+function renderTeamMembers() {
+    var container = document.getElementById('settings-team-list');
+    var countEl = document.getElementById('settings-team-count');
+    if (!container) return;
+
+    container.innerHTML = '';
+    countEl.textContent = teamMembersData.length + ' utilisateur' + (teamMembersData.length !== 1 ? 's' : '');
+
+    teamMembersData.forEach(function (m, index) {
+        var initials = m.name.split(' ').map(function (w) { return w.charAt(0).toUpperCase(); }).join('').substring(0, 2);
+        var roleLabel = m.role === 'administrateur' ? 'Administrateur' : 'Évaluateur';
+
+        var div = document.createElement('div');
+        div.className = 'team-member-item';
+        div.innerHTML =
+            '<div class="team-member-avatar">' + escapeHtml(initials) + '</div>' +
+            '<div class="team-member-info">' +
+                '<div class="team-member-name">' + escapeHtml(m.name) + '</div>' +
+                '<div class="team-member-email">' + escapeHtml(m.email) + '</div>' +
+            '</div>' +
+            '<select class="form-select form-select--role team-member-role" onchange="updateTeamMemberRole(' + index + ', this.value)" title="Rôle">' +
+                '<option value="evaluateur"' + (m.role === 'evaluateur' ? ' selected' : '') + '>Évaluateur</option>' +
+                '<option value="administrateur"' + (m.role === 'administrateur' ? ' selected' : '') + '>Administrateur</option>' +
+            '</select>' +
+            '<button class="btn-icon btn-icon--danger" title="Retirer" onclick="deleteTeamMember(' + index + ')"><i class="fa-solid fa-trash"></i></button>';
+        container.appendChild(div);
+    });
+
+    if (teamMembersData.length === 0) {
+        container.innerHTML = '<div class="team-members-empty">Aucun utilisateur. Ajoutez-en un ci-dessous.</div>';
+    }
+}
+
+function addTeamMember() {
+    var prenom = document.getElementById('team-new-prenom').value.trim();
+    var nom = document.getElementById('team-new-nom').value.trim();
+    var email = document.getElementById('team-new-email').value.trim();
+    var role = document.getElementById('team-new-role').value;
+    if (!prenom || !nom || !email) return;
+
+    var name = prenom + ' ' + nom;
+    teamMembersData.push({ id: String(Date.now()), name: name, email: email, role: role });
+
+    document.getElementById('team-new-prenom').value = '';
+    document.getElementById('team-new-nom').value = '';
+    document.getElementById('team-new-email').value = '';
+    document.getElementById('team-new-prenom').focus();
+    renderTeamMembers();
+}
+
+function updateTeamMemberRole(index, role) {
+    if (index < 0 || index >= teamMembersData.length) return;
+    teamMembersData[index].role = role;
+}
+
+function deleteTeamMember(index) {
+    if (index < 0 || index >= teamMembersData.length) return;
+    teamMembersData.splice(index, 1);
+    renderTeamMembers();
 }
 
 /* ═══════════════════════════════════════════════

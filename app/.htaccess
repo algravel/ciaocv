@@ -1,19 +1,47 @@
 # CiaoCV – Front Controller Routing
-# /app est accessible uniquement via app.ciaocv.com
+# Compatible Apache / LiteSpeed – performance et sécurité
 
 DirectoryIndex index.php
 
 RewriteEngine On
 
+# ─── Sécurité : bloquer l'accès aux fichiers sensibles ───
+<FilesMatch "\.(env|log|sql|md|json|lock|yml|yaml)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# ─── En-têtes de sécurité (LiteSpeed / Apache mod_headers) ───
+<IfModule mod_headers.c>
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header unset X-Powered-By
+</IfModule>
+
+# ─── Cache navigateur pour les assets statiques (CSS, JS, images) ───
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+</IfModule>
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|png|jpe?g|gif|svg|webp|woff2?|ico)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
+
 # ─── Restreindre l'accès au domaine app.ciaocv.com ───
-# Toute requête venant d'un autre domaine (ex: ciaocv.com/app/) est bloquée.
 RewriteCond %{HTTP_HOST} !^app\.ciaocv\.com$ [NC]
 RewriteRule ^ - [F,L]
 
 # ─── Front Controller ───
-# Ne pas réécrire les fichiers et dossiers existants (assets, css, js, images…)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-
-# Router tout vers le front controller
 RewriteRule ^(.*)$ index.php [QSA,L]

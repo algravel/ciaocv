@@ -42,7 +42,12 @@
                 </form>
 
                 <div class="login-footer">
+                    <a href="<?= SITE_URL ?>/tarifs.html" class="login-forgot-link" data-i18n="login.create_account">Créer un compte</a>
+                    <span class="login-footer-sep">·</span>
                     <a href="#" onclick="openForgotModal(); return false;" class="login-forgot-link" data-i18n="login.forgot_password">Mot de passe oublié ?</a>
+                </div>
+                <div class="login-demo-cta">
+                    <a href="<?= SITE_URL ?>/tarifs.html" class="login-demo-link" data-i18n="login.create_demo">Créer votre compte démo</a>
                 </div>
 
                 <!-- OAuth (masqué pour l'instant) -->

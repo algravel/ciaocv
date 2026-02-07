@@ -8,12 +8,24 @@ class Router
     /** @var array<string, array<string, array{controller: string, method: string}>> */
     private array $routes = [];
 
+    /** @var array<string, array<int, array{pattern: string, controller: string, method: string}>> */
+    private array $patternRoutes = [];
+
     /**
      * Enregistre une route GET.
      */
     public function get(string $uri, string $controller, string $method): void
     {
         $this->routes['GET'][$uri] = compact('controller', 'method');
+    }
+
+    /**
+     * Enregistre une route GET avec motif (ex: #^/rec/([a-f0-9]{16})$#).
+     * Les groupes capturés sont passés en arguments à la méthode du contrôleur.
+     */
+    public function getPattern(string $pattern, string $controller, string $method): void
+    {
+        $this->patternRoutes['GET'][] = compact('pattern', 'controller', 'method');
     }
 
     /**
@@ -41,8 +53,18 @@ class Router
 
         if (isset($this->routes[$requestMethod][$uri])) {
             $route = $this->routes[$requestMethod][$uri];
-            $this->callAction($route['controller'], $route['method']);
+            $this->callAction($route['controller'], $route['method'], []);
             return;
+        }
+
+        // Routes à motif (ex: /rec/{longId})
+        $patterns = $this->patternRoutes[$requestMethod] ?? [];
+        foreach ($patterns as $route) {
+            if (preg_match($route['pattern'], $uri, $m)) {
+                $args = array_slice($m, 1);
+                $this->callAction($route['controller'], $route['method'], $args);
+                return;
+            }
         }
 
         // 404 – Page non trouvée
@@ -69,9 +91,10 @@ class Router
     }
 
     /**
-     * Instancie le contrôleur et appelle la méthode.
+     * Instancie le contrôleur et appelle la méthode (avec arguments optionnels).
+     * @param array $args Arguments à passer à la méthode (ex: groupes capturés par un motif)
      */
-    private function callAction(string $controller, string $method): void
+    private function callAction(string $controller, string $method, array $args = []): void
     {
         $file = CONTROLLERS_PATH . '/' . $controller . '.php';
 
@@ -90,6 +113,6 @@ class Router
             throw new RuntimeException("Méthode introuvable : {$controller}@{$method}");
         }
 
-        $instance->{$method}();
+        $instance->{$method}(...$args);
     }
 }

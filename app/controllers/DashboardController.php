@@ -19,8 +19,11 @@ class DashboardController extends Controller
         $candidats      = Candidat::getAll();
         $candidatsByAff = Candidat::getByAffichage();
         $emailTemplates = EmailTemplate::getAll();
+        $departments = ['Technologie', 'Gestion', 'Design', 'Stratégie', 'Marketing', 'Ressources humaines', 'Finance', 'Opérations'];
 
-        // Données utilisateur (mock pour l'instant)
+        $teamMembers = User::getAll();
+
+        // Données utilisateur connecté (mock pour l'instant)
         $user = [
             'name'  => $_SESSION['user_name']  ?? 'Utilisateur',
             'email' => $_SESSION['user_email'] ?? 'admin@olymel.com',
@@ -32,6 +35,8 @@ class DashboardController extends Controller
             'candidats'      => $candidats,
             'candidatsByAff' => $candidatsByAff,
             'emailTemplates' => $emailTemplates,
+            'departments'    => $departments,
+            'teamMembers'    => $teamMembers,
             'user'           => $user,
         ]);
     }
