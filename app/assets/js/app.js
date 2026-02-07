@@ -210,31 +210,28 @@ document.addEventListener('click', function () {
 /* ═══════════════════════════════════════════════
    POSTE DETAIL
    ═══════════════════════════════════════════════ */
+var currentPosteId = null;
+
 function showPosteDetail(id) {
     var data = postesData[id];
     if (!data) return;
+    currentPosteId = id;
 
     document.getElementById('detail-poste-title').textContent = data.title;
     document.getElementById('detail-poste-dept-loc').textContent = data.department + ' • ' + data.location;
     var sb = document.getElementById('detail-poste-status');
     sb.textContent = data.status;
     sb.className = 'status-badge ' + data.statusClass;
-    document.getElementById('detail-poste-description').textContent = data.description;
     document.getElementById('detail-poste-candidates').textContent = data.candidates;
     document.getElementById('detail-poste-date').textContent = data.date;
 
-    var ql = document.getElementById('detail-poste-questions');
-    ql.innerHTML = '';
-    if (data.questions && data.questions.length > 0) {
-        data.questions.forEach(function (q) {
-            var li = document.createElement('li');
-            li.textContent = q;
-            li.style.marginBottom = '0.5rem';
-            ql.appendChild(li);
-        });
-    } else {
-        ql.innerHTML = '<li style="list-style:none; color:var(--text-secondary);">Aucune question définie.</li>';
+    // Durée d'enregistrement
+    var durationSelect = document.getElementById('detail-poste-record-duration');
+    if (durationSelect) {
+        durationSelect.value = data.recordDuration || 3;
     }
+
+    renderPosteQuestions();
 
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
     document.getElementById('poste-detail-section').classList.add('active');
@@ -242,8 +239,224 @@ function showPosteDetail(id) {
 }
 
 function goBackToPostes() {
+    currentPosteId = null;
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
     document.getElementById('postes-section').classList.add('active');
+}
+
+/* ─── Questions CRUD ─── */
+
+function renderPosteQuestions() {
+    var data = postesData[currentPosteId];
+    if (!data) return;
+    if (!data.questions) data.questions = [];
+
+    var container = document.getElementById('detail-poste-questions-list');
+    var countEl = document.getElementById('detail-poste-questions-count');
+    var len = data.questions.length;
+    countEl.textContent = len + ' question' + (len !== 1 ? 's' : '');
+
+    container.innerHTML = '';
+    if (len === 0) {
+        container.innerHTML = '<div class="text-center subtitle-muted" style="padding:1.5rem 0;">Aucune question définie. Ajoutez-en ci-dessous.</div>';
+        return;
+    }
+
+    data.questions.forEach(function (q, i) {
+        var div = document.createElement('div');
+        div.className = 'question-item';
+        div.setAttribute('data-index', i);
+        div.setAttribute('draggable', 'true');
+        div.innerHTML =
+            '<span class="question-drag-handle" title="Glisser pour réordonner"><i class="fa-solid fa-grip-vertical"></i></span>' +
+            '<span class="question-number">' + (i + 1) + '</span>' +
+            '<span class="question-text">' + escapeHtml(q) + '</span>' +
+            '<div class="question-actions">' +
+                '<button class="btn-icon" title="Monter" onclick="movePosteQuestion(' + i + ',-1)"' + (i === 0 ? ' disabled style="opacity:0.3;pointer-events:none;"' : '') + '><i class="fa-solid fa-chevron-up"></i></button>' +
+                '<button class="btn-icon" title="Descendre" onclick="movePosteQuestion(' + i + ',1)"' + (i === len - 1 ? ' disabled style="opacity:0.3;pointer-events:none;"' : '') + '><i class="fa-solid fa-chevron-down"></i></button>' +
+                '<button class="btn-icon" title="Modifier" onclick="editPosteQuestion(' + i + ')"><i class="fa-solid fa-pen"></i></button>' +
+                '<button class="btn-icon btn-icon--danger" title="Supprimer" onclick="deletePosteQuestion(' + i + ')"><i class="fa-solid fa-trash"></i></button>' +
+            '</div>';
+
+        // Drag & Drop
+        div.addEventListener('dragstart', function (e) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', i);
+            div.classList.add('question-item--dragging');
+        });
+        div.addEventListener('dragend', function () {
+            div.classList.remove('question-item--dragging');
+            container.querySelectorAll('.question-item--over').forEach(function (el) { el.classList.remove('question-item--over'); });
+        });
+        div.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            div.classList.add('question-item--over');
+        });
+        div.addEventListener('dragleave', function () {
+            div.classList.remove('question-item--over');
+        });
+        div.addEventListener('drop', function (e) {
+            e.preventDefault();
+            var fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+            var toIndex = i;
+            if (fromIndex !== toIndex) {
+                var questions = postesData[currentPosteId].questions;
+                var item = questions.splice(fromIndex, 1)[0];
+                questions.splice(toIndex, 0, item);
+                renderPosteQuestions();
+            }
+        });
+
+        container.appendChild(div);
+    });
+}
+
+function addPosteQuestion() {
+    var input = document.getElementById('detail-poste-new-question');
+    var text = input.value.trim();
+    if (!text || !currentPosteId) return;
+
+    postesData[currentPosteId].questions.push(text);
+    input.value = '';
+    renderPosteQuestions();
+}
+
+function editPosteQuestion(index) {
+    var data = postesData[currentPosteId];
+    if (!data) return;
+
+    var container = document.getElementById('detail-poste-questions-list');
+    var item = container.querySelector('[data-index="' + index + '"]');
+    if (!item) return;
+
+    var currentText = data.questions[index];
+    item.innerHTML =
+        '<span class="question-number">' + (index + 1) + '</span>' +
+        '<input type="text" class="question-edit-input" value="' + escapeHtml(currentText).replace(/"/g, '&quot;') + '" ' +
+            'onkeydown="if(event.key===\'Enter\'){savePosteQuestion(' + index + ')} if(event.key===\'Escape\'){renderPosteQuestions()}">' +
+        '<div class="question-actions">' +
+            '<button class="btn-icon btn-icon--success" title="Enregistrer" onclick="savePosteQuestion(' + index + ')"><i class="fa-solid fa-check"></i></button>' +
+            '<button class="btn-icon" title="Annuler" onclick="renderPosteQuestions()"><i class="fa-solid fa-xmark"></i></button>' +
+        '</div>';
+
+    var editInput = item.querySelector('.question-edit-input');
+    editInput.focus();
+    editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+}
+
+function savePosteQuestion(index) {
+    var container = document.getElementById('detail-poste-questions-list');
+    var item = container.querySelector('[data-index="' + index + '"]');
+    if (!item) return;
+
+    var input = item.querySelector('.question-edit-input');
+    var text = input.value.trim();
+    if (!text) return;
+
+    postesData[currentPosteId].questions[index] = text;
+    renderPosteQuestions();
+}
+
+function deletePosteQuestion(index) {
+    postesData[currentPosteId].questions.splice(index, 1);
+    renderPosteQuestions();
+}
+
+function updatePosteRecordDuration(value) {
+    if (!currentPosteId || !postesData[currentPosteId]) return;
+    postesData[currentPosteId].recordDuration = parseInt(value, 10);
+}
+
+function movePosteQuestion(index, direction) {
+    var questions = postesData[currentPosteId].questions;
+    var newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= questions.length) return;
+    var item = questions.splice(index, 1)[0];
+    questions.splice(newIndex, 0, item);
+    renderPosteQuestions();
+}
+
+/* ─── Modal Candidats du poste ─── */
+
+function openPosteCandidatsModal() {
+    if (!currentPosteId) return;
+    var data = postesData[currentPosteId];
+    if (!data) return;
+
+    var title = data.title;
+    document.getElementById('poste-candidats-modal-title').textContent = 'Candidats — ' + title;
+
+    // Collecter tous les candidats dont le role correspond au titre du poste
+    var matches = [];
+    // Chercher dans candidatsData (vue globale)
+    for (var key in candidatsData) {
+        if (candidatsData[key].role === title) {
+            matches.push(candidatsData[key]);
+        }
+    }
+    // Chercher aussi dans affichageCandidats
+    for (var affId in affichageCandidats) {
+        var list = affichageCandidats[affId] || [];
+        list.forEach(function (c) {
+            // Vérifier que le candidat n'est pas déjà dans matches
+            var alreadyIn = matches.some(function (m) { return m.id === c.id; });
+            if (!alreadyIn && affId.indexOf(currentPosteId) === 0) {
+                matches.push(c);
+            }
+        });
+    }
+
+    var listEl = document.getElementById('poste-candidats-modal-list');
+    var emptyEl = document.getElementById('poste-candidats-modal-empty');
+
+    if (matches.length === 0) {
+        listEl.innerHTML = '';
+        listEl.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+    } else {
+        emptyEl.classList.add('hidden');
+        listEl.classList.remove('hidden');
+        listEl.innerHTML = '';
+
+        matches.forEach(function (c) {
+            var name = c.name || '';
+            var email = c.email || '';
+            var color = c.color || '64748B';
+            var rating = c.rating || c.stars || 0;
+            var status = '';
+            if (c.status === 'new' || c.status === 'Nouveau') status = '<span class="status-badge status-new">Nouveau</span>';
+            else if (c.status === 'reviewed' || c.status === 'Évalué') status = '<span class="status-badge status-active">Évalué</span>';
+            else if (c.status === 'shortlisted' || c.status === 'Favori') status = '<span class="status-badge status-shortlisted">Favori</span>';
+            else if (c.status === 'rejected' || c.status === 'Refusé') status = '<span class="status-badge status-rejected">Refusé</span>';
+            else status = '<span class="status-badge">' + escapeHtml(c.status || '') + '</span>';
+
+            var stars = '';
+            for (var i = 1; i <= 5; i++) {
+                stars += '<i class="fa-' + (i <= rating ? 'solid' : 'regular') + ' fa-star"></i>';
+            }
+
+            var row = document.createElement('div');
+            row.className = 'poste-candidat-row';
+            row.onclick = function () {
+                closeModal('poste-candidats');
+                if (typeof showCandidateDetail === 'function' && candidatsData[c.id]) {
+                    showCandidateDetail(c.id);
+                }
+            };
+            row.innerHTML =
+                '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=' + escapeHtml(color) + '&color=fff" class="avatar" alt="">' +
+                '<div class="poste-candidat-info">' +
+                    '<div class="poste-candidat-name">' + escapeHtml(name) + '</div>' +
+                    '<div class="poste-candidat-email">' + escapeHtml(email) + '</div>' +
+                '</div>' +
+                '<div class="star-color">' + stars + '</div>' +
+                status;
+            listEl.appendChild(row);
+        });
+    }
+
+    openModal('poste-candidats');
 }
 
 /* ═══════════════════════════════════════════════

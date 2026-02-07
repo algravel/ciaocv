@@ -36,7 +36,6 @@
                 <th data-i18n="th_status">Statut</th>
                 <th data-i18n="th_candidates">Candidats</th>
                 <th data-i18n="th_created">Créé le</th>
-                <th data-i18n="th_actions">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -48,11 +47,6 @@
                 <td><span class="status-badge <?= e($p['statusClass']) ?>"><?= e($p['status']) ?></span></td>
                 <td><?= $p['candidates'] ?></td>
                 <td><?= e($p['date']) ?></td>
-                <td onclick="event.stopPropagation()">
-                    <button class="btn-icon" title="Modifier"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn-icon" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                    <button class="btn-icon" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -73,13 +67,31 @@
     </div>
     <div class="grid-detail">
         <div>
-            <div class="card mb-8">
-                <h3 class="section-heading">Description</h3>
-                <div class="text-body" id="detail-poste-description">...</div>
-            </div>
+            <!-- Questions CRUD -->
             <div class="card">
-                <h3 class="section-heading">Questions de présélection</h3>
-                <ul class="detail-list" id="detail-poste-questions"></ul>
+                <div class="flex-between mb-4">
+                    <h3 class="section-heading mb-0">Questions de présélection</h3>
+                    <span class="subtitle-muted" id="detail-poste-questions-count">0 questions</span>
+                </div>
+                <div id="detail-poste-questions-list" class="questions-list"></div>
+                <div class="questions-add-row mt-4">
+                    <input type="text" id="detail-poste-new-question" class="form-input" placeholder="Ajouter une question..." onkeydown="if(event.key==='Enter'){addPosteQuestion(); event.preventDefault();}">
+                    <button class="btn btn-primary" onclick="addPosteQuestion()"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <!-- Durée d'enregistrement -->
+                <div class="flex-between mt-6" style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <div>
+                        <label class="form-label mb-0 fw-semibold"><i class="fa-solid fa-video"></i> Durée d'enregistrement</label>
+                        <div class="form-help">Temps maximum par question pour le candidat.</div>
+                    </div>
+                    <select class="form-select form-select--auto" id="detail-poste-record-duration" onchange="updatePosteRecordDuration(this.value)">
+                        <option value="1">1 minute</option>
+                        <option value="2">2 minutes</option>
+                        <option value="3" selected>3 minutes</option>
+                        <option value="4">4 minutes</option>
+                        <option value="5">5 minutes</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div>
@@ -88,10 +100,26 @@
                 <div class="info-row"><div class="info-label">Candidats</div><div class="info-value" id="detail-poste-candidates">0</div></div>
                 <div class="info-row"><div class="info-label">Créé le</div><div id="detail-poste-date">2026-01-01</div></div>
                 <div class="action-stack">
-                    <button class="btn btn-primary btn--center">Modifier le poste</button>
-                    <button class="btn btn-secondary btn--center">Voir les candidats</button>
+                    <button class="btn btn-primary btn--center" onclick="openPosteCandidatsModal()">
+                        <i class="fa-solid fa-users"></i> Voir les candidats
+                    </button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Candidats du poste -->
+<div class="modal-overlay" id="poste-candidats-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" id="poste-candidats-modal-title">Candidats</h2>
+            <button class="btn-icon" onclick="closeModal('poste-candidats')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="poste-candidats-modal-list" class="poste-candidats-list"></div>
+        <div id="poste-candidats-modal-empty" class="text-center hidden" style="padding: 2rem 0;">
+            <i class="fa-regular fa-user icon-xl" style="opacity: 0.3;"></i>
+            <p class="subtitle-muted mt-2">Aucun candidat pour ce poste.</p>
         </div>
     </div>
 </div>
@@ -139,12 +167,23 @@
             <h1 class="page-title" id="affichage-candidats-title">Candidats</h1>
             <div class="subtitle-muted" id="affichage-candidats-subtitle">Plateforme</div>
         </div>
-        <span class="status-badge ml-auto" id="affichage-candidats-status">Statut</span>
-        <button class="btn btn-danger-light ml-4" onclick="openCloseAffichageModal()">
-            <i class="fa-solid fa-xmark"></i>
-            <span>Fermer l'affichage</span>
-        </button>
+        <div class="action-group">
+            <select class="status-select" id="affichage-status-select" onchange="updateAffichageStatus(this.value)">
+                <option value="actif">Actif</option>
+                <option value="termine">Terminé</option>
+                <option value="archive">Archivé</option>
+            </select>
+            <button class="btn-icon" title="Notifier les candidats" onclick="openNotifyCandidatsModal()"><i class="fa-solid fa-envelope"></i></button>
+            <button class="btn btn-primary btn-sm" onclick="openAddCandidatModal()"><i class="fa-solid fa-user-plus"></i> Ajouter</button>
+        </div>
     </div>
+
+    <!-- Alerte Terminé (30 jours) -->
+    <div class="alert-warning mb-4 hidden" id="affichage-termine-alert">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Cet affichage est terminé. Les fichiers associés seront supprimés dans <strong>30 jours</strong> si le statut ne change pas.</span>
+    </div>
+
     <div class="filters-bar">
         <div class="view-tabs">
             <button class="view-tab active">Tous</button>
@@ -157,9 +196,25 @@
         <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Rechercher..."></div>
     </div>
     <table class="data-table">
-        <thead><tr><th>Candidat</th><th>Statut</th><th>Vidéo</th><th>Note</th><th>Postulé le</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Candidat</th><th>Statut</th><th>Vidéo</th><th>Note</th><th>Postulé le</th></tr></thead>
         <tbody id="affichage-candidats-tbody"></tbody>
     </table>
+
+    <!-- Évaluateurs CRUD -->
+    <div class="card mt-6">
+        <div class="flex-between mb-4">
+            <h3 class="section-heading mb-0"><i class="fa-solid fa-user-check"></i> Évaluateurs</h3>
+            <span class="subtitle-muted" id="affichage-evaluateurs-count">0 évaluateurs</span>
+        </div>
+        <div id="affichage-evaluateurs-list" class="evaluateurs-list"></div>
+        <div class="grid-2col mt-4 gap-2 evaluateurs-add-row">
+            <input type="text" id="eval-new-name" class="form-input" placeholder="Nom complet">
+            <div class="flex-center gap-2">
+                <input type="email" id="eval-new-email" class="form-input" placeholder="Courriel" onkeydown="if(event.key==='Enter'){addEvaluateur(); event.preventDefault();}">
+                <button class="btn btn-primary" onclick="addEvaluateur()" style="flex-shrink:0;"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ─── AFFICHAGES Section ─── -->
@@ -179,27 +234,19 @@
     <table class="data-table" id="affichages-table">
         <thead>
             <tr>
-                <th data-i18n="th_poste">Poste</th><th data-i18n="th_platform">Plateforme</th>
-                <th data-i18n="th_start_date">Date début</th><th data-i18n="th_end_date">Date fin</th>
-                <th data-i18n="th_status">Statut</th><th data-i18n="th_views">Vues</th>
-                <th data-i18n="th_applications">Candidatures</th><th data-i18n="th_actions">Actions</th>
+                <th data-i18n="th_poste">Poste</th>
+                <th data-i18n="th_start_date">Date début</th>
+                <th data-i18n="th_status">Statut</th>
+                <th data-i18n="th_applications">Candidatures</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($affichages as $aId => $a): ?>
             <tr onclick="showAffichageDetail('<?= e($aId) ?>')" class="row-clickable">
                 <td><strong><?= e($a['title']) ?></strong></td>
-                <td><?php if ($a['platform'] === 'LinkedIn'): ?><i class="fa-brands fa-linkedin platform-icon--linkedin"></i><?php else: ?><i class="fa-solid fa-globe platform-icon--default"></i><?php endif; ?> <?= e($a['platform']) ?></td>
                 <td><?= e($a['start']) ?></td>
-                <td><?= e($a['end']) ?></td>
                 <td><span class="status-badge <?= e($a['statusClass']) ?>"><?= e($a['status']) ?></span></td>
-                <td><?= e($a['views']) ?></td>
                 <td><?= e($a['apps']) ?></td>
-                <td onclick="event.stopPropagation()">
-                    <button class="btn-icon" title="Modifier"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn-icon" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                    <button class="btn-icon" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -514,35 +561,64 @@
     </div>
 </div>
 
-<!-- Modal Fermer l'affichage -->
-<div class="modal-overlay" id="close-affichage-modal">
+<!-- Modal Notifier les candidats -->
+<div class="modal-overlay" id="notify-candidats-modal">
     <div class="modal modal--narrow">
-        <div class="modal-header"><h2 class="modal-title">Fermer l'affichage</h2><button class="btn-icon" onclick="closeModal('close-affichage')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="modal-header"><h2 class="modal-title"><i class="fa-solid fa-envelope"></i> Notifier les candidats</h2><button class="btn-icon" onclick="closeModal('notify-candidats')"><i class="fa-solid fa-xmark"></i></button></div>
         <div class="mb-5">
             <p class="subtitle-muted mb-2">Sélectionnez les candidats à notifier par courriel.</p>
-            <div class="alert-warning"><i class="fa-solid fa-triangle-exclamation"></i> Cette action est irréversible.</div>
         </div>
         <div class="mb-5">
             <div class="flex-between mb-3">
                 <label class="form-label mb-0 fw-semibold">Candidats à notifier</label>
                 <label class="select-all-label">
-                    <input type="checkbox" id="close-select-all" onchange="toggleSelectAllClose(this)">Tout sélectionner
+                    <input type="checkbox" id="notify-select-all" onchange="toggleSelectAllNotify(this)">Tout sélectionner
                 </label>
             </div>
-            <div id="close-affichage-candidates" class="candidate-list-scroll"></div>
+            <div id="notify-candidats-list" class="candidate-list-scroll"></div>
         </div>
         <div class="form-group mb-5">
             <label class="form-label fw-semibold">Message aux candidats</label>
             <div class="flex-center gap-2 mb-3 flex-wrap">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="setCloseMessage('polite')">Refus poli</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="setCloseMessage('filled')">Poste comblé</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="setCloseMessage('custom')">Personnalisé</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setNotifyMessage('polite')">Refus poli</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setNotifyMessage('filled')">Poste comblé</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setNotifyMessage('custom')">Personnalisé</button>
             </div>
-            <textarea id="close-affichage-message" class="form-input w-full" rows="4" style="resize: vertical;" placeholder="Rédigez votre message..."></textarea>
+            <textarea id="notify-candidats-message" class="form-input w-full" rows="4" style="resize: vertical;" placeholder="Rédigez votre message..."></textarea>
         </div>
         <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('close-affichage')">Annuler</button>
-            <button type="button" class="btn btn-danger" onclick="confirmCloseAffichage()"><i class="fa-solid fa-xmark"></i> Fermer l'affichage</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal('notify-candidats')">Annuler</button>
+            <button type="button" class="btn btn-primary" onclick="confirmNotifyCandidats()"><i class="fa-solid fa-paper-plane"></i> Envoyer</button>
         </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter un candidat -->
+<div class="modal-overlay" id="add-candidat-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header"><h2 class="modal-title"><i class="fa-solid fa-user-plus"></i> Ajouter un candidat</h2><button class="btn-icon" onclick="closeModal('add-candidat')"><i class="fa-solid fa-xmark"></i></button></div>
+        <form onsubmit="submitAddCandidat(event)">
+            <?= csrf_field() ?>
+            <div class="form-group mb-4">
+                <label class="form-label" for="add-candidat-prenom">Prénom</label>
+                <input type="text" id="add-candidat-prenom" class="form-input" required>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="add-candidat-nom">Nom</label>
+                <input type="text" id="add-candidat-nom" class="form-input" required>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="add-candidat-email">Courriel</label>
+                <input type="email" id="add-candidat-email" class="form-input" required>
+            </div>
+            <div class="form-group mb-5">
+                <label class="form-label" for="add-candidat-phone">Téléphone</label>
+                <input type="tel" id="add-candidat-phone" class="form-input">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-candidat')">Annuler</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ajouter</button>
+            </div>
+        </form>
     </div>
 </div>

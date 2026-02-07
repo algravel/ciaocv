@@ -21,6 +21,7 @@ class Poste
                 'candidates'  => 12,
                 'date'        => '2026-01-15',
                 'description' => "Nous recherchons un développeur frontend passionné pour rejoindre notre équipe. Vous travaillerez avec React, Tailwind et TypeScript pour créer des expériences utilisateur exceptionnelles.",
+                'recordDuration' => 3,
                 'questions'   => [
                     "Combien d'années d'expérience avez-vous avec React ?",
                     "Avez-vous déjà travaillé avec TypeScript ?",
@@ -37,6 +38,7 @@ class Poste
                 'candidates'  => 8,
                 'date'        => '2026-01-20',
                 'description' => "Nous cherchons un chef de projet expérimenté pour mener à bien nos initiatives technologiques. Expérience en Agile/Scrum requise.",
+                'recordDuration' => 2,
                 'questions'   => [
                     "Avez-vous une certification PMP ?",
                     "Décrivez un projet complexe que vous avez géré.",
@@ -53,6 +55,7 @@ class Poste
                 'candidates'  => 5,
                 'date'        => '2026-01-10',
                 'description' => "Rejoignez notre équipe créative pour concevoir des interfaces intuitives et esthétiques. Figma est notre outil principal.",
+                'recordDuration' => 3,
                 'questions'   => [
                     "Lien vers votre portfolio Dribbble/Behance ?",
                     "Racontez-nous un défi UX que vous avez résolu.",
@@ -69,6 +72,7 @@ class Poste
                 'candidates'  => 15,
                 'date'        => '2025-12-01',
                 'description' => "Poste comblé. Merci de votre intérêt.",
+                'recordDuration' => 3,
                 'questions'   => [],
             ],
         ];
