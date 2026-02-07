@@ -9,6 +9,7 @@ const translations = {
         "nav.recruiter": "Espace Recruteur",
         "nav.candidate": "Espace Candidat",
         "nav.login": "Se connecter",
+        "nav.logout": "Se déconnecter",
         "login.hero.title": "Content de vous <br><span class=\"highlight\">revoir !</span>",
         "login.hero.subtitle": "Accédez à votre espace pour gérer vos entrevues vidéo de présélection et vos candidatures en toute simplicité.",
         "login.hero.subtitle.candidat": "Accédez à votre espace candidat pour gérer vos entrevues vidéo et vos candidatures en toute simplicité.",
@@ -18,7 +19,7 @@ const translations = {
         "login.modal.recruiter": "Un Recruteur",
         "login.title": "Connexion",
         "login.email.label": "Courriel",
-        "login.email.placeholder": "ton@email.com",
+        "login.email.placeholder": "votre@courriel.com",
         "login.password.label": "Mot de passe",
         "login.password.placeholder": "••••••••",
         "login.submit": "Se connecter",
@@ -34,7 +35,13 @@ const translations = {
         "footer.privacy": "Politique de confidentialité",
         "footer.terms": "Conditions d'utilisation",
         "footer.contact": "Contact",
-        "footer.proudly": "Fièrement humain ❤️"
+        "footer.proudly": "Fièrement humain ❤️",
+        "forgot.title": "Mot de passe oublié ?",
+        "forgot.desc": "Entrez votre adresse courriel et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+        "forgot.email.label": "Courriel",
+        "forgot.email.placeholder": "votre@courriel.com",
+        "forgot.turnstile": "Vérification de sécurité Cloudflare",
+        "forgot.submit": "Envoyer le lien"
     },
     en: {
         "nav.service": "Our Service",
@@ -42,6 +49,7 @@ const translations = {
         "nav.recruiter": "Recruiter Login",
         "nav.candidate": "Candidate Login",
         "nav.login": "Log In",
+        "nav.logout": "Log Out",
         "login.hero.title": "Good to see you <br><span class=\"highlight\">again!</span>",
         "login.hero.subtitle": "Access your space to manage your pre-selection video interviews and applications with ease.",
         "login.hero.subtitle.candidat": "Access your candidate space to manage your video interviews and applications with ease.",
@@ -67,7 +75,13 @@ const translations = {
         "footer.privacy": "Privacy Policy",
         "footer.terms": "Terms of Use",
         "footer.contact": "Contact",
-        "footer.proudly": "Proudly human ❤️"
+        "footer.proudly": "Proudly human ❤️",
+        "forgot.title": "Forgot password?",
+        "forgot.desc": "Enter your email address and we'll send you a link to reset your password.",
+        "forgot.email.label": "Email",
+        "forgot.email.placeholder": "your@email.com",
+        "forgot.turnstile": "Cloudflare security check",
+        "forgot.submit": "Send reset link"
     }
 };
 

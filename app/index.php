@@ -4,8 +4,12 @@
  * Si connecté : redirection directe vers l'espace candidat (candidate-jobs.php).
  */
 session_start();
-require_once __DIR__ . '/db.php';
+// require_once __DIR__ . '/db.php'; // Disabled: file not available, login form redirects directly to entreprise.html
 require_once __DIR__ . '/includes/functions.php';
+
+// Initialize error variables
+$error = '';
+$errorHtml = false;
 
 // Déconnexion
 if (isset($_GET['logout'])) {
@@ -37,11 +41,11 @@ if ($loginType === 'candidat') {
         rel="stylesheet">
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
     <link rel="stylesheet"
-        href="assets/css/design-system.css?v=<?= defined('ASSET_VERSION') ? ASSET_VERSION : '1.2' ?>">
+        href="assets/css/design-system.css?v=<?= defined('ASSET_VERSION') ? ASSET_VERSION : '1.3' ?>">
     <style>
         /* Page de connexion – mise en page et couleurs */
         .page-login .hero {
-            min-height: calc(100vh - 80px - 180px);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -211,63 +215,195 @@ if ($loginType === 'candidat') {
                 text-align: center !important;
             }
         }
+
+        /* ========== MODAL MOT DE PASSE OUBLIÉ ========== */
+        .forgot-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.25s, visibility 0.25s;
+        }
+
+        .forgot-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .forgot-modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 2.5rem 2rem 2rem;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transform: translateY(20px) scale(0.97);
+            transition: transform 0.25s;
+        }
+
+        .forgot-overlay.active .forgot-modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .forgot-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0.25rem;
+            border-radius: 8px;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .forgot-modal-close:hover {
+            background: var(--bg-alt, rgba(255,255,255,0.05));
+            color: var(--text);
+        }
+
+        .forgot-modal h3 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .forgot-modal .forgot-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .forgot-modal .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .forgot-modal .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .forgot-modal .turnstile-placeholder {
+            background: var(--bg);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 1.5rem;
+            min-height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .forgot-modal .turnstile-placeholder svg {
+            opacity: 0.5;
+        }
     </style>
 </head>
 
 <body class="page-login">
-    <!-- HEADER -->
-    <header class="navbar">
-        <a href="https://www.ciaocv.com/index.html" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
+    <!-- HEADER REMOVED -->
 
-        <nav class="nav-links">
-            <a href="https://www.ciaocv.com/tarifs.html" data-i18n="nav.service">Notre service</a>
-            <a href="https://www.ciaocv.com/guide-candidat.html" data-i18n="nav.guide">Préparez votre entrevue</a>
-        </nav>
-
-        <div class="nav-actions">
-            <!-- Language Toggle (Desktop) -->
-            <a href="#" class="lang-toggle" id="langToggleDesktop"
-                style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
-
-            <!-- Single Login Button -->
-            <a href="index.php" class="btn-header-primary" data-i18n="nav.login">
-                Se connecter
-            </a>
-
-            <button class="hamburger" aria-label="Menu" onclick="toggleMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </header>
-
-    <!-- MOBILE MENU -->
-    <div class="mobile-menu" id="mobileMenu">
-        <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%; display:flex;"
-            onclick="toggleMenu()">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-
-        <!-- Language Toggle (Mobile) -->
-        <a href="#" class="lang-toggle" id="langToggleMobile"
-            style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
-
-        <a href="https://www.ciaocv.com/tarifs.html" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
-        <a href="https://www.ciaocv.com/guide-candidat.html" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre
-            entrevue</a>
-        <div style="margin-top:2rem; width:80%;">
-            <a href="index.php" class="btn-header-primary" style="display:block; text-align:center; padding:1rem;"
-                data-i18n="nav.login">Se connecter</a>
-        </div>
-    </div>
+    <!-- MOBILE MENU REMOVED -->
 
     <!-- MAIN CONTENT -->
     <main class="hero">
         <div class="login-container">
             <div class="hero-text">
+                <!-- LOGO AND LANGUAGE SWITCHER -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; width: 100%;">
+                    <a href="https://www.ciaocv.com/index.html"
+                        style="font-size: 2.5rem; font-weight: 800; text-decoration: none; color: var(--primary);">
+                        ciao<span style="color: var(--text);">cv</span>
+                    </a>
+                    
+                    <!-- Language Switcher -->
+                    <div class="lang-switcher" style="display: flex; gap: 0.5rem; background: var(--card-bg); padding: 0.25rem; border-radius: 9999px; border: 1px solid var(--border);">
+                        <button onclick="changeLanguage('fr')" id="btn-fr" style="border: none; background: transparent; padding: 0.25rem 0.75rem; border-radius: 9999px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">FR</button>
+                        <button onclick="changeLanguage('en')" id="btn-en" style="border: none; background: transparent; padding: 0.25rem 0.75rem; border-radius: 9999px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">EN</button>
+                    </div>
+                </div>
+
+                <script>
+                    // Custom Language Logic: Default EN, unless browser is FR
+                    function initLoginLanguage() {
+                        // Check if language is already stored
+                        let storedLang = localStorage.getItem('language');
+                        
+                        if (!storedLang) {
+                            // If not stored, check browser language
+                            const browserLang = navigator.language || navigator.userLanguage;
+                            if (browserLang.toLowerCase().startsWith('fr')) {
+                                storedLang = 'fr';
+                            } else {
+                                storedLang = 'en'; // Default to EN
+                            }
+                            localStorage.setItem('language', storedLang);
+                        }
+                        
+                        // Apply language
+                        changeLanguage(storedLang);
+                    }
+
+                    function changeLanguage(lang) {
+                        localStorage.setItem('language', lang);
+                        document.documentElement.lang = lang;
+                        if (typeof updateContent === 'function') {
+                            updateContent();
+                        }
+                        
+                        // Update UI
+                        const btnFr = document.getElementById('btn-fr');
+                        const btnEn = document.getElementById('btn-en');
+                        
+                        if (lang === 'fr') {
+                            if(btnFr) {
+                                btnFr.style.backgroundColor = 'var(--primary)';
+                                btnFr.style.color = 'white';
+                            }
+                            if(btnEn) {
+                                btnEn.style.backgroundColor = 'transparent';
+                                btnEn.style.color = 'var(--text-secondary)';
+                            }
+                        } else {
+                            if(btnFr) {
+                                btnFr.style.backgroundColor = 'transparent';
+                                btnFr.style.color = 'var(--text-secondary)';
+                            }
+                            if(btnEn) {
+                                btnEn.style.backgroundColor = 'var(--primary)';
+                                btnEn.style.color = 'white';
+                            }
+                        }
+                    }
+
+                    // Run immediately
+                    document.addEventListener('DOMContentLoaded', initLoginLanguage);
+                </script>
+
                 <h1 data-i18n="login.hero.title">Content de vous <br><span class="highlight">revoir !</span></h1>
                 <p class="hero-subtitle" data-i18n="<?= $subtitleKey ?>">Accédez à votre espace pour gérer vos entrevues
                     vidéo et vos candidatures en toute simplicité.</p>
@@ -289,7 +425,7 @@ if ($loginType === 'candidat') {
                     <form action="entreprise.html" method="GET">
                         <div class="form-group" style="margin-bottom: 1.25rem;">
                             <label for="email" data-i18n="login.email.label">Courriel</label>
-                            <input type="email" id="email" name="email" class="form-control" placeholder="ton@email.com"
+                            <input type="email" id="email" name="email" class="form-control" placeholder="votre@courriel.com"
                                 data-i18n="login.email.placeholder">
                         </div>
                         <div class="form-group" style="margin-bottom: 1.75rem;">
@@ -303,24 +439,18 @@ if ($loginType === 'candidat') {
                     </form>
 
                     <div class="login-footer" style="margin-top: 1.5rem; text-align: center;">
-                        <a href="forgot-password.php"
+                        <a href="#" onclick="openForgotModal(); return false;"
                             style="font-size: 0.85rem; color: var(--text-gray); text-decoration: none;"
                             data-i18n="login.forgot_password">Mot de passe oublié ?</a>
-                        <p style="margin-top: 1.25rem; font-size: 0.95rem; color: var(--text-gray);">
-                            <span data-i18n="login.signup_prompt">Pas encore de compte ?</span> <a
-                                href="onboarding/register-candidate.php"
-                                style="color: var(--primary); font-weight: 700; text-decoration: none;"
-                                data-i18n="login.signup_link">S'inscrire gratuitement</a>
-                        </p>
                     </div>
 
-                    <div class="oauth-divider">
+                    <div class="oauth-divider" style="display: none;">
                         <span
                             style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;"
                             data-i18n="login.oauth.divider">ou</span>
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: none; flex-direction: column; gap: 0.75rem;">
                         <a href="oauth-google.php?action=login" class="btn-oauth">
                             <svg width="20" height="20" viewBox="0 0 24 24">
                                 <path fill="#4285F4"
@@ -349,54 +479,39 @@ if ($loginType === 'candidat') {
         </div>
     </main>
 
-    <!-- FOOTER -->
-    <footer style="margin-top: 0; padding: 5rem 5% 3rem; background: var(--primary); color: white;">
-        <div
-            style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; text-align: left;">
-            <div>
-                <h4
-                    style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;">
-                    CIAOCV</h4>
-                <ul style="list-style: none;">
-                    <li><a href="https://www.ciaocv.com/tarifs.html"
-                            style="color: white; text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.6rem; opacity: 0.9;"
-                            data-i18n="footer.service">Notre service</a></li>
-                    <li><a href="https://www.ciaocv.com/guide-candidat.html"
-                            style="color: white; text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.6rem; opacity: 0.9;"
-                            data-i18n="footer.guide">Préparez votre entrevue</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;"
-                    data-i18n="footer.legal">Légal</h4>
-                <ul style="list-style: none;">
-                    <li><a href="#"
-                            style="color: white; text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.6rem; opacity: 0.9;"
-                            data-i18n="footer.privacy">Politique de confidentialité</a></li>
-                    <li><a href="#"
-                            style="color: white; text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.6rem; opacity: 0.9;"
-                            data-i18n="footer.terms">Conditions d’utilisation</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;"
-                    data-i18n="footer.contact">Contact</h4>
-                <ul style="list-style: none;">
-                    <li><a href="mailto:bonjour@ciaocv.com"
-                            style="color: white; text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.6rem; opacity: 0.9;">bonjour@ciaocv.com</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div
-            style="max-width: 1200px; margin: 2rem auto 0; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2); text-align: center;">
-            <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.85rem;">© 2026 CiaoCV</p>
-            <p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.85rem;" data-i18n="footer.proudly">Fièrement humain
-                ❤️</p>
-        </div>
-    </footer>
+    <!-- MODAL MOT DE PASSE OUBLIÉ -->
+    <div class="forgot-overlay" id="forgotOverlay" onclick="closeForgotModal(event)">
+        <div class="forgot-modal" onclick="event.stopPropagation()">
+            <button class="forgot-modal-close" onclick="closeForgotModal()" aria-label="Fermer">&times;</button>
 
-    <script src="assets/js/i18n.js?v=<?= defined('ASSET_VERSION') ? ASSET_VERSION : '1.2' ?>"></script>
+            <h3 data-i18n="forgot.title">Mot de passe oublié ?</h3>
+            <p class="forgot-desc" data-i18n="forgot.desc">Entrez votre adresse courriel et nous vous enverrons un lien pour réinitialiser votre mot de passe.</p>
+
+            <form id="forgotForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="forgot-email" data-i18n="forgot.email.label">Courriel</label>
+                    <input type="email" id="forgot-email" name="email" class="form-control"
+                        placeholder="votre@courriel.com" data-i18n="forgot.email.placeholder" required>
+                </div>
+
+                <!-- Cloudflare Turnstile -->
+                <div class="turnstile-placeholder" id="cf-turnstile-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span data-i18n="forgot.turnstile">Vérification de sécurité Cloudflare</span>
+                </div>
+
+                <button type="submit" class="btn-primary"
+                    style="width: 100%; border: none; cursor: pointer; font-size: 1rem; padding: 0.85rem;"
+                    data-i18n="forgot.submit">Envoyer le lien</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER REMOVED -->
+
+    <script src="assets/js/i18n.js?v=<?= defined('ASSET_VERSION') ? ASSET_VERSION : '1.3' ?>"></script>
     <script>
         function toggleMenu() {
             const menu = document.getElementById('mobileMenu');
@@ -411,7 +526,35 @@ if ($loginType === 'candidat') {
             hamburgers.forEach(h => h.classList.toggle('active'));
         }
 
-        // Modal Logic for Missing Type
+        // Forgot Password Modal
+        function openForgotModal() {
+            const overlay = document.getElementById('forgotOverlay');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            // Re-apply translations to modal content
+            if (typeof updateContent === 'function') updateContent();
+            // Focus email field after animation
+            setTimeout(() => {
+                const input = document.getElementById('forgot-email');
+                if (input) input.focus();
+            }, 300);
+        }
+
+        function closeForgotModal(e) {
+            // If called from overlay click, only close if clicking the overlay itself
+            if (e && e.target !== document.getElementById('forgotOverlay')) return;
+            const overlay = document.getElementById('forgotOverlay');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeForgotModal();
+        });
+
+        // Modal Logic for Missing Type - DISABLED PER USER REQUEST
+        /*
         document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             const type = urlParams.get('type');
@@ -456,6 +599,7 @@ if ($loginType === 'candidat') {
                 updateContent();
             }
         });
+        */
     </script>
 </body>
 

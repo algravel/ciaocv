@@ -149,6 +149,87 @@
             font-size: 1.25rem;
         }
 
+        .user-profile {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            min-width: 200px;
+            padding: 0.5rem 0;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-8px);
+            transition: opacity 0.2s, visibility 0.2s, transform 0.2s;
+            z-index: 1000;
+        }
+
+        .user-dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-dropdown-header strong {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .user-dropdown-header span {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .user-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: background 0.15s;
+        }
+
+        .user-dropdown a:hover {
+            background: #f1f5f9;
+        }
+
+        .user-dropdown a i {
+            width: 18px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .user-dropdown .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 0.25rem 0;
+        }
+
+        .user-dropdown a.logout-link {
+            color: #ef4444;
+        }
+
+        .user-dropdown a.logout-link i {
+            color: #ef4444;
+        }
+
         /* Tabs */
         .view-tabs {
             display: flex;
@@ -570,11 +651,23 @@
                     <button class="icon-btn">
                         <i class="fa-regular fa-bell"></i>
                     </button>
-                    <div class="user-profile">
+                    <div class="user-profile" onclick="toggleUserDropdown(event)">
                         <div class="user-avatar-icon">
                             <i class="fa-regular fa-user"></i>
                         </div>
                         <i class="fa-solid fa-caret-down" style="font-size: 0.75rem; color: var(--text-secondary);"></i>
+
+                        <!-- User Dropdown -->
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-dropdown-header">
+                                <strong>Utilisateur</strong>
+                                <span>admin@olymel.com</span>
+                            </div>
+                            <a href="index.php?logout=1" class="logout-link">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span data-i18n="dropdown_logout">Se déconnecter</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -814,6 +907,55 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- AFFICHAGE CANDIDATS Section -->
+                <div id="affichage-candidats-section" class="content-section" style="padding-top: 1rem;">
+                    <div class="page-header" style="justify-content: flex-start; gap: 1rem; align-items: center;">
+                        <button class="btn-icon" onclick="goBackToAffichages()" style="font-size: 1.25rem;">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h1 class="page-title" id="affichage-candidats-title">Candidats</h1>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);" id="affichage-candidats-subtitle">Plateforme</div>
+                        </div>
+                        <span class="status-badge" id="affichage-candidats-status" style="margin-left: auto;">Statut</span>
+                        <button class="btn" onclick="openCloseAffichageModal()" style="margin-left: 1rem; background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                            <i class="fa-solid fa-xmark"></i>
+                            <span>Fermer l'affichage</span>
+                        </button>
+                    </div>
+
+                    <div class="filters-bar">
+                        <div class="view-tabs">
+                            <button class="view-tab active">Tous</button>
+                            <button class="view-tab">Nouveaux</button>
+                            <button class="view-tab">Évalués</button>
+                            <button class="view-tab">Favoris</button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end;">
+                        <div class="search-bar" style="max-width: 100%;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Rechercher...">
+                        </div>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Candidat</th>
+                                <th>Statut</th>
+                                <th>Vidéo</th>
+                                <th>Note</th>
+                                <th>Postulé le</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="affichage-candidats-tbody">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
                 </div>
 
                 <!-- AFFICHAGES Section -->
@@ -1198,233 +1340,164 @@
                     </div>
                 </div>
 
-                <!-- STATISTIQUES Section -->
+                <!-- STATISTIQUES / TABLEAU DE BORD Section -->
                 <div id="statistiques-section" class="content-section active">
                     <div class="page-header">
-                        <h1 class="page-title" data-i18n="statistiques_title">Statistiques</h1>
+                        <h1 class="page-title" data-i18n="statistiques_title">Tableau de bord</h1>
                     </div>
 
-                    <!-- Stats Cards - Material Design -->
-                    <div
-                        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-                        <div style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); border-radius: 16px; padding: 1.5rem; color: white; box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.5); transition: transform 0.2s, box-shadow 0.2s;"
-                            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 40px -10px rgba(59, 130, 246, 0.6)';"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px -10px rgba(59, 130, 246, 0.5)';">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                <div>
-                                    <div style="font-size: 2.5rem; font-weight: 700; line-height: 1;">24</div>
-                                    <div style="opacity: 0.9; margin-top: 0.5rem; font-size: 0.875rem;"
-                                        data-i18n="stat_active_jobs">Postes actifs</div>
-                                </div>
-                                <div
-                                    style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa-solid fa-briefcase" style="font-size: 1.25rem;"></i>
-                                </div>
+                    <!-- Forfait Banner -->
+                    <div style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); border-radius: 16px; padding: 1.5rem 2rem; color: white; box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.5); margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 1.25rem;">
+                            <div style="width: 52px; height: 52px; background: rgba(255,255,255,0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-gem" style="font-size: 1.5rem;"></i>
                             </div>
-                            <div style="margin-top: 1rem; font-size: 0.75rem; opacity: 0.8;">
-                                <i class="fa-solid fa-arrow-up"></i> +12% ce mois
+                            <div>
+                                <div style="font-size: 1.25rem; font-weight: 700;">Forfait Platine</div>
                             </div>
                         </div>
-                        <div style="background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%); border-radius: 16px; padding: 1.5rem; color: white; box-shadow: 0 10px 40px -10px rgba(96, 165, 250, 0.5); transition: transform 0.2s, box-shadow 0.2s;"
-                            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 40px -10px rgba(96, 165, 250, 0.6)';"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px -10px rgba(96, 165, 250, 0.5)';">
+                        <a href="#" onclick="document.querySelector('a[data-section=\'parametres\']').click(); setTimeout(function(){ document.querySelector('.settings-nav-item[data-target=\'settings-billing\']').click(); }, 50); return false;" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 0.5rem 1.25rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">Gérer mon forfait</a>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                        <!-- Mon forfait (progress) -->
+                        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05);">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div>
-                                    <div style="font-size: 2.5rem; font-weight: 700; line-height: 1;">156</div>
-                                    <div style="opacity: 0.9; margin-top: 0.5rem; font-size: 0.875rem;"
-                                        data-i18n="stat_total_candidates">Candidats totaux</div>
+                                    <div style="font-size: 0.8rem; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">Mon forfait</div>
+                                    <div style="font-size: 2rem; font-weight: 700; color: #1E293B; margin-top: 0.25rem;">20 <span style="font-size: 1rem; font-weight: 500; color: #94A3B8;">/ 50</span></div>
+                                    <div style="font-size: 0.8rem; color: #64748B; margin-top: 0.25rem;">candidats disponibles</div>
                                 </div>
-                                <div
-                                    style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa-solid fa-users" style="font-size: 1.25rem;"></i>
+                                <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #3B82F6, #60A5FA); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-users" style="color: white; font-size: 1.1rem;"></i>
                                 </div>
                             </div>
-                            <div style="margin-top: 1rem; font-size: 0.75rem; opacity: 0.8;">
-                                <i class="fa-solid fa-arrow-up"></i> +28% ce mois
+                            <!-- Progress bar -->
+                            <div style="margin-top: 1rem; background: #E2E8F0; border-radius: 9999px; height: 8px; overflow: hidden;">
+                                <div style="width: 40%; height: 100%; background: linear-gradient(90deg, #3B82F6, #60A5FA); border-radius: 9999px;"></div>
                             </div>
                         </div>
-                        <div style="background: linear-gradient(135deg, #64748B 0%, #475569 100%); border-radius: 16px; padding: 1.5rem; color: white; box-shadow: 0 10px 40px -10px rgba(100, 116, 139, 0.5); transition: transform 0.2s, box-shadow 0.2s;"
-                            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 40px -10px rgba(100, 116, 139, 0.6)';"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px -10px rgba(100, 116, 139, 0.5)';">
+
+                        <!-- Postes actifs -->
+                        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05);">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div>
-                                    <div style="font-size: 2.5rem; font-weight: 700; line-height: 1;">42</div>
-                                    <div style="opacity: 0.9; margin-top: 0.5rem; font-size: 0.875rem;"
-                                        data-i18n="stat_pending_review">En attente d'évaluation</div>
+                                    <div style="font-size: 0.8rem; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;" data-i18n="stat_active_jobs">Postes actifs</div>
+                                    <div style="font-size: 2rem; font-weight: 700; color: #1E293B; margin-top: 0.25rem;">3</div>
                                 </div>
-                                <div
-                                    style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa-solid fa-clock" style="font-size: 1.25rem;"></i>
+                                <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #64748B, #94A3B8); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-briefcase" style="color: white; font-size: 1.1rem;"></i>
                                 </div>
                             </div>
-                            <div style="margin-top: 1rem; font-size: 0.75rem; opacity: 0.8;">
-                                <i class="fa-solid fa-minus"></i> Stable
+                            <div style="margin-top: 1rem; font-size: 0.8rem; color: #64748B;">
+                                <span style="color: #22C55E; font-weight: 600;"><i class="fa-solid fa-arrow-up"></i> 1</span> depuis le mois dernier
                             </div>
                         </div>
-                        <div style="background: linear-gradient(135deg, #94A3B8 0%, #64748B 100%); border-radius: 16px; padding: 1.5rem; color: white; box-shadow: 0 10px 40px -10px rgba(148, 163, 184, 0.5); transition: transform 0.2s, box-shadow 0.2s;"
-                            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 40px -10px rgba(148, 163, 184, 0.6)';"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px -10px rgba(148, 163, 184, 0.5)';">
+
+                        <!-- Candidats en attente -->
+                        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05);">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div>
-                                    <div style="font-size: 2.5rem; font-weight: 700; line-height: 1;">18</div>
-                                    <div style="opacity: 0.9; margin-top: 0.5rem; font-size: 0.875rem;"
-                                        data-i18n="stat_shortlisted">Shortlistés</div>
+                                    <div style="font-size: 0.8rem; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">Candidats en attente</div>
+                                    <div style="font-size: 2rem; font-weight: 700; color: #1E293B; margin-top: 0.25rem;">7</div>
                                 </div>
-                                <div
-                                    style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa-solid fa-star" style="font-size: 1.25rem;"></i>
+                                <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #F59E0B, #FBBF24); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-clock" style="color: white; font-size: 1.1rem;"></i>
                                 </div>
                             </div>
-                            <div style="margin-top: 1rem; font-size: 0.75rem; opacity: 0.8;">
-                                <i class="fa-solid fa-arrow-up"></i> +5 cette semaine
+                            <div style="margin-top: 1rem; font-size: 0.8rem; color: #F59E0B; font-weight: 600;">
+                                <i class="fa-solid fa-circle-exclamation"></i> En attente de réponse
                             </div>
                         </div>
                     </div>
 
-                    <!-- Charts Row - Material Design -->
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
-                        <div
-                            style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05);">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                                <div
-                                    style="width: 40px; height: 40px; background: linear-gradient(135deg, #3B82F6, #60A5FA); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa-solid fa-chart-bar" style="color: white;"></i>
-                                </div>
-                                <h2 style="font-size: 1rem; font-weight: 600; color: #1E293B; margin: 0;"
-                                    data-i18n="chart_applications">Candidatures par mois</h2>
+                    <!-- Chart : Candidatures par mois -->
+                    <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05); margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #3B82F6, #60A5FA); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-chart-bar" style="color: white;"></i>
                             </div>
-                            <div
-                                style="height: 200px; display: flex; align-items: flex-end; justify-content: space-around; padding-top: 1rem; background: linear-gradient(180deg, rgba(59,130,246,0.03) 0%, transparent 100%); border-radius: 12px; padding: 1rem;">
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                                    <div
-                                        style="width: 32px; height: 60px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;">
-                                    </div>
-                                    <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Sep</span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                                    <div
-                                        style="width: 32px; height: 100px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;">
-                                    </div>
-                                    <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Oct</span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                                    <div
-                                        style="width: 32px; height: 80px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;">
-                                    </div>
-                                    <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Nov</span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                                    <div
-                                        style="width: 32px; height: 140px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;">
-                                    </div>
-                                    <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Déc</span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                                    <div
-                                        style="width: 32px; height: 180px; background: linear-gradient(180deg, #1D4ED8, #3B82F6); border-radius: 6px; box-shadow: 0 4px 12px rgba(59,130,246,0.3);">
-                                    </div>
-                                    <span style="font-size: 0.75rem; color: #3B82F6; font-weight: 600;">Jan</span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                                    <div
-                                        style="width: 32px; height: 120px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;">
-                                    </div>
-                                    <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Fév</span>
-                                </div>
-                            </div>
+                            <h2 style="font-size: 1rem; font-weight: 600; color: #1E293B; margin: 0;" data-i18n="chart_applications">Candidatures par mois</h2>
                         </div>
-
-                        <div
-                            style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05);">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                                <div
-                                    style="width: 40px; height: 40px; background: linear-gradient(135deg, #64748B, #94A3B8); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa-solid fa-chart-pie" style="color: white;"></i>
-                                </div>
-                                <h2 style="font-size: 1rem; font-weight: 600; color: #1E293B; margin: 0;"
-                                    data-i18n="chart_sources">Sources des candidatures</h2>
+                        <div style="height: 200px; display: flex; align-items: flex-end; justify-content: space-around; background: linear-gradient(180deg, rgba(59,130,246,0.03) 0%, transparent 100%); border-radius: 12px; padding: 1rem;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                                <div style="width: 32px; height: 60px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;"></div>
+                                <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Sep</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 2rem; padding: 1rem;">
-                                <div style="position: relative; width: 150px; height: 150px;">
-                                    <div
-                                        style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(#3B82F6 0% 40%, #60A5FA 40% 65%, #94A3B8 65% 85%, #CBD5E1 85% 100%); box-shadow: 0 4px 20px rgba(59,130,246,0.2);">
-                                    </div>
-                                    <div
-                                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);">
-                                        <div style="font-size: 1.25rem; font-weight: 700; color: #1E293B;">156</div>
-                                        <div style="font-size: 0.625rem; color: #64748B;">Total</div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 0.875rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                        <span
-                                            style="width: 12px; height: 12px; border-radius: 4px; background: #3B82F6;"></span>
-                                        <span
-                                            style="font-size: 0.875rem; color: #1E293B; font-weight: 500;">LinkedIn</span>
-                                        <span style="font-size: 0.875rem; color: #64748B; margin-left: auto;">40%</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                        <span
-                                            style="width: 12px; height: 12px; border-radius: 4px; background: #60A5FA;"></span>
-                                        <span
-                                            style="font-size: 0.875rem; color: #1E293B; font-weight: 500;">Indeed</span>
-                                        <span style="font-size: 0.875rem; color: #64748B; margin-left: auto;">25%</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                        <span
-                                            style="width: 12px; height: 12px; border-radius: 4px; background: #94A3B8;"></span>
-                                        <span style="font-size: 0.875rem; color: #1E293B; font-weight: 500;"
-                                            data-i18n="source_career">Site carrière</span>
-                                        <span style="font-size: 0.875rem; color: #64748B; margin-left: auto;">20%</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                        <span
-                                            style="width: 12px; height: 12px; border-radius: 4px; background: #CBD5E1;"></span>
-                                        <span style="font-size: 0.875rem; color: #1E293B; font-weight: 500;"
-                                            data-i18n="source_other">Autres</span>
-                                        <span style="font-size: 0.875rem; color: #64748B; margin-left: auto;">15%</span>
-                                    </div>
-                                </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                                <div style="width: 32px; height: 100px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;"></div>
+                                <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Oct</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                                <div style="width: 32px; height: 80px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;"></div>
+                                <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Nov</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                                <div style="width: 32px; height: 140px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;"></div>
+                                <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Déc</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                                <div style="width: 32px; height: 180px; background: linear-gradient(180deg, #1D4ED8, #3B82F6); border-radius: 6px; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"></div>
+                                <span style="font-size: 0.75rem; color: #3B82F6; font-weight: 600;">Jan</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                                <div style="width: 32px; height: 120px; background: linear-gradient(180deg, #3B82F6, #60A5FA); border-radius: 6px;"></div>
+                                <span style="font-size: 0.75rem; color: #64748B; font-weight: 500;">Fév</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Performance Table -->
-                    <div class="card" style="margin-top: 1.5rem;">
+                    <!-- Journalisation des événements -->
+                    <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title" data-i18n="performance_title">Performance par poste</h2>
+                            <h2 class="card-title">Journalisation des événements</h2>
                         </div>
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th data-i18n="th_poste">Poste</th>
-                                    <th data-i18n="th_views">Vues</th>
-                                    <th data-i18n="th_applications">Candidatures</th>
-                                    <th data-i18n="th_conversion">Taux conversion</th>
-                                    <th data-i18n="th_avg_time">Temps moyen</th>
+                                    <th>Date</th>
+                                    <th>Utilisateur</th>
+                                    <th>Action</th>
+                                    <th>Détails</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><strong>Développeur Frontend</strong></td>
-                                    <td>2,458</td>
-                                    <td>45</td>
-                                    <td><span style="color: var(--primary-color); font-weight: 500;">1.83%</span></td>
-                                    <td>3.2 jours</td>
+                                    <td style="white-space: nowrap; color: #64748B; font-size: 0.85rem;">6 fév 2026, 14:32</td>
+                                    <td><strong>Marie Tremblay</strong></td>
+                                    <td><span style="background: #DBEAFE; color: #1D4ED8; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Évaluation</span></td>
+                                    <td style="color: #64748B; font-size: 0.875rem;">A noté le candidat <strong>Jean Dupont</strong> — 4/5 étoiles</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Chef de projet</strong></td>
-                                    <td>1,892</td>
-                                    <td>28</td>
-                                    <td><span style="color: #60A5FA; font-weight: 500;">1.48%</span></td>
-                                    <td>4.5 jours</td>
+                                    <td style="white-space: nowrap; color: #64748B; font-size: 0.85rem;">6 fév 2026, 11:15</td>
+                                    <td><strong>Pierre Roy</strong></td>
+                                    <td><span style="background: #D1FAE5; color: #065F46; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Création</span></td>
+                                    <td style="color: #64748B; font-size: 0.875rem;">A créé un nouvel affichage pour <strong>Développeur Frontend</strong></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Designer UX/UI</strong></td>
-                                    <td>956</td>
-                                    <td>12</td>
-                                    <td><span style="color: #94A3B8; font-weight: 500;">1.26%</span></td>
-                                    <td>2.8 jours</td>
+                                    <td style="white-space: nowrap; color: #64748B; font-size: 0.85rem;">5 fév 2026, 16:48</td>
+                                    <td><strong>Marie Tremblay</strong></td>
+                                    <td><span style="background: #FEF3C7; color: #92400E; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Modification</span></td>
+                                    <td style="color: #64748B; font-size: 0.875rem;">A modifié les questions du poste <strong>Chef de projet</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="white-space: nowrap; color: #64748B; font-size: 0.85rem;">5 fév 2026, 09:22</td>
+                                    <td><strong>Pierre Roy</strong></td>
+                                    <td><span style="background: #E0E7FF; color: #3730A3; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Invitation</span></td>
+                                    <td style="color: #64748B; font-size: 0.875rem;">A invité <strong>Sophie Martin</strong> à une entrevue vidéo</td>
+                                </tr>
+                                <tr>
+                                    <td style="white-space: nowrap; color: #64748B; font-size: 0.85rem;">4 fév 2026, 15:05</td>
+                                    <td><strong>Marie Tremblay</strong></td>
+                                    <td><span style="background: #FEE2E2; color: #991B1B; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Suppression</span></td>
+                                    <td style="color: #64748B; font-size: 0.875rem;">A archivé le poste <strong>Analyste d'affaires</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="white-space: nowrap; color: #64748B; font-size: 0.85rem;">4 fév 2026, 10:30</td>
+                                    <td><strong>Pierre Roy</strong></td>
+                                    <td><span style="background: #DBEAFE; color: #1D4ED8; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Évaluation</span></td>
+                                    <td style="color: #64748B; font-size: 0.875rem;">A visionné la vidéo de <strong>Luc Bergeron</strong></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1462,7 +1535,12 @@
                         <a href="#" class="settings-nav-item" data-target="settings-billing"
                             style="padding: 0.75rem 1.25rem; text-decoration: none; color: var(--text-secondary); font-family: inherit; font-size: 0.875rem; border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fa-solid fa-credit-card"></i>
-                            <span data-i18n="settings_billing">Facturation</span>
+                            <span data-i18n="settings_billing">Forfaits</span>
+                        </a>
+                        <a href="#" class="settings-nav-item" data-target="settings-communications"
+                            style="padding: 0.75rem 1.25rem; text-decoration: none; color: var(--text-secondary); font-family: inherit; font-size: 0.875rem; border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-envelope"></i>
+                            <span>Communication</span>
                         </a>
                         <a href="#" class="settings-nav-item" data-target="settings-integrations"
                             style="padding: 0.75rem 1.25rem; text-decoration: none; color: var(--text-secondary); font-family: inherit; font-size: 0.875rem; border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; align-items: center; gap: 0.5rem;">
@@ -1587,10 +1665,208 @@
                         <h2 class="card-title" data-i18n="settings_notifications">Notifications</h2>
                         <p>Préférences de notifications...</p>
                     </div>
-                    <div class="card settings-pane" id="settings-billing" style="display: none;">
-                        <h2 class="card-title" data-i18n="settings_billing">Facturation</h2>
-                        <p>Historique et méthodes de paiement...</p>
+                    <div class="settings-pane" id="settings-billing" style="display: none;">
+
+                        <!-- Forfait actuel -->
+                        <div class="card" style="margin-bottom: 1.5rem; border: 2px solid var(--primary-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h2 class="card-title" style="margin: 0;">Mon forfait</h2>
+                                <span style="background: #DBEAFE; color: #1D4ED8; padding: 0.3rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Actif</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                                <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #3B82F6, #1D4ED8); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-gem" style="color: white; font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Découverte <span style="font-weight: 400; color: #64748B; font-size: 0.9rem;">— Gratuit</span></div>
+                                    <div style="font-size: 0.875rem; color: #64748B; margin-top: 0.25rem;">1 affichage actif &middot; 5 candidats max &middot; Questions standards</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Changer de forfait -->
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <h2 class="card-title" style="margin-bottom: 1.25rem;">Changer de forfait</h2>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+
+                                <!-- À la carte -->
+                                <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; text-align: center; transition: border-color 0.2s, box-shadow 0.2s;" onmouseover="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 4px 20px rgba(59,130,246,0.15)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">À la carte</div>
+                                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary-color); margin: 0.75rem 0;">49$</div>
+                                    <div style="font-size: 0.8rem; color: #64748B; margin-bottom: 1rem;">paiement unique</div>
+                                    <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem; text-align: left;">
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> 1 affichage</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> Accès 30 jours</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> Candidats illimités</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> Questions personnalisées</li>
+                                    </ul>
+                                    <button class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 0.6rem;">Acheter</button>
+                                </div>
+
+                                <!-- Pro (populaire) -->
+                                <div style="border: 2px solid var(--primary-color); border-radius: 12px; padding: 1.5rem; text-align: center; position: relative; box-shadow: 0 4px 20px rgba(59,130,246,0.15);">
+                                    <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--primary-color); color: white; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.75rem; border-radius: 9999px; text-transform: uppercase;">Populaire</span>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">Pro</div>
+                                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary-color); margin: 0.75rem 0;">99$ <span style="font-size: 0.85rem; font-weight: 500; color: #64748B;">/mois</span></div>
+                                    <div style="font-size: 0.8rem; color: #64748B; margin-bottom: 1rem;">Facturé annuellement</div>
+                                    <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem; text-align: left;">
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> 5 affichages simultanés</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> 40 candidats / affichage</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> Outils collaboratifs</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> Marque employeur</li>
+                                    </ul>
+                                    <button class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 0.6rem;">Passer au Pro</button>
+                                </div>
+
+                                <!-- Expert -->
+                                <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; text-align: center; transition: border-color 0.2s, box-shadow 0.2s;" onmouseover="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 4px 20px rgba(59,130,246,0.15)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">Expert</div>
+                                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary-color); margin: 0.75rem 0;">169$ <span style="font-size: 0.85rem; font-weight: 500; color: #64748B;">/mois</span></div>
+                                    <div style="font-size: 0.8rem; color: #64748B; margin-bottom: 1rem;">Facturé annuellement</div>
+                                    <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem; text-align: left;">
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> 10 affichages simultanés</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> 60 candidats / affichage</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> Support prioritaire</li>
+                                        <li style="font-size: 0.8rem; color: #64748B; padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-check" style="color: #22C55E; font-size: 0.7rem;"></i> Accès API & Webhooks</li>
+                                    </ul>
+                                    <button class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 0.6rem;">Passer à Expert</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Historique des factures -->
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 1.25rem;">Historique des factures</h2>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Montant</th>
+                                        <th>Statut</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="color: #64748B; font-size: 0.875rem;">6 fév 2026</td>
+                                        <td><strong>Forfait Découverte</strong> — Activation</td>
+                                        <td style="font-weight: 600;">0,00 $</td>
+                                        <td><span style="background: #D1FAE5; color: #065F46; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Gratuit</span></td>
+                                        <td><a href="#" style="color: var(--primary-color); font-size: 0.8rem; text-decoration: none;"><i class="fa-solid fa-download"></i></a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="text-align: center; padding: 1.5rem 0 0.5rem; color: #94A3B8; font-size: 0.85rem;">
+                                <i class="fa-regular fa-file-lines" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                                Aucune autre facture pour le moment.
+                            </div>
+                        </div>
                     </div>
+                    <!-- Settings Content: Communications -->
+                    <div class="settings-pane" id="settings-communications" style="display: none;">
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                                <div>
+                                    <h2 class="card-title" style="margin: 0;">Modèles de courriels</h2>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">Gérez les messages envoyés aux candidats lors de vos processus de recrutement.</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="openEmailTemplateEditor()" style="white-space: nowrap;">
+                                    <i class="fa-solid fa-plus"></i> Nouveau modèle
+                                </button>
+                            </div>
+
+                            <div id="email-templates-list">
+                                <!-- Template 1 -->
+                                <div class="email-template-row" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 0.75rem; transition: box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'" onmouseout="this.style.boxShadow='none'">
+                                    <div style="width: 40px; height: 40px; background: #DBEAFE; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-envelope" style="color: #1D4ED8;"></i>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <strong style="font-size: 0.9rem; color: var(--text-primary);">Confirmation de réception</strong>
+                                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.2rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nous avons bien reçu votre candidature et nous vous en remercions. Notre équipe...</p>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                                        <button class="btn-icon" title="Modifier" onclick="editEmailTemplate(0)"><i class="fa-solid fa-pen" style="color: var(--primary-color);"></i></button>
+                                        <button class="btn-icon" title="Supprimer" onclick="deleteEmailTemplate(this)"><i class="fa-solid fa-trash" style="color: #EF4444;"></i></button>
+                                    </div>
+                                </div>
+
+                                <!-- Template 2 -->
+                                <div class="email-template-row" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 0.75rem; transition: box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'" onmouseout="this.style.boxShadow='none'">
+                                    <div style="width: 40px; height: 40px; background: #D1FAE5; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-circle-check" style="color: #065F46;"></i>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <strong style="font-size: 0.9rem; color: var(--text-primary);">Invitation à l'entrevue vidéo</strong>
+                                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.2rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Félicitations ! Votre profil a retenu notre attention. Nous vous invitons à réaliser...</p>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                                        <button class="btn-icon" title="Modifier" onclick="editEmailTemplate(1)"><i class="fa-solid fa-pen" style="color: var(--primary-color);"></i></button>
+                                        <button class="btn-icon" title="Supprimer" onclick="deleteEmailTemplate(this)"><i class="fa-solid fa-trash" style="color: #EF4444;"></i></button>
+                                    </div>
+                                </div>
+
+                                <!-- Template 3 -->
+                                <div class="email-template-row" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 0.75rem; transition: box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'" onmouseout="this.style.boxShadow='none'">
+                                    <div style="width: 40px; height: 40px; background: #FEE2E2; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-xmark" style="color: #991B1B;"></i>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <strong style="font-size: 0.9rem; color: var(--text-primary);">Refus poli</strong>
+                                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.2rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nous vous remercions sincèrement pour l'intérêt que vous avez porté à notre offre...</p>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                                        <button class="btn-icon" title="Modifier" onclick="editEmailTemplate(2)"><i class="fa-solid fa-pen" style="color: var(--primary-color);"></i></button>
+                                        <button class="btn-icon" title="Supprimer" onclick="deleteEmailTemplate(this)"><i class="fa-solid fa-trash" style="color: #EF4444;"></i></button>
+                                    </div>
+                                </div>
+
+                                <!-- Template 4 -->
+                                <div class="email-template-row" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 0.75rem; transition: box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'" onmouseout="this.style.boxShadow='none'">
+                                    <div style="width: 40px; height: 40px; background: #FEF3C7; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-clock" style="color: #92400E;"></i>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <strong style="font-size: 0.9rem; color: var(--text-primary);">Poste comblé</strong>
+                                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.2rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nous tenons à vous informer que le poste pour lequel vous avez postulé a été comblé...</p>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                                        <button class="btn-icon" title="Modifier" onclick="editEmailTemplate(3)"><i class="fa-solid fa-pen" style="color: var(--primary-color);"></i></button>
+                                        <button class="btn-icon" title="Supprimer" onclick="deleteEmailTemplate(this)"><i class="fa-solid fa-trash" style="color: #EF4444;"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Éditeur de modèle (caché par défaut) -->
+                        <div class="card" id="email-template-editor" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                                <h2 class="card-title" style="margin: 0;" id="email-editor-title">Nouveau modèle</h2>
+                                <button class="btn-icon" onclick="closeEmailTemplateEditor()" style="font-size: 1.25rem;"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <form onsubmit="saveEmailTemplate(event)" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label class="form-label" style="font-weight: 600;">Titre du modèle</label>
+                                    <input type="text" id="email-tpl-title" class="form-input" placeholder="Ex: Confirmation de réception" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="font-weight: 600;">Contenu du courriel</label>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                        Variables disponibles : <code style="background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;">{{nom_candidat}}</code>
+                                        <code style="background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;">{{titre_poste}}</code>
+                                        <code style="background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;">{{nom_entreprise}}</code>
+                                    </div>
+                                    <textarea id="email-tpl-content" class="form-input" rows="8" style="resize: vertical;" placeholder="Bonjour {{nom_candidat}},&#10;&#10;..." required></textarea>
+                                </div>
+                                <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                    <button type="button" class="btn btn-secondary" onclick="closeEmailTemplateEditor()">Annuler</button>
+                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Enregistrer</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                     <div class="card settings-pane" id="settings-integrations" style="display: none;">
                         <h2 class="card-title" data-i18n="settings_integrations">Intégrations</h2>
                         <p>Connectez vos outils...</p>
@@ -1716,7 +1992,62 @@
         </div>
     </div>
 
+    <!-- Modal Fermer l'affichage -->
+    <div class="modal-overlay" id="close-affichage-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Fermer l'affichage</h2>
+                <button class="btn-icon" onclick="closeModal('close-affichage')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
 
+            <div style="margin-bottom: 1.25rem;">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Vous êtes sur le point de fermer cet affichage. Sélectionnez les candidats à notifier par courriel.</p>
+                <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.8rem; color: #92400E; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Cette action est irréversible. L'affichage ne sera plus visible publiquement.
+                </div>
+            </div>
+
+            <!-- Sélection des candidats -->
+            <div style="margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <label class="form-label" style="margin: 0; font-weight: 600;">Candidats à notifier</label>
+                    <label style="font-size: 0.8rem; color: var(--primary-color); cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+                        <input type="checkbox" id="close-select-all" onchange="toggleSelectAllClose(this)" style="accent-color: var(--primary-color);">
+                        Tout sélectionner
+                    </label>
+                </div>
+                <div id="close-affichage-candidates" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Message -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label" style="font-weight: 600;">Message aux candidats</label>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.75rem;" onclick="setCloseMessage('polite')">Refus poli</button>
+                    <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.75rem;" onclick="setCloseMessage('filled')">Poste comblé</button>
+                    <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.75rem;" onclick="setCloseMessage('custom')">Personnalisé</button>
+                </div>
+                <textarea id="close-affichage-message" class="form-input" rows="4" style="resize: vertical; width: 100%; box-sizing: border-box;" placeholder="Rédigez votre message...">Bonjour,
+
+Nous vous remercions sincèrement pour l'intérêt que vous avez porté à notre offre. Après une analyse attentive de l'ensemble des candidatures reçues, nous avons décidé de poursuivre avec d'autres profils.
+
+Nous conservons votre dossier et ne manquerons pas de vous recontacter si une opportunité correspondant à votre profil se présente.
+
+Cordialement,
+L'équipe de recrutement</textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('close-affichage')">Annuler</button>
+                <button type="button" class="btn" style="background: #DC2626; color: white; border: none;" onclick="confirmCloseAffichage()">
+                    <i class="fa-solid fa-xmark"></i> Fermer l'affichage
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // i18n translations
@@ -1805,7 +2136,7 @@
                 settings_company: 'Entreprise',
                 settings_team: 'Équipe',
                 settings_notifications: 'Notifications',
-                settings_billing: 'Facturation',
+                settings_billing: 'Forfaits',
                 settings_integrations: 'Intégrations',
                 settings_company_info: "Informations de l'entreprise",
                 form_company_name: "Nom de l'entreprise",
@@ -1917,7 +2248,7 @@
                 settings_company: 'Company',
                 settings_team: 'Team',
                 settings_notifications: 'Notifications',
-                settings_billing: 'Billing',
+                settings_billing: 'Plans',
                 settings_integrations: 'Integrations',
                 settings_company_info: 'Company information',
                 form_company_name: 'Company name',
@@ -2094,7 +2425,14 @@
         }
 
         window.addEventListener('hashchange', handleHashNavigation);
-        window.addEventListener('load', handleHashNavigation);
+        window.addEventListener('load', function() {
+            handleHashNavigation();
+            // Ouvrir l'accordéon Affichages par défaut
+            const affichagesSubmenu = document.querySelector('.nav-submenu[data-parent="affichages"]');
+            if (affichagesSubmenu) affichagesSubmenu.classList.add('open');
+            const affichagesArrow = document.querySelector('.nav-item[data-section="affichages"] .submenu-arrow');
+            if (affichagesArrow) affichagesArrow.style.transform = 'rotate(180deg)';
+        });
 
         // Modal functions
         function openModal(type) {
@@ -2170,32 +2508,6 @@
 
             // Get current language to show appropriate success message
             const successMsg = translations[currentLang]['feedback_success'];
-
-
-
-            function showAffichageDetail(id) {
-                const data = affichagesData[id];
-                if (!data) return;
-
-                document.getElementById('detail-affichage-title').textContent = data.title;
-                document.getElementById('detail-affichage-platform').textContent = data.platform;
-
-                const statusBadge = document.getElementById('detail-affichage-status');
-                statusBadge.textContent = data.status;
-                statusBadge.className = `status-badge ${data.statusClass}`;
-
-                document.getElementById('detail-affichage-views').textContent = data.views;
-                document.getElementById('detail-affichage-apps').textContent = data.apps;
-                document.getElementById('detail-affichage-start').textContent = data.start;
-                document.getElementById('detail-affichage-end').textContent = data.end;
-
-
-                // Switch views
-                document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-                document.getElementById('affichage-detail-section').classList.add('active');
-                window.scrollTo(0, 0);
-            }
-
 
             alert(successMsg);
 
@@ -2513,6 +2825,20 @@
         // Initialize
         applyTranslations('fr');
 
+        // User dropdown
+        function toggleUserDropdown(e) {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('open');
+        }
+
+        function closeUserDropdown() {
+            document.getElementById('userDropdown').classList.remove('open');
+        }
+
+        document.addEventListener('click', function () {
+            closeUserDropdown();
+        });
+
         // Sidebar logic for mobile
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('active');
@@ -2564,32 +2890,223 @@
             }
         };
 
+        // Candidats par affichage (mock data)
+        const affichageCandidats = {
+            'frontend-linkedin': [
+                { name: 'Sophie Martin', email: 'sophie.martin@email.com', color: '3B82F6', status: 'Nouveau', statusBg: '#DBEAFE', statusColor: '#1E40AF', video: true, stars: 4, date: '2026-02-01', id: 'sophie' },
+                { name: 'Pierre Lavoie', email: 'pierre.l@email.com', color: 'EC4899', status: 'Favori', statusBg: '#D1FAE5', statusColor: '#065F46', video: true, stars: 4, date: '2026-01-22', id: 'pierre' },
+                { name: 'Luc Bergeron', email: 'luc.b@email.com', color: 'F59E0B', status: 'Nouveau', statusBg: '#DBEAFE', statusColor: '#1E40AF', video: true, stars: 3, date: '2026-02-03', id: 'luc' },
+                { name: 'Amélie Côté', email: 'amelie.c@email.com', color: '10B981', status: 'Évalué', statusBg: '#DBEAFE', statusColor: '#1D4ED8', video: true, stars: 5, date: '2026-01-30', id: 'amelie' },
+                { name: 'Marc Gagnon', email: 'marc.g@email.com', color: '8B5CF6', status: 'Nouveau', statusBg: '#DBEAFE', statusColor: '#1E40AF', video: false, stars: 0, date: '2026-02-05', id: 'marc' },
+            ],
+            'frontend-site': [
+                { name: 'Julie Fortin', email: 'julie.f@email.com', color: '3B82F6', status: 'Nouveau', statusBg: '#DBEAFE', statusColor: '#1E40AF', video: true, stars: 3, date: '2026-02-02', id: 'julie' },
+                { name: 'David Chen', email: 'david.c@email.com', color: '10B981', status: 'Évalué', statusBg: '#DBEAFE', statusColor: '#1D4ED8', video: true, stars: 4, date: '2026-01-28', id: 'david' },
+            ],
+            'manager-linkedin': [
+                { name: 'Jean Dupont', email: 'jean.dupont@email.com', color: '10B981', status: 'Évalué', statusBg: '#DBEAFE', statusColor: '#1D4ED8', video: true, stars: 5, date: '2026-01-28', id: 'jean' },
+                { name: 'Nathalie Roy', email: 'nathalie.r@email.com', color: 'EC4899', status: 'Nouveau', statusBg: '#DBEAFE', statusColor: '#1E40AF', video: true, stars: 3, date: '2026-02-04', id: 'nathalie' },
+                { name: 'François Léger', email: 'francois.l@email.com', color: 'F59E0B', status: 'Favori', statusBg: '#D1FAE5', statusColor: '#065F46', video: true, stars: 4, date: '2026-01-26', id: 'francois' },
+            ]
+        };
+
         function showAffichageDetail(id) {
             const data = affichagesData[id];
             if (!data) return;
+            window._currentAffichageId = id;
 
-            document.getElementById('detail-affichage-title').textContent = data.title;
-            document.getElementById('detail-affichage-platform').textContent = data.platform;
-
-            const statusBadge = document.getElementById('detail-affichage-status');
+            // Header
+            document.getElementById('affichage-candidats-title').textContent = data.title;
+            document.getElementById('affichage-candidats-subtitle').textContent = data.platform + ' · ' + data.apps + ' candidatures · ' + data.views + ' vues';
+            const statusBadge = document.getElementById('affichage-candidats-status');
             statusBadge.textContent = data.status;
-            statusBadge.className = `status-badge ${data.statusClass}`;
+            statusBadge.className = 'status-badge ' + data.statusClass;
 
-            document.getElementById('detail-affichage-views').textContent = data.views;
-            document.getElementById('detail-affichage-apps').textContent = data.apps;
-            document.getElementById('detail-affichage-start').textContent = data.start;
-            document.getElementById('detail-affichage-end').textContent = data.end;
+            // Build candidates table
+            const candidates = affichageCandidats[id] || [];
+            const tbody = document.getElementById('affichage-candidats-tbody');
+            tbody.innerHTML = '';
 
+            candidates.forEach(function(c) {
+                const stars = Array.from({length: 5}, (_, i) =>
+                    '<i class="fa-' + (i < c.stars ? 'solid' : 'regular') + ' fa-star"></i>'
+                ).join('');
+
+                const videoIcon = c.video
+                    ? '<i class="fa-solid fa-circle-check" style="color: var(--success-color);"></i>'
+                    : '<i class="fa-solid fa-circle-xmark" style="color: #CBD5E1;"></i>';
+
+                const row = document.createElement('tr');
+                row.style.cursor = 'pointer';
+                row.onclick = function() { if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id); };
+                row.innerHTML =
+                    '<td><div style="display: flex; align-items: center; gap: 0.75rem;">' +
+                        '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + c.color + '&color=fff" class="avatar" alt="">' +
+                        '<div><strong>' + c.name + '</strong><div style="font-size: 0.75rem; color: var(--text-secondary);">' + c.email + '</div></div>' +
+                    '</div></td>' +
+                    '<td><span class="status-badge" style="background:' + c.statusBg + '; color:' + c.statusColor + ';">' + c.status + '</span></td>' +
+                    '<td>' + videoIcon + '</td>' +
+                    '<td><div style="color: #F59E0B;">' + stars + '</div></td>' +
+                    '<td>' + c.date + '</td>' +
+                    '<td onclick="event.stopPropagation()">' +
+                        '<button class="btn-icon" title="Voir vidéo"><i class="fa-solid fa-play"></i></button>' +
+                        '<button class="btn-icon" title="Profil"><i class="fa-solid fa-user"></i></button>' +
+                        '<button class="btn-icon" title="Favori"><i class="fa-regular fa-star"></i></button>' +
+                    '</td>';
+                tbody.appendChild(row);
+            });
+
+            if (candidates.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #94A3B8;">Aucun candidat pour cet affichage.</td></tr>';
+            }
 
             // Switch views
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById('affichage-detail-section').classList.add('active');
+            document.getElementById('affichage-candidats-section').classList.add('active');
             window.scrollTo(0, 0);
         }
 
         function goBackToAffichages() {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById('affichages-section').classList.add('active');
+        }
+
+        // --- FERMER AFFICHAGE MODAL ---
+        var currentCloseAffichageId = null;
+
+        function openCloseAffichageModal() {
+            currentCloseAffichageId = window._currentAffichageId;
+            var candidates = affichageCandidats[currentCloseAffichageId] || [];
+            var container = document.getElementById('close-affichage-candidates');
+            container.innerHTML = '';
+
+            candidates.forEach(function(c, i) {
+                var div = document.createElement('div');
+                div.style.cssText = 'display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border-color);';
+                if (i === candidates.length - 1) div.style.borderBottom = 'none';
+                div.innerHTML =
+                    '<input type="checkbox" class="close-candidate-cb" value="' + c.id + '" checked style="accent-color: var(--primary-color);">' +
+                    '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + c.color + '&color=fff&size=32" style="width:32px; height:32px; border-radius:50%;" alt="">' +
+                    '<div style="flex:1;"><strong style="font-size:0.875rem;">' + c.name + '</strong><div style="font-size:0.75rem; color:var(--text-secondary);">' + c.email + '</div></div>' +
+                    '<span class="status-badge" style="background:' + c.statusBg + '; color:' + c.statusColor + '; font-size:0.7rem;">' + c.status + '</span>';
+                container.appendChild(div);
+            });
+
+            if (candidates.length === 0) {
+                container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.85rem;">Aucun candidat à notifier.</div>';
+            }
+
+            document.getElementById('close-select-all').checked = true;
+            openModal('close-affichage');
+        }
+
+        function toggleSelectAllClose(cb) {
+            document.querySelectorAll('.close-candidate-cb').forEach(function(box) {
+                box.checked = cb.checked;
+            });
+        }
+
+        var closeMessages = {
+            polite: "Bonjour,\n\nNous vous remercions sincèrement pour l'intérêt que vous avez porté à notre offre. Après une analyse attentive de l'ensemble des candidatures reçues, nous avons décidé de poursuivre avec d'autres profils.\n\nNous conservons votre dossier et ne manquerons pas de vous recontacter si une opportunité correspondant à votre profil se présente.\n\nCordialement,\nL'équipe de recrutement",
+            filled: "Bonjour,\n\nNous tenons à vous informer que le poste pour lequel vous avez postulé a été comblé. Nous avons reçu un grand nombre de candidatures de qualité et la décision a été difficile.\n\nNous vous encourageons à consulter nos futures offres et à postuler de nouveau.\n\nMerci et bonne continuation,\nL'équipe de recrutement",
+            custom: ""
+        };
+
+        function setCloseMessage(type) {
+            document.getElementById('close-affichage-message').value = closeMessages[type];
+            if (type === 'custom') {
+                document.getElementById('close-affichage-message').focus();
+            }
+        }
+
+        // --- EMAIL TEMPLATE CRUD ---
+        var emailTemplates = [
+            { title: 'Confirmation de réception', content: "Bonjour {{nom_candidat}},\n\nNous avons bien reçu votre candidature pour le poste de {{titre_poste}} chez {{nom_entreprise}} et nous vous en remercions.\n\nNotre équipe examinera votre dossier dans les prochains jours. Nous vous tiendrons informé(e) de la suite du processus.\n\nCordialement,\nL'équipe de recrutement" },
+            { title: "Invitation à l'entrevue vidéo", content: "Bonjour {{nom_candidat}},\n\nFélicitations ! Votre profil a retenu notre attention pour le poste de {{titre_poste}}.\n\nNous vous invitons à réaliser une entrevue vidéo de présélection. Vous pourrez enregistrer vos réponses au moment qui vous convient.\n\nCliquez sur le lien ci-dessous pour commencer :\n[Lien vers l'entrevue]\n\nCordialement,\nL'équipe de recrutement" },
+            { title: 'Refus poli', content: "Bonjour {{nom_candidat}},\n\nNous vous remercions sincèrement pour l'intérêt que vous avez porté à notre offre de {{titre_poste}}. Après une analyse attentive de l'ensemble des candidatures reçues, nous avons décidé de poursuivre avec d'autres profils.\n\nNous conservons votre dossier et ne manquerons pas de vous recontacter si une opportunité correspondant à votre profil se présente.\n\nCordialement,\nL'équipe de recrutement" },
+            { title: 'Poste comblé', content: "Bonjour {{nom_candidat}},\n\nNous tenons à vous informer que le poste de {{titre_poste}} pour lequel vous avez postulé a été comblé.\n\nNous avons reçu un grand nombre de candidatures de qualité et la décision a été difficile.\n\nNous vous encourageons à consulter nos futures offres et à postuler de nouveau.\n\nMerci et bonne continuation,\nL'équipe de recrutement" }
+        ];
+        var editingTemplateIndex = -1;
+
+        function openEmailTemplateEditor(index) {
+            editingTemplateIndex = (typeof index === 'number') ? index : -1;
+            document.getElementById('email-editor-title').textContent = editingTemplateIndex >= 0 ? 'Modifier le modèle' : 'Nouveau modèle';
+            document.getElementById('email-tpl-title').value = editingTemplateIndex >= 0 ? emailTemplates[editingTemplateIndex].title : '';
+            document.getElementById('email-tpl-content').value = editingTemplateIndex >= 0 ? emailTemplates[editingTemplateIndex].content : '';
+            document.getElementById('email-template-editor').style.display = 'block';
+            document.getElementById('email-tpl-title').focus();
+        }
+
+        function closeEmailTemplateEditor() {
+            document.getElementById('email-template-editor').style.display = 'none';
+            editingTemplateIndex = -1;
+        }
+
+        function editEmailTemplate(index) {
+            openEmailTemplateEditor(index);
+        }
+
+        function deleteEmailTemplate(btn) {
+            var row = btn.closest('.email-template-row');
+            var rows = Array.from(document.querySelectorAll('.email-template-row'));
+            var index = rows.indexOf(row);
+            if (index >= 0) {
+                emailTemplates.splice(index, 1);
+                row.remove();
+            }
+        }
+
+        function saveEmailTemplate(e) {
+            e.preventDefault();
+            var title = document.getElementById('email-tpl-title').value.trim();
+            var content = document.getElementById('email-tpl-content').value.trim();
+            if (!title || !content) return;
+
+            if (editingTemplateIndex >= 0) {
+                emailTemplates[editingTemplateIndex] = { title: title, content: content };
+            } else {
+                emailTemplates.push({ title: title, content: content });
+            }
+            renderEmailTemplates();
+            closeEmailTemplateEditor();
+        }
+
+        function renderEmailTemplates() {
+            var container = document.getElementById('email-templates-list');
+            container.innerHTML = '';
+            var icons = [
+                { bg: '#DBEAFE', color: '#1D4ED8', icon: 'fa-envelope' },
+                { bg: '#D1FAE5', color: '#065F46', icon: 'fa-circle-check' },
+                { bg: '#FEE2E2', color: '#991B1B', icon: 'fa-xmark' },
+                { bg: '#FEF3C7', color: '#92400E', icon: 'fa-clock' },
+                { bg: '#E0E7FF', color: '#3730A3', icon: 'fa-paper-plane' },
+                { bg: '#FCE7F3', color: '#9D174D', icon: 'fa-heart' }
+            ];
+            emailTemplates.forEach(function(tpl, i) {
+                var ic = icons[i % icons.length];
+                var div = document.createElement('div');
+                div.className = 'email-template-row';
+                div.style.cssText = 'display:flex; align-items:center; gap:1rem; padding:1rem; border:1px solid var(--border-color); border-radius:10px; margin-bottom:0.75rem; transition:box-shadow 0.15s;';
+                div.onmouseover = function(){ this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'; };
+                div.onmouseout = function(){ this.style.boxShadow='none'; };
+                div.innerHTML =
+                    '<div style="width:40px;height:40px;background:'+ic.bg+';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid '+ic.icon+'" style="color:'+ic.color+';"></i></div>' +
+                    '<div style="flex:1;min-width:0;"><strong style="font-size:0.9rem;color:var(--text-primary);">'+tpl.title+'</strong><p style="font-size:0.8rem;color:var(--text-secondary);margin:0.2rem 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+tpl.content.substring(0, 100)+'...</p></div>' +
+                    '<div style="display:flex;gap:0.5rem;flex-shrink:0;"><button class="btn-icon" title="Modifier" onclick="editEmailTemplate('+i+')"><i class="fa-solid fa-pen" style="color:var(--primary-color);"></i></button><button class="btn-icon" title="Supprimer" onclick="deleteEmailTemplate(this)"><i class="fa-solid fa-trash" style="color:#EF4444;"></i></button></div>';
+                container.appendChild(div);
+            });
+        }
+
+        function confirmCloseAffichage() {
+            var selected = [];
+            document.querySelectorAll('.close-candidate-cb:checked').forEach(function(cb) {
+                selected.push(cb.value);
+            });
+            var message = document.getElementById('close-affichage-message').value;
+
+            // Design only - just close modal and go back
+            closeModal('close-affichage');
+            goBackToAffichages();
         }
 
     </script>

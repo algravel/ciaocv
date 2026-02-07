@@ -5,6 +5,7 @@ const translations = {
         "nav.recruiter": "Espace Recruteur",
         "nav.candidate": "Espace Candidat",
         "nav.login": "Se connecter",
+        "nav.logout": "Se déconnecter",
 
         "hero.title": "L'entrevue de présélection <br><span class=\"highlight\">simplifiée</span> pour tous.",
         "hero.subtitle": "Gagnez du temps sur vos recrutements. Invitez les candidats à des entrevues de présélection en vidéo, recevez leurs réponses, et choisissez les meilleurs talents en quelques minutes.",
@@ -170,6 +171,7 @@ const translations = {
         "nav.recruiter": "Recruiter Login",
         "nav.candidate": "Candidate Login",
         "nav.login": "Log In",
+        "nav.logout": "Log Out",
 
         "hero.title": "Pre-selection video interviewing <br><span class=\"highlight\">made simple</span> for everyone.",
         "hero.subtitle": "Save time on recruiting. Invite candidates to pre-selection video interviews, receive their responses, and choose the best talent in minutes.",
