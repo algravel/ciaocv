@@ -193,18 +193,18 @@ if ($jobId) {
 <body>
 
     <header class="navbar">
-        <a href="index.html" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
+        <a href="/" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
         <nav class="nav-links">
-            <a href="index.html">Accueil</a>
-            <a href="emplois.html">Offres d'emploi</a>
+            <a href="/">Accueil</a>
+            <a href="/emplois">Offres d'emploi</a>
         </nav>
         <div style="display:flex; gap:1rem; align-items:center;">
-            <a href="https://app.ciaocv.com" class="btn-login">Connexion</a>
+            <a href="https://app.ciaocv.com/connexion" class="btn-login">Connexion</a>
         </div>
     </header>
 
     <div class="job-container" style="margin-top: 2rem;">
-        <a href="emplois.html" class="back-link">← Retour aux offres</a>
+        <a href="/emplois" class="back-link">← Retour aux offres</a>
 
         <?php if ($job): ?>
             <div class="job-card-detail">
@@ -240,7 +240,7 @@ if ($jobId) {
             <div class="job-card-detail" style="text-align:center; padding: 4rem;">
                 <h2>Offre introuvable</h2>
                 <p>Désolé, cette offre d'emploi n'existe plus ou a été retirée.</p>
-                <a href="emplois.html" class="btn-apply-large" style="margin-top:2rem;">Voir les autres offres</a>
+                <a href="/emplois" class="btn-apply-large" style="margin-top:2rem;">Voir les autres offres</a>
             </div>
         <?php endif; ?>
     </div>

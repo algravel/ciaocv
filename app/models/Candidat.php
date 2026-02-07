@@ -84,20 +84,20 @@ class Candidat
     {
         return [
             'frontend-linkedin' => [
-                ['name' => 'Sophie Martin',  'email' => 'sophie.martin@email.com', 'color' => '3B82F6', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true,  'stars' => 4, 'date' => '2026-02-01', 'id' => 'sophie'],
-                ['name' => 'Pierre Lavoie',  'email' => 'pierre.l@email.com',      'color' => 'EC4899', 'status' => 'Favori',  'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true,  'stars' => 4, 'date' => '2026-01-22', 'id' => 'pierre'],
-                ['name' => 'Luc Bergeron',   'email' => 'luc.b@email.com',         'color' => 'F59E0B', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true,  'stars' => 3, 'date' => '2026-02-03', 'id' => 'luc'],
-                ['name' => 'Amélie Côté',    'email' => 'amelie.c@email.com',      'color' => '10B981', 'status' => 'Évalué',  'statusBg' => '#DBEAFE', 'statusColor' => '#1D4ED8', 'video' => true,  'stars' => 5, 'date' => '2026-01-30', 'id' => 'amelie'],
-                ['name' => 'Marc Gagnon',    'email' => 'marc.g@email.com',        'color' => '8B5CF6', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => false, 'stars' => 0, 'date' => '2026-02-05', 'id' => 'marc'],
+                ['name' => 'Sophie Martin',  'email' => 'sophie.martin@email.com', 'color' => '3B82F6', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true,  'stars' => 4, 'date' => '2026-02-01', 'id' => 'sophie', 'isFavorite' => false],
+                ['name' => 'Pierre Lavoie',  'email' => 'pierre.l@email.com',      'color' => 'EC4899', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true,  'stars' => 4, 'date' => '2026-01-22', 'id' => 'pierre', 'isFavorite' => true],
+                ['name' => 'Luc Bergeron',   'email' => 'luc.b@email.com',         'color' => 'F59E0B', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true,  'stars' => 3, 'date' => '2026-02-03', 'id' => 'luc', 'isFavorite' => false],
+                ['name' => 'Amélie Côté',    'email' => 'amelie.c@email.com',      'color' => '10B981', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true,  'stars' => 5, 'date' => '2026-01-30', 'id' => 'amelie', 'isFavorite' => true],
+                ['name' => 'Marc Gagnon',    'email' => 'marc.g@email.com',        'color' => '8B5CF6', 'status' => 'Refusé',  'statusBg' => '#FEE2E2', 'statusColor' => '#991B1B', 'video' => false, 'stars' => 0, 'date' => '2026-02-05', 'id' => 'marc', 'isFavorite' => false],
             ],
             'frontend-site' => [
-                ['name' => 'Julie Fortin', 'email' => 'julie.f@email.com', 'color' => '3B82F6', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true, 'stars' => 3, 'date' => '2026-02-02', 'id' => 'julie'],
-                ['name' => 'David Chen',   'email' => 'david.c@email.com', 'color' => '10B981', 'status' => 'Évalué',  'statusBg' => '#DBEAFE', 'statusColor' => '#1D4ED8', 'video' => true, 'stars' => 4, 'date' => '2026-01-28', 'id' => 'david'],
+                ['name' => 'Julie Fortin', 'email' => 'julie.f@email.com', 'color' => '3B82F6', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true, 'stars' => 3, 'date' => '2026-02-02', 'id' => 'julie', 'isFavorite' => false],
+                ['name' => 'David Chen',   'email' => 'david.c@email.com', 'color' => '10B981', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true, 'stars' => 4, 'date' => '2026-01-28', 'id' => 'david', 'isFavorite' => true],
             ],
             'manager-linkedin' => [
-                ['name' => 'Jean Dupont',     'email' => 'jean.dupont@email.com', 'color' => '10B981', 'status' => 'Évalué',  'statusBg' => '#DBEAFE', 'statusColor' => '#1D4ED8', 'video' => true, 'stars' => 5, 'date' => '2026-01-28', 'id' => 'jean'],
-                ['name' => 'Nathalie Roy',    'email' => 'nathalie.r@email.com',  'color' => 'EC4899', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true, 'stars' => 3, 'date' => '2026-02-04', 'id' => 'nathalie'],
-                ['name' => 'François Léger',  'email' => 'francois.l@email.com',  'color' => 'F59E0B', 'status' => 'Favori',  'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true, 'stars' => 4, 'date' => '2026-01-26', 'id' => 'francois'],
+                ['name' => 'Jean Dupont',     'email' => 'jean.dupont@email.com', 'color' => '10B981', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true, 'stars' => 5, 'date' => '2026-01-28', 'id' => 'jean', 'isFavorite' => true],
+                ['name' => 'Nathalie Roy',    'email' => 'nathalie.r@email.com',  'color' => 'EC4899', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true, 'stars' => 3, 'date' => '2026-02-04', 'id' => 'nathalie', 'isFavorite' => false],
+                ['name' => 'François Léger',  'email' => 'francois.l@email.com',  'color' => 'F59E0B', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true, 'stars' => 4, 'date' => '2026-01-26', 'id' => 'francois', 'isFavorite' => false],
             ],
         ];
     }

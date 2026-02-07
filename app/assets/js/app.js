@@ -117,6 +117,13 @@ function activateNavItem(item) {
     document.querySelectorAll('.content-section').forEach(function (sec) { sec.classList.remove('active'); });
     var sectionEl = document.getElementById(sectionId + '-section');
     if (sectionEl) sectionEl.classList.add('active');
+
+    // Paramètres : afficher le panneau « Entreprise » par défaut
+    if (sectionId === 'parametres') {
+        document.querySelectorAll('.settings-pane').forEach(function (pane) { pane.style.display = 'none'; });
+        var firstPane = document.getElementById('settings-company');
+        if (firstPane) firstPane.style.display = 'block';
+    }
 }
 
 document.querySelectorAll('.nav-item[data-section]').forEach(function (item) {
@@ -137,6 +144,21 @@ function handleHashNavigation() {
         if (submenu) {
             var parentNavItem = document.querySelector('.nav-item[data-section="' + submenu.dataset.parent + '"]');
             if (parentNavItem) activateNavItem(parentNavItem);
+        }
+        if (subitem.classList.contains('settings-subitem')) {
+            var targetId = subitem.getAttribute('data-target');
+            if (targetId) {
+                setTimeout(function () {
+                    document.querySelectorAll('.settings-pane').forEach(function (pane) { pane.style.display = 'none'; });
+                    var pane = document.getElementById(targetId);
+                    if (pane) {
+                        pane.style.display = 'block';
+                        if (targetId === 'settings-team') renderTeamMembers();
+                        if (targetId === 'settings-departments') renderDepartments();
+                    }
+                }, 0);
+            }
+            return;
         }
         var i18nKey = subitem.getAttribute('data-i18n');
         if (i18nKey) {
@@ -198,25 +220,7 @@ document.querySelectorAll('.view-tabs').forEach(function (tabGroup) {
     });
 });
 
-/* ═══════════════════════════════════════════════
-   SETTINGS TABS
-   ═══════════════════════════════════════════════ */
-document.querySelectorAll('.settings-nav-item').forEach(function (tab) {
-    tab.addEventListener('click', function (e) {
-        e.preventDefault();
-        var targetId = tab.getAttribute('data-target');
-        document.querySelectorAll('.settings-nav-item').forEach(function (t) {
-            t.classList.remove('active');
-        });
-        tab.classList.add('active');
-        document.querySelectorAll('.settings-pane').forEach(function (pane) { pane.style.display = 'none'; });
-        var targetPane = document.getElementById(targetId);
-        if (targetPane) targetPane.style.display = 'block';
-        if (targetId === 'settings-team') renderTeamMembers();
-        if (targetId === 'settings-departments') renderDepartments();
-    });
-});
-
+/* Paramètres : visibilité des panneaux (navigation par le menu latéral) */
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.settings-pane').forEach(function (pane) {
         if (pane.id !== 'settings-company') pane.style.display = 'none';
@@ -242,15 +246,20 @@ document.addEventListener('click', function () {
 var currentPosteId = null;
 
 function showPosteDetail(id) {
-    var data = postesData[id];
+    if (id == null || id === '') return;
+    var data = postesData[id] || postesData[String(id)];
     if (!data) return;
-    currentPosteId = id;
+    currentPosteId = data.id;
 
     document.getElementById('detail-poste-title').textContent = data.title;
     document.getElementById('detail-poste-dept-loc').textContent = data.department + ' • ' + data.location;
-    var sb = document.getElementById('detail-poste-status');
-    sb.textContent = data.status;
-    sb.className = 'status-badge ' + data.statusClass;
+    var statusSelect = document.getElementById('detail-poste-status-select');
+    var sKey = (data.status || 'Actif').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (sKey === 'actif') statusSelect.value = 'actif';
+    else if (sKey === 'non actif' || sKey === 'inactif' || sKey === 'pause') statusSelect.value = 'inactif';
+    else if (sKey === 'archive' || sKey === 'ferme') statusSelect.value = 'archive';
+    else statusSelect.value = 'actif';
+    applyPosteStatusStyle(statusSelect);
     document.getElementById('detail-poste-candidates').textContent = data.candidates;
     document.getElementById('detail-poste-date').textContent = data.date;
 
@@ -263,14 +272,54 @@ function showPosteDetail(id) {
     renderPosteQuestions();
 
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
-    document.getElementById('poste-detail-section').classList.add('active');
+    var detailSection = document.getElementById('poste-detail-section');
+    if (detailSection) detailSection.classList.add('active');
     window.scrollTo(0, 0);
+}
+
+// Clic sur une ligne du tableau Postes (délégation)
+var postesTable = document.getElementById('postes-table');
+if (postesTable && postesTable.tBodies && postesTable.tBodies[0]) {
+    postesTable.tBodies[0].addEventListener('click', function (e) {
+        var row = e.target && e.target.closest && e.target.closest('tr.row-clickable[data-poste-id]');
+        if (row) {
+            var id = row.getAttribute('data-poste-id');
+            if (id) showPosteDetail(id);
+        }
+    });
+    postesTable.tBodies[0].addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        var row = e.target && e.target.closest && e.target.closest('tr.row-clickable[data-poste-id]');
+        if (row) {
+            e.preventDefault();
+            var id = row.getAttribute('data-poste-id');
+            if (id) showPosteDetail(id);
+        }
+    });
 }
 
 function goBackToPostes() {
     currentPosteId = null;
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
     document.getElementById('postes-section').classList.add('active');
+}
+
+function applyPosteStatusStyle(select) {
+    select.className = 'status-select ml-auto';
+    if (select.value === 'actif') select.classList.add('status-select--actif');
+    else if (select.value === 'inactif') select.classList.add('status-select--inactif');
+    else if (select.value === 'archive') select.classList.add('status-select--archive');
+}
+
+function updatePosteStatus(value) {
+    if (!currentPosteId || !postesData[currentPosteId]) return;
+    var select = document.getElementById('detail-poste-status-select');
+    applyPosteStatusStyle(select);
+    var labels = { actif: 'Actif', inactif: 'Non actif', archive: 'Archivé' };
+    var classes = { actif: 'status-active', inactif: 'status-paused', archive: 'status-closed' };
+    postesData[currentPosteId].status = labels[value] || 'Actif';
+    postesData[currentPosteId].statusClass = classes[value] || 'status-active';
+    // TODO: envoyer la mise à jour au serveur
 }
 
 /* ─── Questions CRUD ─── */
@@ -283,7 +332,8 @@ function renderPosteQuestions() {
     var container = document.getElementById('detail-poste-questions-list');
     var countEl = document.getElementById('detail-poste-questions-count');
     var len = data.questions.length;
-    countEl.textContent = len + ' question' + (len !== 1 ? 's' : '');
+    if (countEl) countEl.textContent = len + ' question' + (len !== 1 ? 's' : '');
+    if (!container) return;
 
     container.innerHTML = '';
     if (len === 0) {
@@ -497,12 +547,12 @@ function showAffichageDetail(id) {
     window._currentAffichageId = id;
 
     document.getElementById('affichage-candidats-title').textContent = data.title;
-    document.getElementById('affichage-candidats-subtitle').textContent = data.platform + ' · ' + data.apps + ' candidatures · ' + data.views + ' vues';
+    document.getElementById('affichage-candidats-subtitle').textContent = data.platform + ' · Début : ' + data.start;
 
     var shareUrlEl = document.getElementById('affichage-share-url');
     if (shareUrlEl && data.shareLongId) {
         var baseUrl = (typeof APP_DATA !== 'undefined' && APP_DATA.appUrl) ? APP_DATA.appUrl : 'https://app.ciaocv.com';
-        var url = baseUrl + '/rec/' + data.shareLongId;
+        var url = baseUrl + '/entrevue/' + data.shareLongId;
         shareUrlEl.href = url;
         shareUrlEl.textContent = url;
     }
@@ -526,14 +576,6 @@ function showAffichageDetail(id) {
     tbody.innerHTML = '';
 
     candidates.forEach(function (c) {
-        var stars = '';
-        for (var i = 1; i <= 5; i++) {
-            stars += '<i class="fa-' + (i <= c.stars ? 'solid' : 'regular') + ' fa-star"></i>';
-        }
-        var videoIcon = c.video
-            ? '<i class="fa-solid fa-circle-check" style="color: var(--success-color);"></i>'
-            : '<i class="fa-solid fa-circle-xmark" style="color: #CBD5E1;"></i>';
-
         var row = document.createElement('tr');
         row.style.cursor = 'pointer';
         row.onclick = function () { if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id); };
@@ -543,14 +585,13 @@ function showAffichageDetail(id) {
                 '<div><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
             '</div></td>' +
             '<td><span class="status-badge" style="background:' + c.statusBg + '; color:' + c.statusColor + ';">' + escapeHtml(c.status) + '</span></td>' +
-            '<td>' + videoIcon + '</td>' +
-            '<td><div style="color: #F59E0B;">' + stars + '</div></td>' +
+            '<td style="text-align: center;">' + (c.isFavorite ? '<i class="fa-solid fa-star" style="color: #F59E0B;"></i>' : '<i class="fa-regular fa-star" style="color: #D1D5DB;"></i>') + '</td>' +
             '<td>' + escapeHtml(c.date) + '</td>';
         tbody.appendChild(row);
     });
 
     if (candidates.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #94A3B8;">Aucun candidat pour cet affichage.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #94A3B8;">Aucun candidat pour cet affichage.</td></tr>';
     }
 
     // Render evaluateurs
@@ -582,8 +623,10 @@ function showCandidateDetail(id) {
     document.getElementById('detail-candidate-phone').textContent = data.phone;
 
     var ss = document.getElementById('detail-candidate-status-select');
-    ss.value = data.status;
-    ss.className = 'status-select status-' + data.status;
+    if (ss) {
+        ss.value = data.status || 'new';
+        ss.className = 'status-select status-select--candidate status-' + (data.status || 'new');
+    }
 
     var favBtn = document.getElementById('detail-candidate-favorite');
     if (data.isFavorite) {
@@ -599,7 +642,6 @@ function showCandidateDetail(id) {
     if (data.video) { vp.style.display = 'block'; ph.style.display = 'none'; vp.src = data.video; }
     else { vp.style.display = 'none'; ph.style.display = 'block'; }
 
-    setRatingUI(data.rating);
     renderTimeline(data.comments);
 
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
@@ -619,7 +661,8 @@ function toggleFavorite() {
 function updateCandidateStatus(newStatus) {
     if (!currentCandidateId) return;
     candidatsData[currentCandidateId].status = newStatus;
-    document.getElementById('detail-candidate-status-select').className = 'status-select status-' + newStatus;
+    var ss = document.getElementById('detail-candidate-status-select');
+    if (ss) ss.className = 'status-select status-select--candidate status-' + newStatus;
 }
 
 function goBackToCandidates() {
@@ -627,19 +670,6 @@ function goBackToCandidates() {
     document.getElementById('candidats-section').classList.add('active');
 }
 
-function setRating(rating) {
-    if (!currentCandidateId) return;
-    candidatsData[currentCandidateId].rating = rating;
-    setRatingUI(rating);
-}
-
-function setRatingUI(rating) {
-    document.querySelectorAll('#detail-star-rating i').forEach(function (star) {
-        var val = parseInt(star.getAttribute('data-value'));
-        star.classList.toggle('active', val <= rating);
-        star.style.color = val <= rating ? '#F59E0B' : '#D1D5DB';
-    });
-}
 
 function renderTimeline(comments) {
     var container = document.getElementById('detail-timeline-list');
@@ -714,10 +744,11 @@ function openNotifyCandidatsModal() {
         div.style.cssText = 'display:flex;align-items:center;gap:0.75rem;padding:0.6rem 1rem;border-bottom:1px solid var(--border-color);';
         if (i === candidates.length - 1) div.style.borderBottom = 'none';
         div.innerHTML =
-            '<input type="checkbox" class="notify-candidate-cb" value="' + escapeHtml(c.id) + '" checked style="accent-color:var(--primary-color);">' +
-            '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff&size=32" style="width:32px;height:32px;border-radius:50%;" alt="">' +
-            '<div style="flex:1;"><strong style="font-size:0.875rem;">' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
-            '<span class="status-badge" style="background:' + c.statusBg + ';color:' + c.statusColor + ';font-size:0.7rem;">' + escapeHtml(c.status) + '</span>';
+            '<input type="checkbox" class="notify-candidate-cb" value="' + escapeHtml(c.id) + '" checked style="accent-color:var(--primary-color);flex-shrink:0;">' +
+            '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff&size=32" style="width:32px;height:32px;border-radius:50%;flex-shrink:0;" alt="">' +
+            '<div style="flex:1;min-width:0;"><strong style="font-size:0.875rem;">' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
+            '<span class="notify-row-favorite" style="display:inline-flex;align-items:center;justify-content:center;width:1.25rem;flex-shrink:0;">' + (c.isFavorite ? '<i class="fa-solid fa-star" style="color:#F59E0B;"></i>' : '<i class="fa-regular fa-star" style="color:#D1D5DB;"></i>') + '</span>' +
+            '<span class="status-badge" style="background:' + c.statusBg + ';color:' + c.statusColor + ';font-size:0.7rem;flex-shrink:0;">' + escapeHtml(c.status) + '</span>';
         container.appendChild(div);
     });
 

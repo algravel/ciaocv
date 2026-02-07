@@ -41,11 +41,6 @@ RewriteEngine On
 RewriteCond %{HTTP_HOST} !^app\.ciaocv\.com$ [NC]
 RewriteRule ^ - [F,L]
 
-
-# /gestion : application autonome
-RewriteRule ^gestion/?(.*)$ gestion/index.php [QSA,L]
-
-
 # ─── Front Controller ───
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

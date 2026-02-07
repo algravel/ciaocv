@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Espace Entreprise - <?= APP_NAME ?></title>
+    <title><?= isset($pageTitle) ? e($pageTitle) . ' - ' : '' ?>Espace Entreprise - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= asset('assets/css/app.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,8 +39,8 @@
                     <div class="nav-submenu-inner">
                         <a href="#postes-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
                         <a href="#postes-actifs" class="nav-subitem" data-i18n="filter_active">Actifs</a>
-                        <a href="#postes-pauses" class="nav-subitem" data-i18n="filter_paused">Pausés</a>
-                        <a href="#postes-fermes" class="nav-subitem" data-i18n="filter_closed">Fermés</a>
+                        <a href="#postes-inactifs" class="nav-subitem" data-i18n="filter_inactive">Non actifs</a>
+                        <a href="#postes-archives" class="nav-subitem" data-i18n="filter_archived">Archivés</a>
                     </div>
                 </div>
 
@@ -71,10 +71,21 @@
                     </div>
                 </div>
 
-                <a href="#parametres" class="nav-item" data-section="parametres" data-i18n="nav_parametres">
+                <a href="#parametres" class="nav-item has-submenu" data-section="parametres" data-i18n="nav_parametres">
                     <i class="fa-solid fa-gear"></i>
                     <span>Paramètres</span>
+                    <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                 </a>
+                <div class="nav-submenu" data-parent="parametres">
+                    <div class="nav-submenu-inner">
+                        <a href="#parametres-company" class="nav-subitem settings-subitem" data-target="settings-company" data-i18n="settings_company">Entreprise</a>
+                        <a href="#parametres-branding" class="nav-subitem settings-subitem" data-target="settings-branding" data-i18n="settings_branding">Marque employeur</a>
+                        <a href="#parametres-departments" class="nav-subitem settings-subitem" data-target="settings-departments" data-i18n="settings_departments">Départements</a>
+                        <a href="#parametres-team" class="nav-subitem settings-subitem" data-target="settings-team" data-i18n="settings_team">Équipe</a>
+                        <a href="#parametres-billing" class="nav-subitem settings-subitem" data-target="settings-billing" data-i18n="settings_billing">Facturation</a>
+                        <a href="#parametres-communications" class="nav-subitem settings-subitem" data-target="settings-communications">Communication</a>
+                    </div>
+                </div>
             </nav>
         </aside>
 
@@ -111,7 +122,7 @@
                                 <strong><?= e($user['name'] ?? 'Utilisateur') ?></strong>
                                 <span><?= e($user['email'] ?? '') ?></span>
                             </div>
-                            <a href="/logout" class="logout-link">
+                            <a href="/deconnexion" class="logout-link">
                                 <i class="fa-solid fa-right-from-bracket"></i>
                                 <span data-i18n="dropdown_logout">Se déconnecter</span>
                             </a>

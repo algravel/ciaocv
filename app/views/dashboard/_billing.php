@@ -10,7 +10,7 @@
         </div>
         <div>
             <div class="plan-name">Découverte <span class="plan-suffix">— Gratuit</span></div>
-            <div class="subtitle-muted">1 affichage actif &middot; 5 candidats max &middot; Questions standards</div>
+            <div class="subtitle-muted">1 affichage actif &middot; 5 entrevues vidéo &middot; Questions standards</div>
         </div>
     </div>
 </div>
@@ -21,9 +21,9 @@
     <div class="pricing-grid">
         <?php
         $plans = [
-            ['name' => 'À la carte', 'price' => '49$', 'sub' => 'paiement unique', 'features' => ['1 affichage', 'Accès 30 jours', 'Candidats illimités', 'Questions personnalisées'], 'cta' => 'Acheter', 'popular' => false],
-            ['name' => 'Pro', 'price' => '99$', 'sub' => 'Facturé annuellement', 'priceSuffix' => '/mois', 'features' => ['5 affichages simultanés', '40 candidats / affichage', 'Outils collaboratifs', 'Marque employeur'], 'cta' => 'Passer au Pro', 'popular' => true],
-            ['name' => 'Expert', 'price' => '169$', 'sub' => 'Facturé annuellement', 'priceSuffix' => '/mois', 'features' => ['10 affichages simultanés', '60 candidats / affichage', 'Support prioritaire', 'Accès API & Webhooks'], 'cta' => 'Passer à Expert', 'popular' => false],
+            ['name' => 'À la carte', 'price' => '79$', 'sub' => 'paiement unique', 'features' => ['1 affichage', 'Accès 30 jours', 'Entrevues vidéo illimitées', 'Outils collaboratifs', 'Marque employeur', 'Questions personnalisées'], 'cta' => 'Acheter', 'popular' => false],
+            ['name' => 'Pro', 'price' => '99$', 'sub' => 'Facturé annuellement', 'priceSuffix' => '/mois', 'features' => ['Affichages illimités', ['i18n' => 'billing.plan.interviews_50', 'text' => 'Gérez jusqu\'à 50 entrevues à la fois (libérez des places en supprimant les anciennes)'], 'Outils collaboratifs', 'Marque employeur', 'Questions personnalisées'], 'cta' => 'Passer au Pro', 'popular' => true],
+            ['name' => 'Expert', 'price' => '149$', 'sub' => 'Facturé annuellement', 'priceSuffix' => '/mois', 'features' => ['Affichages illimités', ['i18n' => 'billing.plan.interviews_200', 'text' => 'Gérez jusqu\'à 200 entrevues à la fois (libérez des places en supprimant les anciennes)'], 'Outils collaboratifs', 'Marque employeur', 'Questions personnalisées', 'Support prioritaire'], 'cta' => 'Passer à Expert', 'popular' => false],
         ];
         foreach ($plans as $plan): ?>
         <div class="pricing-card <?= $plan['popular'] ? 'pricing-card--popular' : '' ?>">
@@ -33,7 +33,13 @@
             <div class="pricing-sub"><?= e($plan['sub']) ?></div>
             <ul class="pricing-features">
                 <?php foreach ($plan['features'] as $f): ?>
-                <li><i class="fa-solid fa-check pricing-check"></i> <?= e($f) ?></li>
+                <li><i class="fa-solid fa-check pricing-check"></i> <?php
+                    if (is_array($f) && isset($f['i18n'], $f['text'])) {
+                        echo '<span data-i18n="' . e($f['i18n']) . '">' . e($f['text']) . '</span>';
+                    } else {
+                        echo e($f);
+                    }
+                ?></li>
                 <?php endforeach; ?>
             </ul>
             <button class="btn btn-primary btn--full"><?= e($plan['cta']) ?></button>

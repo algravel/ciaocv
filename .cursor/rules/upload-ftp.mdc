@@ -7,8 +7,9 @@ alwaysApply: true
 
 Quand l'utilisateur dit **« upload »** (ou demande un upload), l’agent doit :
 
-1. **Identifier les fichiers modifiés** (git status, ou fichiers récemment édités dans la session).
-2. **Transférer ces fichiers sur le serveur FTP** en utilisant **curl**.
+1. **Cache busting automatique (site vitrine)** : exécuter `scripts/update-asset-version.sh` pour mettre à jour le paramètre `?v=` dans tous les fichiers `public_html/*.html`. Ainsi chaque upload invalide le cache des assets (CSS/JS) sans intervention manuelle.
+2. **Identifier les fichiers modifiés** (git status après l’étape 1, ou fichiers récemment édités).
+3. **Transférer ces fichiers sur le serveur FTP** en utilisant **curl**.
 
 ## Configuration FTP
 
@@ -37,3 +38,8 @@ Adapter `<chemin_remote>` au répertoire cible sur le serveur (structure du proj
   ```bash
   curl -Q "CWD /chemin/vers/dossier" -Q "SITE CHMOD 644 nomfichier" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/"
   ```
+- **Purge LSCache (optionnel)** : si `PURGE_CACHE_SECRET` est défini dans `.env`, après le transfert FTP appeler l’URL de purge pour vider le cache LiteSpeed de l’ensemble des pages. URL par défaut : `https://app.ciaocv.com/purge-cache` (ou `PURGE_CACHE_URL` si défini). Commande :
+  ```bash
+  curl -s -H "X-Purge-Secret: $PURGE_CACHE_SECRET" "${PURGE_CACHE_URL:-https://app.ciaocv.com/purge-cache}"
+  ```
+  L’app expose la route `GET /purge-cache` (voir `PurgeController`). À configurer dans `.env` : `PURGE_CACHE_SECRET=<secret_fort>` (et optionnellement `PURGE_CACHE_URL` si le domaine diffère).

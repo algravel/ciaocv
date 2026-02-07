@@ -37,9 +37,11 @@ class Controller
 
     /**
      * Redirection HTTP.
+     * @param int $status 301 (permanent) ou 302 (temporaire)
      */
-    protected function redirect(string $url): void
+    protected function redirect(string $url, int $status = 302): void
     {
+        http_response_code($status);
         header("Location: {$url}");
         exit;
     }
@@ -56,12 +58,12 @@ class Controller
     }
 
     /**
-     * Exige une session authentifiée, sinon redirige vers /login.
+     * Exige une session authentifiée, sinon redirige vers /connexion.
      */
     protected function requireAuth(): void
     {
         if (!isset($_SESSION['user_id'])) {
-            $this->redirect('/login');
+            $this->redirect('/connexion');
         }
     }
 

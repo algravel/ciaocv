@@ -30,6 +30,7 @@ class DashboardController extends Controller
         ];
 
         $this->view('dashboard.index', [
+            'pageTitle'      => 'Tableau de bord',
             'postes'         => $postes,
             'affichages'     => $affichages,
             'candidats'      => $candidats,

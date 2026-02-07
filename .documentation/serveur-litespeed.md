@@ -40,6 +40,7 @@ L’application `/app` est compatible **LiteSpeed** (et Apache). Les réglages c
 
 - Si un plugin LSCache (WordPress ou autre) ou une config LSCache pour PHP est utilisée sur le même serveur, il est possible d’exclure les chemins dynamiques de l’app (ex. `/app/` ou `app.ciaocv.com`) du cache page, tout en laissant le cache des assets statiques (déjà géré par le navigateur via `.htaccess`).
 - Pour une app PHP custom comme CiaoCV, le cache navigateur des assets (déjà en place) suffit en général ; le cache de page LiteSpeed pour les URLs dynamiques n’est en général pas activé sur ce type d’app.
+- **Purge automatique après déploiement** : l’app expose une route `GET /purge-cache` protégée par un secret (`PURGE_CACHE_SECRET` dans `.env`). Lors d’un upload FTP, si ce secret est défini, l’agent peut appeler cette URL (avec l’en-tête `X-Purge-Secret`) pour vider le LSCache de l’ensemble des pages. Voir la règle « Upload FTP » et `app/controllers/PurgeController.php`.
 
 ### 2.4 Fichiers sensibles
 
@@ -52,6 +53,11 @@ L’application `/app` est compatible **LiteSpeed** (et Apache). Les réglages c
 | Élément              | Statut |
 |----------------------|--------|
 | .htaccess compatible LiteSpeed | Oui (mod_rewrite, mod_headers, mod_expires) |
+### 1.3 Cache busting
+
+- **App (PHP)** : la fonction `asset()` dans `config/app.php` ajoute `?v=filemtime()` à chaque CSS/JS. À chaque upload, la date de modification change → le navigateur recharge les assets.
+- **Site vitrine (public_html)** : les assets utilisent `?v=1.5` (ou la version du moment). À chaque déploiement, incrémenter ce numéro dans tous les HTML (ex. `v=1.5` → `v=1.6`) pour forcer le rechargement.
+
 | En-têtes de sécurité | En place dans .htaccess |
 | Cache des assets     | En place (1 mois) |
 | Cookie session sécurisé | En place (HttpOnly, Secure, SameSite) |

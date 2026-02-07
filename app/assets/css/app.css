@@ -402,6 +402,11 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
     .kpi-grid { grid-template-columns: 1fr; }
     .pricing-grid { grid-template-columns: 1fr; }
     .settings-tabs { overflow-x: auto; flex-wrap: nowrap; }
+    /* Masquer la colonne "Créé le" (6e colonne) du tableau des postes */
+    #postes-table th:nth-child(6),
+    #postes-table td:nth-child(6) { display: none; }
+    /* Détail affichage : passer en 1 colonne en mobile */
+    .grid-detail { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1024px) {
@@ -580,11 +585,24 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 /* ═══════════════════════════════════════════════
    MODAL – Variants
    ═══════════════════════════════════════════════ */
-.modal--narrow { max-width: 600px; }
+.modal--narrow { max-width: 750px; }
 
 .candidate-list-scroll {
-    max-height: 200px; overflow-y: auto;
+    max-height: 280px; overflow-y: auto;
     border: 1px solid var(--border-color); border-radius: 8px;
+}
+
+/* Alignement des étoiles favori dans le modal Notifier les candidats */
+.notify-row-favorite {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    flex-shrink: 0;
+}
+.notify-row-favorite i {
+    font-size: 1rem;
+    line-height: 1;
 }
 
 .select-all-label {
@@ -755,6 +773,13 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 .status-select--actif { border-color: #059669; color: #065F46; background: #D1FAE5; }
 .status-select--termine { border-color: #D97706; color: #92400E; background: #FEF3C7; }
 .status-select--archive { border-color: #9CA3AF; color: #4B5563; background: #F3F4F6; }
+.status-select--inactif { border-color: #D97706; color: #92400E; background: #FEF3C7; }
+
+/* Statut candidat (détail) */
+.status-select--candidate.status-new { border-color: #3B82F6; color: #1E40AF; background: #DBEAFE; }
+.status-select--candidate.status-reviewed { border-color: #059669; color: #065F46; background: #D1FAE5; }
+.status-select--candidate.status-rejected { border-color: #DC2626; color: #991B1B; background: #FEE2E2; }
+.status-select--candidate.status-shortlisted { border-color: #D97706; color: #92400E; background: #FEF3C7; }
 
 /* Modal Compléter votre profil */
 .completer-profil-list { display: flex; flex-direction: column; gap: 0; }

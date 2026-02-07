@@ -13,8 +13,8 @@
         <div class="view-tabs">
             <button class="view-tab active" data-i18n="filter_all">Tous</button>
             <button class="view-tab" data-i18n="filter_active">Actifs</button>
-            <button class="view-tab" data-i18n="filter_paused">Pausés</button>
-            <button class="view-tab" data-i18n="filter_closed">Fermés</button>
+            <button class="view-tab" data-i18n="filter_inactive">Non actifs</button>
+            <button class="view-tab" data-i18n="filter_archived">Archivés</button>
         </div>
         <button class="btn btn-primary" onclick="openModal('poste')">
             <i class="fa-solid fa-plus"></i>
@@ -40,7 +40,7 @@
         </thead>
         <tbody>
             <?php foreach ($postes as $p): ?>
-            <tr onclick="showPosteDetail('<?= e($p['id']) ?>')" class="row-clickable">
+            <tr class="row-clickable" data-poste-id="<?= e($p['id']) ?>" role="button" tabindex="0">
                 <td><strong><?= e($p['title']) ?></strong></td>
                 <td><?= e($p['department']) ?></td>
                 <td><?= e($p['location']) ?></td>
@@ -63,48 +63,47 @@
             <h1 class="page-title" id="detail-poste-title">Titre du Poste</h1>
             <div class="subtitle-muted" id="detail-poste-dept-loc">Département • Lieu</div>
         </div>
-        <span class="status-badge ml-auto" id="detail-poste-status">Statut</span>
+        <select class="status-select ml-auto" id="detail-poste-status-select" onchange="updatePosteStatus(this.value)">
+            <option value="actif">Actif</option>
+            <option value="inactif">Non actif</option>
+            <option value="archive">Archivé</option>
+        </select>
     </div>
-    <div class="grid-detail">
-        <div>
-            <!-- Questions CRUD -->
-            <div class="card">
-                <div class="flex-between mb-4">
-                    <h3 class="section-heading mb-0">Questions de présélection</h3>
-                    <span class="subtitle-muted" id="detail-poste-questions-count">0 questions</span>
-                </div>
-                <div id="detail-poste-questions-list" class="questions-list"></div>
-                <div class="questions-add-row mt-4">
-                    <input type="text" id="detail-poste-new-question" class="form-input" placeholder="Ajouter une question..." onkeydown="if(event.key==='Enter'){addPosteQuestion(); event.preventDefault();}">
-                    <button class="btn btn-primary" onclick="addPosteQuestion()"><i class="fa-solid fa-plus"></i></button>
-                </div>
-                <!-- Durée d'enregistrement -->
-                <div class="flex-between mt-6" style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                    <div>
-                        <label class="form-label mb-0 fw-semibold"><i class="fa-solid fa-video"></i> Durée d'enregistrement</label>
-                        <div class="form-help">Temps maximum par question pour le candidat.</div>
-                    </div>
-                    <select class="form-select form-select--auto" id="detail-poste-record-duration" onchange="updatePosteRecordDuration(this.value)">
-                        <option value="1">1 minute</option>
-                        <option value="2">2 minutes</option>
-                        <option value="3" selected>3 minutes</option>
-                        <option value="4">4 minutes</option>
-                        <option value="5">5 minutes</option>
-                    </select>
-                </div>
-            </div>
+    <!-- Informations du poste -->
+    <div class="card">
+        <h3 class="card-subtitle">Informations</h3>
+        <div class="info-row"><div class="info-label">Candidats</div><div class="info-value" id="detail-poste-candidates">0</div></div>
+        <div class="action-stack">
+            <button class="btn btn-primary btn--center" onclick="openPosteCandidatsModal()">
+                <i class="fa-solid fa-users"></i> Voir les candidats
+            </button>
         </div>
-        <div>
-            <div class="card">
-                <h3 class="card-subtitle">Informations</h3>
-                <div class="info-row"><div class="info-label">Candidats</div><div class="info-value" id="detail-poste-candidates">0</div></div>
-                <div class="info-row"><div class="info-label">Créé le</div><div id="detail-poste-date">2026-01-01</div></div>
-                <div class="action-stack">
-                    <button class="btn btn-primary btn--center" onclick="openPosteCandidatsModal()">
-                        <i class="fa-solid fa-users"></i> Voir les candidats
-                    </button>
-                </div>
+    </div>
+
+    <!-- Questions CRUD -->
+    <div class="card">
+        <div class="flex-between mb-4">
+            <h3 class="section-heading mb-0">Questions de présélection</h3>
+            <span class="subtitle-muted" id="detail-poste-questions-count">0 questions</span>
+        </div>
+        <div id="detail-poste-questions-list" class="questions-list"></div>
+        <div class="questions-add-row mt-4">
+            <input type="text" id="detail-poste-new-question" class="form-input" placeholder="Ajouter une question..." onkeydown="if(event.key==='Enter'){addPosteQuestion(); event.preventDefault();}">
+            <button class="btn btn-primary" onclick="addPosteQuestion()"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <!-- Durée d'enregistrement -->
+        <div class="flex-between mt-6" style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <div>
+                <label class="form-label mb-0 fw-semibold"><i class="fa-solid fa-video"></i> Durée d'enregistrement</label>
+                <div class="form-help">Temps maximum par question pour le candidat.</div>
             </div>
+            <select class="form-select form-select--auto" id="detail-poste-record-duration" onchange="updatePosteRecordDuration(this.value)">
+                <option value="1">1 minute</option>
+                <option value="2">2 minutes</option>
+                <option value="3" selected>3 minutes</option>
+                <option value="4">4 minutes</option>
+                <option value="5">5 minutes</option>
+            </select>
         </div>
     </div>
 </div>
@@ -188,7 +187,7 @@
             <button class="view-tab active">Tous</button>
             <button class="view-tab">Nouveaux</button>
             <button class="view-tab">Évalués</button>
-            <button class="view-tab">Favoris</button>
+            <button class="view-tab">Refusés</button>
         </div>
     </div>
     <div class="search-row search-row--with-label">
@@ -198,12 +197,12 @@
             $firstAff = $affichages ? reset($affichages) : null;
             $shareLongId = $firstAff['shareLongId'] ?? '0cb075d860fa55c4';
             ?>
-            <a class="search-row-url" id="affichage-share-url" href="<?= APP_URL ?>/rec/<?= e($shareLongId) ?>" target="_blank" rel="noopener"><?= APP_URL ?>/rec/<?= e($shareLongId) ?></a>
+            <a class="search-row-url" id="affichage-share-url" href="<?= APP_URL ?>/entrevue/<?= e($shareLongId) ?>" target="_blank" rel="noopener"><?= APP_URL ?>/entrevue/<?= e($shareLongId) ?></a>
             <button type="button" class="btn-icon btn-icon--copy" title="Copier le lien" onclick="copyShareUrl()"><i class="fa-regular fa-copy"></i></button>
         </span>
     </div>
     <table class="data-table">
-        <thead><tr><th>Candidat</th><th>Statut</th><th>Vidéo</th><th>Note</th><th>Postulé le</th></tr></thead>
+        <thead><tr><th>Candidat</th><th>Statut</th><th>Favori</th><th>Postulé le</th></tr></thead>
         <tbody id="affichage-candidats-tbody"></tbody>
     </table>
 
@@ -244,7 +243,6 @@
                 <th data-i18n="th_department">Département</th>
                 <th data-i18n="th_start_date">Date début</th>
                 <th data-i18n="th_status">Statut</th>
-                <th data-i18n="th_interviews">Entrevues</th>
             </tr>
         </thead>
         <tbody>
@@ -254,7 +252,6 @@
                 <td><?= e($a['department'] ?? '') ?></td>
                 <td><?= e($a['start']) ?></td>
                 <td><span class="status-badge <?= e($a['statusClass']) ?>"><?= e($a['status']) ?></span></td>
-                <td><strong><?= (int)($a['completed'] ?? 0) ?></strong> / <?= (int)($a['sent'] ?? 0) ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -269,7 +266,7 @@
             <button class="view-tab active" data-i18n="filter_all">Tous</button>
             <button class="view-tab" data-i18n="filter_new">Nouveaux</button>
             <button class="view-tab" data-i18n="filter_reviewed">Évalués</button>
-            <button class="view-tab" data-i18n="filter_shortlisted">Favoris</button>
+            <button class="view-tab" data-i18n="filter_rejected">Refusés</button>
         </div>
         <div><select class="form-select form-select--auto"><option data-i18n="filter_all_jobs">Tous les postes</option><option>Développeur Frontend</option><option>Chef de projet</option><option>Designer UX/UI</option></select></div>
     </div>
@@ -277,7 +274,7 @@
         <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Rechercher..." data-i18n-placeholder="search"></div>
     </div>
     <table class="data-table" id="candidats-table">
-        <thead><tr><th data-i18n="th_candidate">Candidat</th><th data-i18n="th_poste">Poste</th><th data-i18n="th_status">Statut</th><th data-i18n="th_video">Vidéo</th><th data-i18n="th_rating">Note</th><th data-i18n="th_applied">Postulé le</th><th data-i18n="th_actions">Actions</th></tr></thead>
+        <thead><tr><th data-i18n="th_candidate">Candidat</th><th data-i18n="th_poste">Poste</th><th data-i18n="th_status">Statut</th><th data-i18n="th_rating">Note</th><th data-i18n="th_applied">Postulé le</th></tr></thead>
         <tbody>
             <?php foreach ($candidats as $cId => $c): ?>
             <tr onclick="showCandidateDetail('<?= e($cId) ?>')" class="row-clickable">
@@ -298,14 +295,8 @@
                     $st = $c['status'];
                     $badge = $statusMap[$st] ?? ['label' => $st, 'class' => ''];
                 ?><span class="status-badge <?= $badge['class'] ?>"><?= e($badge['label']) ?></span></td>
-                <td><i class="fa-solid fa-circle-check icon-video-ok"></i></td>
                 <td><div class="star-color"><?php for ($i = 1; $i <= 5; $i++): ?><i class="fa-<?= $i <= $c['rating'] ? 'solid' : 'regular' ?> fa-star"></i><?php endfor; ?></div></td>
                 <td>2026-02-01</td>
-                <td>
-                    <button class="btn-icon" title="Voir vidéo" onclick="event.stopPropagation()"><i class="fa-solid fa-play"></i></button>
-                    <button class="btn-icon" title="Profil" onclick="event.stopPropagation()"><i class="fa-solid fa-user"></i></button>
-                    <button class="btn-icon" title="Mettre en favoris" onclick="event.stopPropagation()"><i class="fa-<?= $c['isFavorite'] ? 'solid' : 'regular' ?> fa-star <?= $c['isFavorite'] ? 'star-color' : '' ?>"></i></button>
-                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -320,41 +311,35 @@
             <h1 class="page-title" id="detail-candidate-name">Nom du Candidat</h1>
             <div class="subtitle-muted" id="detail-candidate-role-source">Poste • Source</div>
         </div>
-        <div class="action-group">
-            <button class="favorite-btn" id="detail-candidate-favorite" onclick="toggleFavorite()"><i class="fa-regular fa-star"></i></button>
-            <select class="status-select" id="detail-candidate-status-select" onchange="updateCandidateStatus(this.value)">
-                <option value="new">Nouveau</option><option value="reviewed">Évalué</option><option value="shortlisted">Favori</option>
-                <option value="interview">Entretien</option><option value="rejected">Refusé</option><option value="hired">Embauché</option>
+        <div class="action-group flex-center gap-3">
+            <select class="status-select status-select--candidate" id="detail-candidate-status-select" onchange="updateCandidateStatus(this.value)">
+                <option value="new" data-i18n="status_new">Nouveau</option>
+                <option value="reviewed" data-i18n="status_accepted">Accepté</option>
+                <option value="rejected" data-i18n="status_rejected">Refusé</option>
+                <option value="shortlisted" data-i18n="status_shortlisted">Favori</option>
             </select>
+            <button class="favorite-btn" id="detail-candidate-favorite" onclick="toggleFavorite()" title="Mettre en favori"><i class="fa-regular fa-star"></i></button>
         </div>
     </div>
-    <div class="modal-split-view mt-6">
-        <div class="modal-left">
-            <div class="video-container">
-                <video controls class="hidden" id="detail-candidate-video-player"><source src="" type="video/mp4"></video>
-                <div id="detail-video-placeholder" class="text-center">
-                    <i class="fa-solid fa-play-circle icon-xl"></i>
-                    <div class="mt-2" data-i18n="video_preview">Aperçu vidéo</div>
-                </div>
-            </div>
-            <div class="card contact-card">
-                <h3 class="contact-heading"><i class="fa-regular fa-envelope"></i> Email</h3>
-                <p id="detail-candidate-email" class="text-body mb-4">email@example.com</p>
-                <h3 class="contact-heading"><i class="fa-solid fa-phone"></i> <span data-i18n="form_phone">Téléphone</span></h3>
-                <p id="detail-candidate-phone" class="text-body">+1 514 555-0199</p>
-            </div>
+    <div class="card contact-card mt-6">
+        <h3 class="contact-heading"><i class="fa-regular fa-envelope"></i> Email</h3>
+        <p id="detail-candidate-email" class="text-body mb-4">email@example.com</p>
+        <h3 class="contact-heading"><i class="fa-solid fa-phone"></i> <span data-i18n="form_phone">Téléphone</span></h3>
+        <p id="detail-candidate-phone" class="text-body">+1 514 555-0199</p>
+    </div>
+    <div class="video-container">
+        <video controls class="hidden" id="detail-candidate-video-player"><source src="" type="video/mp4"></video>
+        <div id="detail-video-placeholder" class="text-center">
+            <i class="fa-solid fa-play-circle icon-xl"></i>
+            <div class="mt-2" data-i18n="video_preview">Aperçu vidéo</div>
         </div>
-        <div class="modal-right">
-            <h3 class="section-heading-sm" data-i18n="th_rating">Note</h3>
-            <div class="star-rating-input" id="detail-star-rating">
-                <?php for ($i = 1; $i <= 5; $i++): ?><i class="fa-solid fa-star" data-value="<?= $i ?>" onclick="setRating(<?= $i ?>)"></i><?php endfor; ?>
-            </div>
-            <h3 class="section-heading-sm" data-i18n="comments_title">Commentaires</h3>
-            <div class="timeline-container" id="detail-timeline-list"></div>
-            <div class="flex-center gap-2">
-                <textarea class="form-input" id="detail-new-comment-input" rows="1" placeholder="Ajouter une note..." style="resize: none;" data-i18n-placeholder="add_note_placeholder"></textarea>
-                <button class="btn btn-primary" onclick="addComment()"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
+    </div>
+    <div class="card">
+        <h3 class="section-heading-sm" data-i18n="comments_title">Commentaires</h3>
+        <div class="timeline-container" id="detail-timeline-list"></div>
+        <div class="flex-center gap-2">
+            <textarea class="form-input" id="detail-new-comment-input" rows="1" placeholder="Ajouter une note..." style="resize: none;" data-i18n-placeholder="add_note_placeholder"></textarea>
+            <button class="btn btn-primary" onclick="addComment()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
 </div>
@@ -369,7 +354,7 @@
             <div class="forfait-icon"><i class="fa-solid fa-gem icon-lg"></i></div>
             <div><div class="plan-name">Forfait Platine</div></div>
         </div>
-        <a href="#" onclick="document.querySelector('a[data-section=\'parametres\']').click(); setTimeout(function(){ document.querySelector('.settings-nav-item[data-target=\'settings-billing\']').click(); }, 50); return false;" class="forfait-cta">Gérer mon forfait</a>
+        <a href="#parametres-billing" class="forfait-cta">Gérer mon forfait</a>
     </div>
 
     <!-- KPI Cards -->
@@ -444,16 +429,6 @@
 <!-- ─── PARAMÈTRES Section ─── -->
 <div id="parametres-section" class="content-section">
     <div class="page-header"><h1 class="page-title" data-i18n="parametres_title">Paramètres</h1></div>
-
-    <!-- Onglets horizontaux -->
-    <div class="settings-tabs">
-        <a href="#" class="settings-nav-item active" data-target="settings-company"><i class="fa-regular fa-building"></i><span data-i18n="settings_company">Entreprise</span></a>
-        <a href="#" class="settings-nav-item" data-target="settings-branding"><i class="fa-solid fa-palette"></i><span data-i18n="settings_branding">Marque employeur</span></a>
-        <a href="#" class="settings-nav-item" data-target="settings-departments"><i class="fa-solid fa-sitemap"></i><span data-i18n="settings_departments">Départements</span></a>
-        <a href="#" class="settings-nav-item" data-target="settings-team"><i class="fa-solid fa-users"></i><span data-i18n="settings_team">Équipe</span></a>
-        <a href="#" class="settings-nav-item" data-target="settings-billing"><i class="fa-solid fa-credit-card"></i><span data-i18n="settings_billing">Facturation</span></a>
-        <a href="#" class="settings-nav-item" data-target="settings-communications"><i class="fa-solid fa-envelope"></i><span>Communication</span></a>
-    </div>
 
     <!-- Entreprise -->
     <div class="card settings-pane" id="settings-company">

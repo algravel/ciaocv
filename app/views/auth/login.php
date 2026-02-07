@@ -21,12 +21,12 @@
                 <h2 class="login-form-title" data-i18n="login.title">Connexion</h2>
 
                 <?php if (!empty($error)): ?>
-                    <div class="login-error">
+                    <div class="login-error"<?php if (!empty($errorKey)): ?> data-i18n="<?= e($errorKey) ?>"<?php endif ?>>
                         <?= $errorHtml ? $error : e($error) ?>
                     </div>
                 <?php endif; ?>
 
-                <form action="/login" method="POST">
+                <form action="/connexion" method="POST">
                     <?= csrf_field() ?>
                     <div class="form-group mb-5">
                         <label for="email" data-i18n="login.email.label">Courriel</label>
@@ -42,12 +42,12 @@
                 </form>
 
                 <div class="login-footer">
-                    <a href="<?= SITE_URL ?>/tarifs.html" class="login-forgot-link" data-i18n="login.create_account">Créer un compte</a>
+                    <a href="<?= SITE_URL ?>/tarifs" class="login-forgot-link" data-i18n="login.create_account">Créer un compte</a>
                     <span class="login-footer-sep">·</span>
                     <a href="#" onclick="openForgotModal(); return false;" class="login-forgot-link" data-i18n="login.forgot_password">Mot de passe oublié ?</a>
                 </div>
                 <div class="login-demo-cta">
-                    <a href="<?= SITE_URL ?>/tarifs.html" class="login-demo-link" data-i18n="login.create_demo">Créer votre compte démo</a>
+                    <a href="<?= SITE_URL ?>/tarifs" class="login-demo-link" data-i18n="login.create_demo">Créer votre compte démo</a>
                 </div>
 
                 <!-- OAuth (masqué pour l'instant) -->

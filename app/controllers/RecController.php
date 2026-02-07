@@ -1,7 +1,7 @@
 <?php
 /**
  * Contrôleur pour la page candidat – entrevue de présélection
- * URL : /rec/{longid}
+ * URL : /entrevue/{longId} (ancienne URL /rec/{longId} redirigée en 301)
  * Source unique des données : Affichage::getPosteByLongId()
  */
 class RecController extends Controller

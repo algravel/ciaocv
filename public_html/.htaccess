@@ -1,0 +1,23 @@
+# CiaoCV – Site vitrine – URLs SEO-friendly (sans .html)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Redirections 301 : anciennes URLs .html vers slugs
+    RewriteCond %{REQUEST_URI} \.html$ [NC]
+    RewriteRule ^(.*)\.html$ /$1 [R=301,L]
+
+    # Servir le fichier .html si la requête est un slug (pas de fichier/dossier existant)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^tarifs/?$ tarifs.html [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^guide-candidat/?$ guide-candidat.html [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^emplois/?$ emplois.html [L]
+    # Racine : index.html est servi par défaut via DirectoryIndex
+</IfModule>
+
+DirectoryIndex index.html

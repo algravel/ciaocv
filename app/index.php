@@ -27,17 +27,27 @@ require_once __DIR__ . '/includes/functions.php';
 // ─── Routes ────────────────────────────────────────────────────────────
 $router = new Router();
 
-// Authentification
-$router->get('/',           'AuthController', 'login');
-$router->get('/login',      'AuthController', 'login');
-$router->post('/login',     'AuthController', 'authenticate');
-$router->get('/logout',     'AuthController', 'logout');
+// Authentification (slugs SEO-friendly)
+$router->get('/',              'AuthController', 'login');
+$router->get('/connexion',     'AuthController', 'login');
+$router->post('/connexion',    'AuthController', 'authenticate');
+$router->get('/deconnexion',   'AuthController', 'logout');
+$router->get('/logout',       'AuthController', 'logout'); // alias, redirige vers /connexion après déco
 
 // Dashboard employeur
-$router->get('/dashboard',  'DashboardController', 'index');
+$router->get('/tableau-de-bord', 'DashboardController', 'index');
 
-// Page candidat – entrevue de présélection (app.ciaocv.com/rec/{longid})
-$router->getPattern('#^/rec/([a-f0-9]{16})$#', 'RecController', 'show');
+// Page candidat – entrevue de présélection (slug: /entrevue/{longId})
+$router->getPattern('#^/entrevue/([a-f0-9]{16})$#', 'RecController', 'show');
+
+// Purge LSCache (après déploiement) – protégé par PURGE_CACHE_SECRET
+$router->get('/purge-cache', 'PurgeController', 'index');
+
+// Redirections 301 : anciennes URLs → slugs
+$router->get('/login',      'RedirectController', 'toConnexion');
+$router->post('/login',     'RedirectController', 'toConnexion');
+$router->get('/dashboard',  'RedirectController', 'toTableauDeBord');
+$router->getPattern('#^/rec/([a-f0-9]{16})$#', 'RedirectController', 'toEntrevue');
 
 // ─── Dispatch ──────────────────────────────────────────────────────────
 $router->dispatch();

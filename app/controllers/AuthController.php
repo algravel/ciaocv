@@ -12,7 +12,7 @@ class AuthController extends Controller
     {
         // Déjà connecté → rediriger vers le tableau de bord
         if ($this->isAuthenticated()) {
-            $this->redirect('/dashboard');
+            $this->redirect('/tableau-de-bord');
         }
 
         // Sous-titre dynamique selon le type de visiteur
@@ -28,6 +28,7 @@ class AuthController extends Controller
         $this->view('auth.login', [
             'subtitleKey' => $subtitleKey,
             'error'       => '',
+            'errorKey'    => '',
             'errorHtml'   => false,
         ], 'auth');
     }
@@ -46,6 +47,7 @@ class AuthController extends Controller
             $this->view('auth.login', [
                 'subtitleKey' => 'login.hero.subtitle',
                 'error'       => 'Veuillez entrer votre courriel.',
+                'errorKey'    => 'login.error.email_required',
                 'errorHtml'   => false,
             ], 'auth');
             return;
@@ -56,7 +58,7 @@ class AuthController extends Controller
         $_SESSION['user_email'] = $email;
         $_SESSION['user_name']  = 'Utilisateur';
 
-        $this->redirect('/dashboard');
+        $this->redirect('/tableau-de-bord');
     }
 
     /**
@@ -65,6 +67,6 @@ class AuthController extends Controller
     public function logout(): void
     {
         session_destroy();
-        $this->redirect('/login');
+        $this->redirect('/connexion');
     }
 }
