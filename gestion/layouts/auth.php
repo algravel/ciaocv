@@ -4,12 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administration - <?= GESTION_APP_NAME ?></title>
+    <title>CIAOCV - GESTION</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="<?= defined('GESTION_ASSETS') ? GESTION_ASSETS : '../assets' ?>/img/favicon.png">
-    <link rel="stylesheet" href="<?= gestion_asset('css/design-system.css') ?>">
+    <link rel="icon" type="image/png" href="<?= gestion_asset('assets/img/favicon.png') ?>">
+    <link rel="stylesheet" href="<?= gestion_asset('assets/css/design-system.css') ?>">
     <style>
-        /* ─── Page de connexion (même look que /app) ─── */
         .page-login .hero {
             min-height: 100vh;
             display: flex;
@@ -47,7 +46,7 @@
             left: 0;
             width: 100%;
             height: 12px;
-            background: rgba(37, 99, 235, 0.2);
+            background: rgba(128, 0, 32, 0.2);
             z-index: -1;
             transform: rotate(-1.5deg);
         }
@@ -102,7 +101,6 @@
             .page-login .login-card { padding: 1.5rem; }
         }
 
-        /* ─── Badge Administration ─── */
         .gestion-badge {
             display: inline-block;
             background: var(--primary);
@@ -184,14 +182,14 @@
             text-decoration: none;
         }
         .login-forgot-link:hover { text-decoration: underline; }
-        .login-footer-sep { color: var(--text-gray); font-size: 0.85rem; }
+        .login-footer-sep { color: var(--text-muted); font-size: 0.85rem; }
     </style>
 </head>
 
 <body class="page-login">
     <?= $content ?>
 
-    <script src="<?= gestion_asset('js/i18n.js') ?>"></script>
+    <script src="<?= gestion_asset('assets/js/i18n.js') ?>"></script>
     <script>
         function changeLanguage(lang) {
             localStorage.setItem('language', lang);

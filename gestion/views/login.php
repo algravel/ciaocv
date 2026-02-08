@@ -2,7 +2,7 @@
     <div class="login-container">
         <div class="hero-text">
             <div class="login-header">
-                <a href="<?= GESTION_APP_URL ?>/gestion" class="login-logo-link">
+                <a href="<?= GESTION_BASE_PATH ?>/" class="login-logo-link">
                     ciao<span class="login-logo-cv">cv</span>
                 </a>
                 <div class="login-lang-switcher">
@@ -26,7 +26,7 @@
                     </div>
                 <?php endif; ?>
 
-                <form action="/gestion/connexion" method="POST">
+                <form action="<?= GESTION_BASE_PATH ?>/connexion" method="POST">
                     <?= csrf_field() ?>
                     <div class="form-group mb-5">
                         <label for="email">Courriel</label>

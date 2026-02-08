@@ -2,6 +2,7 @@ const translations = {
     fr: {
         "nav.service": "Notre service",
         "nav.guide": "Préparez votre entrevue de présélection",
+        "nav.gestion": "Gestion",
         "nav.recruiter": "Espace Recruteur",
         "nav.candidate": "Espace Candidat",
         "nav.login": "Se connecter",
@@ -168,6 +169,7 @@ const translations = {
     en: {
         "nav.service": "Our Service",
         "nav.guide": "Prepare your pre-selection interview",
+        "nav.gestion": "Admin",
         "nav.recruiter": "Recruiter Login",
         "nav.candidate": "Candidate Login",
         "nav.login": "Log In",
