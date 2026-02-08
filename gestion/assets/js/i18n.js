@@ -52,6 +52,10 @@ const translations = {
 
         // ─── Dashboard – Navigation ───
         nav_dashboard: "Tableau de bord",
+        nav_ventes: "Ventes",
+        nav_forfaits: "Forfaits",
+        nav_utilisateurs: "Utilisateurs",
+        nav_synchronisation: "Synchronisation",
         nav_postes: "Postes",
         nav_affichages: "Affichages",
         nav_candidats: "Candidats",
@@ -123,6 +127,35 @@ const translations = {
         stat_shortlisted: "Shortlistés",
         chart_applications: "Candidatures par mois",
         chart_sales_history: "Historiques des ventes",
+        dashboard_kpi_users: "Nombre d'utilisateurs",
+        dashboard_kpi_videos: "Nombre de vidéos sous gestion",
+        dashboard_kpi_sales: "Ventes du mois",
+        dashboard_this_month: "ce mois",
+        dashboard_vs_prev_month: "vs mois précédent",
+        dashboard_events_log: "Journalisation des événements",
+        dashboard_events_desc: "Historique des modifications et actions effectuées dans l'administration (Ventes, Configuration, Utilisateurs).",
+        th_date: "Date",
+        th_user: "Utilisateur",
+        th_action: "Action",
+        th_details: "Détails",
+        event_modification: "Modification",
+        event_creation: "Création",
+        event_deletion: "Suppression",
+        event_sale: "Vente",
+        page_ventes_title: "Liste des ventes Stripe",
+        page_ventes_desc: "Historique des transactions et abonnements Stripe.",
+        th_client: "Client",
+        th_amount: "Montant",
+        status_paid: "Payé",
+        btn_add: "Ajouter",
+        btn_new_user: "Nouvel utilisateur",
+        th_name: "Nom",
+        th_video_limit: "Limite vidéos",
+        th_price_monthly: "Prix mensuel",
+        th_price_yearly: "Prix annuel",
+        th_role: "Rôle",
+        page_sync_desc: "Synchronisation des données avec les services externes.",
+        content_coming: "Contenu à venir",
 
         // ─── Dashboard – Modals ───
         modal_add_poste: "Nouveau poste",
@@ -227,6 +260,10 @@ const translations = {
 
         // ─── Dashboard ───
         nav_dashboard: "Dashboard",
+        nav_ventes: "Sales",
+        nav_forfaits: "Plans",
+        nav_utilisateurs: "Users",
+        nav_synchronisation: "Synchronization",
         nav_postes: "Positions",
         nav_affichages: "Recruitment Drives",
         nav_candidats: "Candidates",
@@ -252,6 +289,35 @@ const translations = {
         stat_pending_review: "Pending review", stat_shortlisted: "Shortlisted",
         chart_applications: "Applications by month",
         chart_sales_history: "Sales history",
+        dashboard_kpi_users: "Number of users",
+        dashboard_kpi_videos: "Number of videos managed",
+        dashboard_kpi_sales: "Monthly sales",
+        dashboard_this_month: "this month",
+        dashboard_vs_prev_month: "vs previous month",
+        dashboard_events_log: "Event log",
+        dashboard_events_desc: "History of modifications and actions in the admin (Sales, Configuration, Users).",
+        th_date: "Date",
+        th_user: "User",
+        th_action: "Action",
+        th_details: "Details",
+        event_modification: "Modification",
+        event_creation: "Creation",
+        event_deletion: "Deletion",
+        event_sale: "Sale",
+        page_ventes_title: "Stripe sales list",
+        page_ventes_desc: "History of transactions and Stripe subscriptions.",
+        th_client: "Client",
+        th_amount: "Amount",
+        status_paid: "Paid",
+        btn_add: "Add",
+        btn_new_user: "New user",
+        th_name: "Name",
+        th_video_limit: "Video limit",
+        th_price_monthly: "Monthly price",
+        th_price_yearly: "Yearly price",
+        th_role: "Role",
+        page_sync_desc: "Data synchronization with external services.",
+        content_coming: "Content coming soon",
         modal_add_poste: "New Position", modal_add_affichage: "New Posting", modal_feedback_title: "Feedback",
         form_title: "Position Title", form_department: "Department", form_location: "Location", form_status: "Status",
         form_poste: "Position", form_platform: "Platform", form_start_date: "Start Date", form_end_date: "End Date",
@@ -296,14 +362,15 @@ function updateContent() {
     var lang = getLanguage();
     var dict = translations[lang] || translations.fr;
 
-    // data-i18n → innerHTML (ou placeholder pour input/textarea)
+    // data-i18n → texte (ou placeholder pour input/textarea)
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
         var key = el.getAttribute('data-i18n');
         if (!dict[key]) return;
         if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
             el.placeholder = dict[key];
         } else {
-            el.innerHTML = dict[key];
+            var val = dict[key];
+            el[val.indexOf('<') >= 0 ? 'innerHTML' : 'textContent'] = val;
         }
     });
 
@@ -337,7 +404,7 @@ function toggleLanguage(e) {
 
 // ─── Initialisation ─────────────────────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', function () {
+function initI18n() {
     var lang = getLanguage();
     document.documentElement.lang = lang;
     updateContent();
@@ -349,8 +416,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Dashboard : .lang-btn
     document.querySelectorAll('.lang-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            setLanguage(btn.dataset.lang);
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            setLanguage(btn.getAttribute('data-lang'));
         });
     });
-});
+}
+
+document.addEventListener('DOMContentLoaded', initI18n);

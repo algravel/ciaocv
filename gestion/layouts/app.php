@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>(function(){var l=localStorage.getItem('language');if(l)document.documentElement.lang=l;})();</script>
     <title><?= isset($pageTitle) ? e($pageTitle) . ' - ' : '' ?>CIAOCV - GESTION</title>
     <link rel="stylesheet" href="<?= gestion_asset('assets/css/app.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -25,44 +26,28 @@
             <nav class="nav-links">
                 <a href="#dashboard" class="nav-item active" data-section="statistiques">
                     <i class="fa-solid fa-chart-line"></i>
-                    <span>Tableau de bord</span>
+                    <span data-i18n="nav_dashboard">Tableau de bord</span>
                 </a>
 
-                <a href="#ventes" class="nav-item has-submenu" data-section="ventes-stripe">
+                <a href="#ventes-stripe" class="nav-item" data-section="ventes-stripe">
                     <i class="fa-solid fa-credit-card"></i>
-                    <span>Ventes</span>
-                    <i class="fa-solid fa-chevron-down submenu-arrow"></i>
+                    <span data-i18n="nav_ventes">Ventes</span>
                 </a>
-                <div class="nav-submenu" data-parent="ventes-stripe">
-                    <div class="nav-submenu-inner">
-                        <a href="#ventes-stripe" class="nav-subitem" data-section="ventes-stripe">Liste des ventes Stripe</a>
-                    </div>
-                </div>
 
-                <a href="#configuration" class="nav-item has-submenu" data-section="forfaits-crud">
+                <a href="#forfaits-crud" class="nav-item" data-section="forfaits-crud">
                     <i class="fa-solid fa-gear"></i>
-                    <span>Configuration</span>
-                    <i class="fa-solid fa-chevron-down submenu-arrow"></i>
+                    <span data-i18n="nav_forfaits">Forfaits</span>
                 </a>
-                <div class="nav-submenu" data-parent="forfaits-crud">
-                    <div class="nav-submenu-inner">
-                        <span class="nav-submenu-label">Forfaits</span>
-                        <span class="nav-submenu-label nav-submenu-label--sub">CRUD des forfaits</span>
-                        <a href="#forfaits-limite" class="nav-subitem nav-subitem--l3" data-section="forfaits-crud">Limite de vidéo</a>
-                        <a href="#forfaits-prix" class="nav-subitem nav-subitem--l3" data-section="forfaits-crud">Prix mensuel / Annuel</a>
-                    </div>
-                </div>
 
-                <a href="#utilisateurs" class="nav-item has-submenu" data-section="utilisateurs-liste">
+                <a href="#utilisateurs-liste" class="nav-item" data-section="utilisateurs-liste">
                     <i class="fa-solid fa-users"></i>
-                    <span>Utilisateurs</span>
-                    <i class="fa-solid fa-chevron-down submenu-arrow"></i>
+                    <span data-i18n="nav_utilisateurs">Utilisateurs</span>
                 </a>
-                <div class="nav-submenu" data-parent="utilisateurs-liste">
-                    <div class="nav-submenu-inner">
-                        <a href="#utilisateurs-liste" class="nav-subitem" data-section="utilisateurs-liste">Liste CRUD</a>
-                    </div>
-                </div>
+
+                <a href="#synchronisation" class="nav-item" data-section="synchronisation">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span data-i18n="nav_synchronisation">Synchronisation</span>
+                </a>
             </nav>
         </aside>
 
@@ -81,12 +66,6 @@
                         <button class="lang-btn active" data-lang="fr">FR</button>
                         <button class="lang-btn" data-lang="en">EN</button>
                     </div>
-                    <button class="icon-btn" onclick="document.querySelector('a[data-section=\'forfaits-crud\']').click()">
-                        <i class="fa-solid fa-gear"></i>
-                    </button>
-                    <button class="icon-btn">
-                        <i class="fa-regular fa-bell"></i>
-                    </button>
                     <div class="user-profile" onclick="toggleUserDropdown(event)">
                         <div class="user-avatar-icon">
                             <i class="fa-regular fa-user"></i>

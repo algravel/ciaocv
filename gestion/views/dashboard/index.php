@@ -346,32 +346,32 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
         <div class="kpi-card">
             <div class="flex-between-start">
                 <div>
-                    <div class="kpi-label">Nombre d'utilisateurs</div>
+                    <div class="kpi-label" data-i18n="dashboard_kpi_users">Nombre d'utilisateurs</div>
                     <div class="kpi-value">247</div>
                 </div>
                 <div class="kpi-icon kpi-icon--blue"><i class="fa-solid fa-users"></i></div>
             </div>
-            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 12</span> ce mois</div>
+            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 12</span> <span data-i18n="dashboard_this_month">ce mois</span></div>
         </div>
         <div class="kpi-card">
             <div class="flex-between-start">
                 <div>
-                    <div class="kpi-label">Nombre de vidéos sous gestion</div>
+                    <div class="kpi-label" data-i18n="dashboard_kpi_videos">Nombre de vidéos sous gestion</div>
                     <div class="kpi-value">1 842</div>
                 </div>
                 <div class="kpi-icon kpi-icon--gray"><i class="fa-solid fa-video"></i></div>
             </div>
-            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 156</span> ce mois</div>
+            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 156</span> <span data-i18n="dashboard_this_month">ce mois</span></div>
         </div>
         <div class="kpi-card">
             <div class="flex-between-start">
                 <div>
-                    <div class="kpi-label">Ventes du mois</div>
+                    <div class="kpi-label" data-i18n="dashboard_kpi_sales">Ventes du mois</div>
                     <div class="kpi-value">8 450 $</div>
                 </div>
                 <div class="kpi-icon kpi-icon--red"><i class="fa-solid fa-credit-card"></i></div>
             </div>
-            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 23 %</span> vs mois précédent</div>
+            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 23 %</span> <span data-i18n="dashboard_vs_prev_month">vs mois précédent</span></div>
         </div>
     </div>
     <div class="chart-card">
@@ -396,17 +396,17 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
         </div>
     </div>
     <div class="card">
-        <div class="card-header"><h2 class="card-title">Journalisation des événements</h2></div>
-        <p class="subtitle-muted mb-4">Historique des modifications et actions effectuées dans l’administration (Ventes, Configuration, Utilisateurs).</p>
+        <div class="card-header"><h2 class="card-title" data-i18n="dashboard_events_log">Journalisation des événements</h2></div>
+        <p class="subtitle-muted mb-4" data-i18n="dashboard_events_desc">Historique des modifications et actions effectuées dans l’administration (Ventes, Configuration, Utilisateurs).</p>
         <table class="data-table">
-            <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Détails</th></tr></thead>
+            <thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_user">Utilisateur</th><th data-i18n="th_action">Action</th><th data-i18n="th_details">Détails</th></tr></thead>
             <tbody>
-                <tr><td class="cell-date">6 fév 2026, 14:32</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--modification">Modification</span></td><td class="cell-muted">A modifié le forfait <strong>Pro</strong> — limite vidéos : 50 → 75</td></tr>
-                <tr><td class="cell-date">6 fév 2026, 11:15</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--creation">Création</span></td><td class="cell-muted">A créé le forfait <strong>Entreprise</strong> — 500 vidéos, 199 $/mois</td></tr>
-                <tr><td class="cell-date">5 fév 2026, 16:48</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--modification">Modification</span></td><td class="cell-muted">A modifié l’utilisateur <strong>Sophie Martin</strong> — rôle : Évaluateur → Admin</td></tr>
-                <tr><td class="cell-date">5 fév 2026, 09:22</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--creation">Création</span></td><td class="cell-muted">A ajouté l’utilisateur <strong>Luc Bergeron</strong> (luc@example.com)</td></tr>
-                <tr><td class="cell-date">4 fév 2026, 15:05</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--suppression">Suppression</span></td><td class="cell-muted">A supprimé le forfait <strong>Starter</strong></td></tr>
-                <tr><td class="cell-date">4 fév 2026, 10:30</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--evaluation">Vente</span></td><td class="cell-muted">Nouvelle vente Stripe — Forfait Platine, 99,99 $ (user@example.com)</td></tr>
+                <tr><td class="cell-date">6 fév 2026, 14:32</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--modification" data-i18n="event_modification">Modification</span></td><td class="cell-muted">A modifié le forfait <strong>Pro</strong> — limite vidéos : 50 → 75</td></tr>
+                <tr><td class="cell-date">6 fév 2026, 11:15</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--creation" data-i18n="event_creation">Création</span></td><td class="cell-muted">A créé le forfait <strong>Entreprise</strong> — 500 vidéos, 199 $/mois</td></tr>
+                <tr><td class="cell-date">5 fév 2026, 16:48</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--modification" data-i18n="event_modification">Modification</span></td><td class="cell-muted">A modifié l’utilisateur <strong>Sophie Martin</strong> — rôle : Évaluateur → Admin</td></tr>
+                <tr><td class="cell-date">5 fév 2026, 09:22</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--creation" data-i18n="event_creation">Création</span></td><td class="cell-muted">A ajouté l’utilisateur <strong>Luc Bergeron</strong> (luc@example.com)</td></tr>
+                <tr><td class="cell-date">4 fév 2026, 15:05</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--suppression" data-i18n="event_deletion">Suppression</span></td><td class="cell-muted">A supprimé le forfait <strong>Starter</strong></td></tr>
+                <tr><td class="cell-date">4 fév 2026, 10:30</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--evaluation" data-i18n="event_sale">Vente</span></td><td class="cell-muted">Nouvelle vente Stripe — Forfait Platine, 99,99 $ (user@example.com)</td></tr>
             </tbody>
         </table>
     </div>
@@ -414,14 +414,14 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
 
 <!-- ─── VENTES STRIPE Section ─── -->
 <div id="ventes-stripe-section" class="content-section">
-    <div class="page-header"><h1 class="page-title">Liste des ventes Stripe</h1></div>
+    <div class="page-header"><h1 class="page-title" data-i18n="page_ventes_title">Liste des ventes Stripe</h1></div>
     <div class="card">
-        <p class="subtitle-muted mb-4">Historique des transactions et abonnements Stripe.</p>
+        <p class="subtitle-muted mb-4" data-i18n="page_ventes_desc">Historique des transactions et abonnements Stripe.</p>
         <table class="data-table">
-            <thead><tr><th>ID</th><th>Date</th><th>Client</th><th>Montant</th><th>Statut</th></tr></thead>
+            <thead><tr><th>ID</th><th data-i18n="th_date">Date</th><th data-i18n="th_client">Client</th><th data-i18n="th_amount">Montant</th><th data-i18n="th_status">Statut</th></tr></thead>
             <tbody>
-                <tr><td>pi_xxx123</td><td>6 fév 2026</td><td>user@example.com</td><td>29,99 $</td><td><span class="status-badge status-active">Payé</span></td></tr>
-                <tr><td>pi_xxx124</td><td>5 fév 2026</td><td>autre@example.com</td><td>99,99 $</td><td><span class="status-badge status-active">Payé</span></td></tr>
+                <tr><td>pi_xxx123</td><td>6 fév 2026</td><td>user@example.com</td><td>29,99 $</td><td><span class="status-badge status-active" data-i18n="status_paid">Payé</span></td></tr>
+                <tr><td>pi_xxx124</td><td>5 fév 2026</td><td>autre@example.com</td><td>99,99 $</td><td><span class="status-badge status-active" data-i18n="status_paid">Payé</span></td></tr>
             </tbody>
         </table>
     </div>
@@ -429,35 +429,17 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
 
 <!-- ─── FORFAITS CRUD Section ─── -->
 <div id="forfaits-crud-section" class="content-section">
-    <div class="page-header"><h1 class="page-title">Configuration des forfaits</h1></div>
-    <div class="card mb-6">
-        <h3 class="card-subtitle">CRUD des forfaits</h3>
-        <form class="form-vertical">
-            <div class="grid-2col">
-                <div class="form-group">
-                    <label class="form-label">Limite de vidéo</label>
-                    <input type="number" class="form-input" value="50" min="1" placeholder="Ex: 50">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Prix mensuel ($)</label>
-                    <input type="number" class="form-input" value="29.99" step="0.01" placeholder="29.99">
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Prix annuel ($)</label>
-                <input type="number" class="form-input" value="299.99" step="0.01" placeholder="299.99">
-            </div>
-            <div class="form-actions"><button type="button" class="btn btn-secondary">Annuler</button><button type="submit" class="btn btn-primary">Enregistrer</button></div>
-        </form>
+    <div class="page-header">
+        <h1 class="page-title" data-i18n="nav_forfaits">Forfaits</h1>
+        <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> <span data-i18n="btn_add">Ajouter</span></button>
     </div>
     <div class="card">
-        <h3 class="card-subtitle">Forfaits existants</h3>
         <table class="data-table">
-            <thead><tr><th>Nom</th><th>Limite vidéos</th><th>Prix mensuel</th><th>Prix annuel</th><th>Actions</th></tr></thead>
+            <thead><tr><th data-i18n="th_name">Nom</th><th data-i18n="th_video_limit">Limite vidéos</th><th data-i18n="th_price_monthly">Prix mensuel</th><th data-i18n="th_price_yearly">Prix annuel</th><th data-i18n="th_actions">Actions</th></tr></thead>
             <tbody>
-                <tr><td>Starter</td><td>10</td><td>9,99 $</td><td>99 $</td><td><button class="btn-icon"><i class="fa-solid fa-pen"></i></button><button class="btn-icon btn-icon--danger"><i class="fa-solid fa-trash"></i></button></td></tr>
-                <tr><td>Pro</td><td>50</td><td>29,99 $</td><td>299 $</td><td><button class="btn-icon"><i class="fa-solid fa-pen"></i></button><button class="btn-icon btn-icon--danger"><i class="fa-solid fa-trash"></i></button></td></tr>
-                <tr><td>Platine</td><td>200</td><td>99,99 $</td><td>999 $</td><td><button class="btn-icon"><i class="fa-solid fa-pen"></i></button><button class="btn-icon btn-icon--danger"><i class="fa-solid fa-trash"></i></button></td></tr>
+                <tr><td>Starter</td><td>10</td><td>9,99 $</td><td>99 $</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
+                <tr><td>Pro</td><td>50</td><td>29,99 $</td><td>299 $</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
+                <tr><td>Platine</td><td>200</td><td>99,99 $</td><td>999 $</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
             </tbody>
         </table>
     </div>
@@ -466,19 +448,31 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
 <!-- ─── UTILISATEURS LISTE Section ─── -->
 <div id="utilisateurs-liste-section" class="content-section">
     <div class="page-header">
-        <h1 class="page-title">Utilisateurs</h1>
-        <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel utilisateur</button>
+        <h1 class="page-title" data-i18n="nav_utilisateurs">Utilisateurs</h1>
+        <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> <span data-i18n="btn_new_user">Nouvel utilisateur</span></button>
     </div>
     <div class="search-row">
-        <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Rechercher..."></div>
+        <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text" data-i18n-placeholder="search" placeholder="Rechercher..."></div>
     </div>
     <table class="data-table">
-        <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Créé le</th><th>Actions</th></tr></thead>
+        <thead><tr><th data-i18n="th_name">Nom</th><th>Email</th><th data-i18n="th_role">Rôle</th><th data-i18n="th_created">Créé le</th><th data-i18n="th_actions">Actions</th></tr></thead>
         <tbody>
-            <tr><td><strong>Marie Tremblay</strong></td><td>marie@example.com</td><td><span class="status-badge status-active">Admin</span></td><td>2026-01-15</td><td><button class="btn-icon"><i class="fa-solid fa-pen"></i></button><button class="btn-icon btn-icon--danger"><i class="fa-solid fa-trash"></i></button></td></tr>
-            <tr><td><strong>Pierre Roy</strong></td><td>pierre@example.com</td><td><span class="status-badge">Utilisateur</span></td><td>2026-02-01</td><td><button class="btn-icon"><i class="fa-solid fa-pen"></i></button><button class="btn-icon btn-icon--danger"><i class="fa-solid fa-trash"></i></button></td></tr>
+            <tr><td><strong>Marie Tremblay</strong></td><td>marie@example.com</td><td><span class="status-badge status-active">Admin</span></td><td>2026-01-15</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
+            <tr><td><strong>Pierre Roy</strong></td><td>pierre@example.com</td><td><span class="status-badge">Utilisateur</span></td><td>2026-02-01</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
         </tbody>
     </table>
+</div>
+
+<!-- ─── SYNCHRONISATION Section ─── -->
+<div id="synchronisation-section" class="content-section">
+    <div class="page-header"><h1 class="page-title" data-i18n="nav_synchronisation">Synchronisation</h1></div>
+    <div class="card">
+        <p class="subtitle-muted mb-4" data-i18n="page_sync_desc">Synchronisation des données avec les services externes.</p>
+        <div class="empty-state">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <p data-i18n="content_coming">Contenu à venir</p>
+        </div>
+    </div>
 </div>
 
 <!-- ─── PARAMÈTRES Section (ancien, conservé pour compatibilité) ─── -->
