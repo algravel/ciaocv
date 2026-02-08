@@ -39,18 +39,21 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
                 <th data-i18n="th_location">Lieu</th>
                 <th data-i18n="th_status">Statut</th>
                 <th data-i18n="th_candidates">Candidats</th>
-                <th data-i18n="th_created">Créé le</th>
+                <th class="th-actions" data-i18n="th_actions">Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($postes as $p): ?>
-            <tr class="row-clickable" data-poste-id="<?= e($p['id']) ?>" role="button" tabindex="0">
+            <tr class="row-clickable" data-poste-id="<?= e($p['id']) ?>" role="button" tabindex="0" onclick="showPosteDetail('<?= e($p['id']) ?>')">
                 <td><strong><?= e($p['title']) ?></strong></td>
                 <td><?= e($p['department']) ?></td>
                 <td><?= e($p['location']) ?></td>
                 <td><span class="status-badge <?= e($p['statusClass']) ?>"><?= e($p['status']) ?></span></td>
                 <td><?= $p['candidates'] ?></td>
-                <td><?= e($p['date']) ?></td>
+                <td class="cell-actions">
+                    <button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showPosteDetail('<?= e($p['id']) ?>')" title="Modifier" data-i18n-title="action_edit"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deletePoste('<?= e($p['id']) ?>', this.closest('tr'))" title="Supprimer" data-i18n-title="action_delete"><i class="fa-solid fa-trash"></i></button>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -76,6 +79,7 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
     <div class="card">
         <h3 class="card-subtitle">Informations</h3>
         <div class="info-row"><div class="info-label">Candidats</div><div class="info-value" id="detail-poste-candidates">0</div></div>
+        <div class="info-row"><div class="info-label" data-i18n="th_created">Créé le</div><div class="info-value" id="detail-poste-date">—</div></div>
         <div class="action-stack">
             <button class="btn btn-primary btn--center" onclick="openPosteCandidatsModal()">
                 <i class="fa-solid fa-users"></i> Voir les candidats
@@ -1179,6 +1183,21 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
         <div class="modal-actions">
             <button type="button" class="btn btn-secondary" onclick="closeModal('config-delete-admin')" data-i18n="btn_cancel">Annuler</button>
             <button type="button" class="btn btn-danger" id="config-delete-admin-confirm" data-i18n="config_delete_confirm_btn">Désactiver</button>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="delete-poste-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title"><i class="fa-solid fa-trash"></i> <span data-i18n="delete_poste_title">Supprimer le poste</span></h2>
+            <button class="btn-icon" onclick="closeModal('delete-poste')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="modal-body" id="delete-poste-message">Êtes-vous sûr de vouloir supprimer ce poste ?</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('delete-poste')" data-i18n="btn_cancel">Annuler</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDeletePoste()">
+                <i class="fa-solid fa-trash"></i> <span data-i18n="action_delete">Supprimer</span>
+            </button>
         </div>
     </div>
 </div>

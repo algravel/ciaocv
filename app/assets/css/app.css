@@ -238,6 +238,12 @@ a { text-decoration: none; color: inherit; }
 .data-table td { padding: 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover { background-color: #F9FAFB; }
+.data-table .cell-actions { white-space: nowrap; display: flex; gap: 0.25rem; align-items: center; }
+.data-table .cell-actions .btn-icon { padding: 0.4rem; font-size: 0.9rem; }
+.data-table .cell-actions .btn-icon-edit:hover { color: var(--primary-color); }
+.data-table .cell-actions .btn-icon-delete { color: var(--text-secondary); }
+.data-table .cell-actions .btn-icon-delete:hover { color: var(--danger-color); }
+.data-table .th-actions { width: 1%; text-align: center; }
 
 /* ═══════════════════════════════════════════════
    COMPOSANTS – Badges & Status
@@ -330,6 +336,7 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
     padding: 1.5rem 2rem; color: white; box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.5);
     margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;
 }
+.forfait-banner .plan-name { color: white; }
 .forfait-icon { width: 52px; height: 52px; background: rgba(255,255,255,0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
 .forfait-cta { background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 0.5rem 1.25rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; transition: background 0.2s; }
 .forfait-cta:hover { background: rgba(255,255,255,0.3); }
@@ -338,6 +345,12 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 .kpi-card { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05); }
 .kpi-card--clickable { cursor: pointer; transition: box-shadow 0.2s, transform 0.2s; }
 .kpi-card--clickable:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.12); transform: translateY(-1px); }
+.kpi-card--alert { background: var(--danger-color); color: white; }
+.kpi-card--alert .kpi-label,
+.kpi-card--alert .kpi-value,
+.kpi-card--alert .kpi-sub { color: white; }
+.kpi-card--alert .kpi-icon { color: rgba(255,255,255,0.9); }
+.kpi-card--alert:hover { box-shadow: 0 6px 24px rgba(239,68,68,0.35); }
 .kpi-label { font-size: 0.8rem; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
 .kpi-value { font-size: 2rem; font-weight: 700; color: #1E293B; margin-top: 0.25rem; }
 .kpi-suffix { font-size: 1rem; font-weight: 500; color: #94A3B8; }
@@ -402,9 +415,6 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
     .kpi-grid { grid-template-columns: 1fr; }
     .pricing-grid { grid-template-columns: 1fr; }
     .settings-tabs { overflow-x: auto; flex-wrap: nowrap; }
-    /* Masquer la colonne "Créé le" (6e colonne) du tableau des postes */
-    #postes-table th:nth-child(6),
-    #postes-table td:nth-child(6) { display: none; }
     /* Détail affichage : passer en 1 colonne en mobile */
     .grid-detail { grid-template-columns: 1fr; }
 }
@@ -538,6 +548,7 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 .kpi-icon--red { background: linear-gradient(135deg, #EF4444, #F87171); }
 .kpi-icon i { color: white; font-size: 1.1rem; }
 .kpi-trend--up { color: #22C55E; font-weight: 600; }
+.kpi-trend--down { color: #EF4444; font-weight: 600; }
 .kpi-trend--warning { color: #F59E0B; font-weight: 600; }
 
 /* Platform icons */

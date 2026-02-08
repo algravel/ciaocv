@@ -58,16 +58,15 @@ if (session_status() === PHP_SESSION_NONE) {
  * fichier est réellement modifié. Le navigateur peut ainsi mettre en
  * cache tant que le fichier ne bouge pas.
  *
- * Priorité : filemtime → ASSET_VERSION (.env) → timestamp courant.
+ * Priorité : ASSET_VERSION (.env) → filemtime → timestamp courant.
  */
 function asset(string $path): string
 {
     $filePath = BASE_PATH . '/' . ltrim($path, '/');
+    $version  = $_ENV['ASSET_VERSION'] ?? null;
 
-    if (file_exists($filePath)) {
-        $version = filemtime($filePath);
-    } else {
-        $version = ASSET_VERSION_FALLBACK ?? time();
+    if ($version === null || $version === '') {
+        $version = file_exists($filePath) ? filemtime($filePath) : (ASSET_VERSION_FALLBACK ?? time());
     }
 
     return $path . '?v=' . $version;

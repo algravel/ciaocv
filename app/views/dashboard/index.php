@@ -3,9 +3,10 @@
      Toutes les sections (SPA côté client, affichées/masquées via JS).
      Les données viennent de APP_DATA (injecté par le layout).
      ═══════════════════════════════════════════════════════════════════════ -->
+<?php $def = $defaultSection ?? 'statistiques'; ?>
 
 <!-- ─── POSTES Section ─── -->
-<div id="postes-section" class="content-section">
+<div id="postes-section" class="content-section<?= $def === 'postes' ? ' active' : '' ?>">
     <div class="page-header">
         <h1 class="page-title" data-i18n="postes_title">Postes actifs</h1>
     </div>
@@ -35,18 +36,21 @@
                 <th data-i18n="th_location">Lieu</th>
                 <th data-i18n="th_status">Statut</th>
                 <th data-i18n="th_candidates">Candidats</th>
-                <th data-i18n="th_created">Créé le</th>
+                <th class="th-actions" data-i18n="th_actions">Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($postes as $p): ?>
-            <tr class="row-clickable" data-poste-id="<?= e($p['id']) ?>" role="button" tabindex="0">
+            <tr class="row-clickable" data-poste-id="<?= e($p['id']) ?>" role="button" tabindex="0" onclick="showPosteDetail('<?= e($p['id']) ?>')">
                 <td><strong><?= e($p['title']) ?></strong></td>
                 <td><?= e($p['department']) ?></td>
                 <td><?= e($p['location']) ?></td>
                 <td><span class="status-badge <?= e($p['statusClass']) ?>"><?= e($p['status']) ?></span></td>
                 <td><?= $p['candidates'] ?></td>
-                <td><?= e($p['date']) ?></td>
+                <td class="cell-actions">
+                    <button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showPosteDetail('<?= e($p['id']) ?>')" title="Modifier" data-i18n-title="action_edit"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deletePoste('<?= e($p['id']) ?>', this.closest('tr'))" title="Supprimer" data-i18n-title="action_delete"><i class="fa-solid fa-trash"></i></button>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -73,6 +77,7 @@
     <div class="card">
         <h3 class="card-subtitle">Informations</h3>
         <div class="info-row"><div class="info-label">Candidats</div><div class="info-value" id="detail-poste-candidates">0</div></div>
+        <div class="info-row"><div class="info-label" data-i18n="th_created">Créé le</div><div class="info-value" id="detail-poste-date">—</div></div>
         <div class="action-stack">
             <button class="btn btn-primary btn--center" onclick="openPosteCandidatsModal()">
                 <i class="fa-solid fa-users"></i> Voir les candidats
@@ -223,7 +228,7 @@
 </div>
 
 <!-- ─── AFFICHAGES Section ─── -->
-<div id="affichages-section" class="content-section">
+<div id="affichages-section" class="content-section<?= $def === 'affichages' ? ' active' : '' ?>">
     <div class="page-header"><h1 class="page-title" data-i18n="affichages_title">Affichages en cours</h1></div>
     <div class="filters-bar">
         <div class="view-tabs">
@@ -243,15 +248,24 @@
                 <th data-i18n="th_department">Département</th>
                 <th data-i18n="th_start_date">Date début</th>
                 <th data-i18n="th_status">Statut</th>
+                <th class="th-actions" data-i18n="th_actions">Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($affichages as $aId => $a): ?>
-            <tr onclick="showAffichageDetail('<?= e($aId) ?>')" class="row-clickable">
+            <tr data-affichage-id="<?= e($aId) ?>" onclick="showAffichageDetail('<?= e($aId) ?>')" class="row-clickable">
                 <td><strong><?= e($a['title']) ?></strong></td>
                 <td><?= e($a['department'] ?? '') ?></td>
                 <td><?= e($a['start']) ?></td>
                 <td><span class="status-badge <?= e($a['statusClass']) ?>"><?= e($a['status']) ?></span></td>
+                <td class="cell-actions">
+                    <button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showAffichageDetail('<?= e($aId) ?>')" title="Modifier" data-i18n-title="action_edit">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deleteAffichage('<?= e($aId) ?>', this.closest('tr'))" title="Supprimer" data-i18n-title="action_delete">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -259,7 +273,7 @@
 </div>
 
 <!-- ─── CANDIDATS Section ─── -->
-<div id="candidats-section" class="content-section">
+<div id="candidats-section" class="content-section<?= $def === 'candidats' ? ' active' : '' ?>">
     <div class="page-header"><h1 class="page-title" data-i18n="candidats_title">Candidats</h1></div>
     <div class="filters-bar">
         <div class="view-tabs">
@@ -345,16 +359,16 @@
 </div>
 
 <!-- ─── STATISTIQUES / TABLEAU DE BORD Section ─── -->
-<div id="statistiques-section" class="content-section active">
+<div id="statistiques-section" class="content-section<?= $def === 'statistiques' ? ' active' : '' ?>">
     <div class="page-header"><h1 class="page-title" data-i18n="statistiques_title">Tableau de bord</h1></div>
 
     <!-- Forfait Banner -->
     <div class="forfait-banner">
         <div class="flex-center gap-5">
             <div class="forfait-icon"><i class="fa-solid fa-gem icon-lg"></i></div>
-            <div><div class="plan-name">Forfait Platine</div></div>
+            <div><div class="plan-name"><?= e($planName ?? 'Découverte') ?></div></div>
         </div>
-        <a href="#parametres-billing" class="forfait-cta">Gérer mon forfait</a>
+        <a href="/parametres#parametres-billing" class="forfait-cta">Gérer mon forfait</a>
     </div>
 
     <!-- KPI Cards -->
@@ -363,32 +377,35 @@
             <div class="flex-between-start">
                 <div>
                     <div class="kpi-label">Mon forfait</div>
-                    <div class="kpi-value">20 <span class="kpi-suffix">/ 50</span></div>
+                    <div class="kpi-value"><?= (int) ($kpiForfaitUsed ?? 0) ?> <span class="kpi-suffix">/ <?= (int) ($kpiForfaitLimit ?? 50) ?></span></div>
                     <div class="kpi-sub">entrevues disponibles</div>
                 </div>
                 <div class="kpi-icon kpi-icon--blue"><i class="fa-solid fa-users"></i></div>
             </div>
-            <div class="progress-bar"><div class="progress-fill" style="width: 40%;"></div></div>
+            <?php $kpiPct = ($kpiForfaitLimit ?? 50) > 0 ? min(100, (int) ((($kpiForfaitUsed ?? 0) / ($kpiForfaitLimit ?? 50)) * 100)) : 0; ?>
+            <div class="progress-bar"><div class="progress-fill" style="width: <?= $kpiPct ?>%;"></div></div>
         </div>
-        <div class="kpi-card">
+        <a href="/affichages" class="kpi-card kpi-card--clickable" style="text-decoration:none;color:inherit;display:block;" onclick="event.preventDefault(); document.querySelector('a.nav-item[href=\'/affichages\']')?.click();">
             <div class="flex-between-start">
                 <div>
                     <div class="kpi-label" data-i18n="stat_active_jobs">Affichages actifs</div>
-                    <div class="kpi-value">3</div>
+                    <div class="kpi-value"><?= (int) ($kpiAffichagesActifs ?? 0) ?></div>
                 </div>
                 <div class="kpi-icon kpi-icon--gray"><i class="fa-solid fa-briefcase"></i></div>
             </div>
-            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 1</span> depuis le mois dernier</div>
-        </div>
-        <div class="kpi-card kpi-card--clickable" onclick="openModal('completer-profil')" role="button" tabindex="0">
+            <?php $affDiff = ($kpiAffichagesActifs ?? 0) - ($kpiAffichagesActifsPrev ?? 0); ?>
+            <div class="kpi-trend"><?php if ($affDiff > 0): ?><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> <?= $affDiff ?></span><?php elseif ($affDiff < 0): ?><span class="kpi-trend--down"><i class="fa-solid fa-arrow-down"></i> <?= abs($affDiff) ?></span><?php endif; ?> depuis le mois dernier</div>
+        </a>
+        <?php $tachesRestantes = (int) ($kpiTachesRestantes ?? 0); $hasTaches = $tachesRestantes > 0; ?>
+        <div class="kpi-card kpi-card--clickable<?= $hasTaches ? ' kpi-card--alert' : '' ?>" onclick="openModal('completer-profil')" role="button" tabindex="0">
             <div class="flex-between-start">
                 <div>
                     <div class="kpi-label">Compléter votre profil</div>
-                    <div class="kpi-value">2</div>
+                    <div class="kpi-value"><?= $tachesRestantes ?></div>
                 </div>
                 <div class="kpi-icon kpi-icon--red"><i class="fa-solid fa-clipboard-check"></i></div>
             </div>
-            <div class="kpi-sub">tâches restantes</div>
+            <div class="kpi-sub"><?= $tachesRestantes === 1 ? 'tâche restante' : 'tâches restantes' ?></div>
         </div>
     </div>
 
@@ -399,11 +416,17 @@
             <h2 class="section-heading mb-0" data-i18n="chart_applications">Candidatures par mois</h2>
         </div>
         <div class="chart-bars">
-            <?php $months = [['Sep', 60], ['Oct', 100], ['Nov', 80], ['Déc', 140], ['Jan', 180], ['Fév', 120]]; ?>
-            <?php foreach ($months as $i => $m): ?>
+            <?php
+            $chartData = $chartMonths ?? [['label' => 'Sep', 'count' => 60], ['label' => 'Oct', 'count' => 100], ['label' => 'Nov', 'count' => 80], ['label' => 'Déc', 'count' => 140], ['label' => 'Jan', 'count' => 180], ['label' => 'Fév', 'count' => 120]];
+            $maxVal = max(array_column($chartData, 'count')) ?: 1;
+            foreach ($chartData as $i => $m):
+                $cnt = (int) ($m['count'] ?? 0);
+                $h = $maxVal > 0 ? (int) (($cnt / $maxVal) * 150) : 0;
+                $label = $m['label'] ?? '';
+            ?>
             <div class="chart-bar-col">
-                <div class="chart-bar <?= $i === 4 ? 'chart-bar--highlight' : '' ?>" style="height: <?= $m[1] ?>px;"></div>
-                <span class="chart-bar-label <?= $i === 4 ? 'chart-bar-label--highlight' : '' ?>"><?= $m[0] ?></span>
+                <div class="chart-bar <?= $label === 'Jan' ? 'chart-bar--highlight' : '' ?>" style="height: <?= $h ?>px;"></div>
+                <span class="chart-bar-label <?= $label === 'Jan' ? 'chart-bar-label--highlight' : '' ?>"><?= e($label) ?></span>
             </div>
             <?php endforeach; ?>
         </div>
@@ -415,37 +438,60 @@
         <table class="data-table">
             <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Détails</th></tr></thead>
             <tbody>
-                <tr><td class="cell-date">6 fév 2026, 14:32</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--evaluation">Évaluation</span></td><td class="cell-muted">A noté le candidat <strong>Jean Dupont</strong> — 4/5 étoiles</td></tr>
-                <tr><td class="cell-date">6 fév 2026, 11:15</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--creation">Création</span></td><td class="cell-muted">A créé un nouvel affichage pour <strong>Développeur Frontend</strong></td></tr>
-                <tr><td class="cell-date">5 fév 2026, 16:48</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--modification">Modification</span></td><td class="cell-muted">A modifié les questions du poste <strong>Chef de projet</strong></td></tr>
-                <tr><td class="cell-date">5 fév 2026, 09:22</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--invitation">Invitation</span></td><td class="cell-muted">A invité <strong>Sophie Martin</strong> à une entrevue vidéo</td></tr>
-                <tr><td class="cell-date">4 fév 2026, 15:05</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--suppression">Suppression</span></td><td class="cell-muted">A archivé le poste <strong>Analyste d'affaires</strong></td></tr>
-                <tr><td class="cell-date">4 fév 2026, 10:30</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--evaluation">Évaluation</span></td><td class="cell-muted">A visionné la vidéo de <strong>Luc Bergeron</strong></td></tr>
+                <?php
+                $evts = $events ?? [];
+                $badgeMap = ['creation' => 'event-badge--creation', 'modification' => 'event-badge--modification', 'suppression' => 'event-badge--suppression', 'evaluation' => 'event-badge--evaluation', 'invitation' => 'event-badge--invitation'];
+                $moisFr = ['Jan' => 'janv', 'Feb' => 'fév', 'Mar' => 'mars', 'Apr' => 'avr', 'May' => 'mai', 'Jun' => 'juin', 'Jul' => 'juil', 'Aug' => 'août', 'Sep' => 'sept', 'Oct' => 'oct', 'Nov' => 'nov', 'Dec' => 'déc'];
+                if (empty($evts)): ?>
+                <tr><td colspan="4" class="cell-muted">Aucun événement enregistré.</td></tr>
+                <?php else:
+                foreach ($evts as $ev):
+                    $d = date('j M Y, H:i', strtotime($ev['created_at']));
+                    $createdFormatted = preg_replace_callback('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/', fn($m) => $moisFr[$m[1]] ?? $m[1], $d);
+                    $badgeClass = $badgeMap[$ev['action_type']] ?? 'event-badge--modification';
+                ?>
+                <tr>
+                    <td class="cell-date"><?= e($createdFormatted) ?></td>
+                    <td><strong><?= e($ev['user_name']) ?></strong></td>
+                    <td><span class="event-badge <?= e($badgeClass) ?>"><?= e(ucfirst($ev['action_type'])) ?></span></td>
+                    <td class="cell-muted"><?= e($ev['details']) ?></td>
+                </tr>
+                <?php endforeach; endif; ?>
             </tbody>
         </table>
     </div>
 </div>
 
 <!-- ─── PARAMÈTRES Section ─── -->
-<div id="parametres-section" class="content-section">
+<div id="parametres-section" class="content-section<?= $def === 'parametres' ? ' active' : '' ?>">
     <div class="page-header"><h1 class="page-title" data-i18n="parametres_title">Paramètres</h1></div>
 
+    <?php
+    $isNewOrg = $isNewOrg ?? false;
+    $settingsCompanyName = $companyName ?? '';
+    $companyIndustry = $isNewOrg ? '' : 'Technologie';
+    $companyEmail = $isNewOrg ? '' : ($user['email'] ?? 'rh@acme.com');
+    $companyPhone = $isNewOrg ? '' : '+1 (514) 555-0123';
+    $companyAddress = $isNewOrg ? '' : '1234 Rue Principale, Montréal, QC H2X 1Y6';
+    $companyDescription = $isNewOrg ? '' : 'Acme Corporation est une entreprise leader dans le domaine de la technologie.';
+    ?>
     <!-- Entreprise -->
     <div class="card settings-pane" id="settings-company">
         <div class="card-header card-header--bordered">
             <h2 class="card-title" data-i18n="settings_company_info">Informations de l'entreprise</h2>
         </div>
-        <form class="form-vertical">
+        <form class="form-vertical" id="form-settings-company" onsubmit="return saveCompanySettings(event)">
+            <?= csrf_field() ?>
             <div class="grid-2col">
-                <div class="form-group"><label class="form-label" data-i18n="form_company_name">Nom de l'entreprise</label><input type="text" class="form-input" value="Acme Corporation"></div>
-                <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur d'activité</label><select class="form-select"><option>Technologie</option><option>Finance</option><option>Santé</option><option>Commerce</option></select></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_company_name">Nom de l'entreprise</label><input type="text" class="form-input" id="settings-company-name" name="company_name" value="<?= e($settingsCompanyName) ?>" placeholder="<?= $isNewOrg ? 'Ex: Mon entreprise' : '' ?>"></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur d'activité</label><select class="form-select"><option value=""<?= $companyIndustry === '' ? ' selected' : '' ?>>— Sélectionner —</option><option value="Technologie"<?= $companyIndustry === 'Technologie' ? ' selected' : '' ?>>Technologie</option><option value="Finance">Finance</option><option value="Santé">Santé</option><option value="Commerce">Commerce</option></select></div>
             </div>
             <div class="grid-2col">
-                <div class="form-group"><label class="form-label" data-i18n="form_email">Email de contact</label><input type="email" class="form-input" value="rh@acme.com"></div>
-                <div class="form-group"><label class="form-label" data-i18n="form_phone">Téléphone</label><input type="tel" class="form-input" value="+1 (514) 555-0123"></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_email">Email de contact</label><input type="email" class="form-input" value="<?= e($companyEmail) ?>" placeholder="<?= $isNewOrg ? 'contact@entreprise.com' : '' ?>"></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_phone">Téléphone</label><input type="tel" class="form-input" value="<?= e($companyPhone) ?>" placeholder="<?= $isNewOrg ? '+1 (514) 555-0000' : '' ?>"></div>
             </div>
-            <div class="form-group"><label class="form-label" data-i18n="form_address">Adresse</label><input type="text" class="form-input" value="1234 Rue Principale, Montréal, QC H2X 1Y6"></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_description">Description de l'entreprise</label><textarea class="form-input" rows="4" style="resize: vertical;">Acme Corporation est une entreprise leader dans le domaine de la technologie.</textarea></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_address">Adresse</label><input type="text" class="form-input" value="<?= e($companyAddress) ?>" placeholder="<?= $isNewOrg ? 'Adresse complète' : '' ?>"></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_description">Description de l'entreprise</label><textarea class="form-input" rows="4" style="resize: vertical;" placeholder="<?= $isNewOrg ? 'Décrivez votre entreprise...' : '' ?>"><?= e($companyDescription) ?></textarea></div>
             <div class="form-actions"><button type="button" class="btn btn-secondary" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button></div>
         </form>
     </div>
@@ -662,6 +708,40 @@
                 </div>
                 <i class="fa-solid fa-chevron-right"></i>
             </a>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmation suppression affichage -->
+<div class="modal-overlay" id="delete-affichage-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title"><i class="fa-solid fa-trash"></i> Supprimer l'affichage</h2>
+            <button class="btn-icon" onclick="closeModal('delete-affichage')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="modal-body" id="delete-affichage-message">Êtes-vous sûr de vouloir supprimer cet affichage ?</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('delete-affichage')">Annuler</button>
+            <button type="button" class="btn btn-danger" id="delete-affichage-confirm-btn" onclick="confirmDeleteAffichage()">
+                <i class="fa-solid fa-trash"></i> Supprimer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmation suppression poste (soft delete) -->
+<div class="modal-overlay" id="delete-poste-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title"><i class="fa-solid fa-trash"></i> <span data-i18n="delete_poste_title">Supprimer le poste</span></h2>
+            <button class="btn-icon" onclick="closeModal('delete-poste')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="modal-body" id="delete-poste-message">Êtes-vous sûr de vouloir supprimer ce poste ?</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('delete-poste')" data-i18n="btn_cancel">Annuler</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDeletePoste()">
+                <i class="fa-solid fa-trash"></i> <span data-i18n="action_delete">Supprimer</span>
+            </button>
         </div>
     </div>
 </div>

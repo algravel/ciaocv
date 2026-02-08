@@ -38,6 +38,14 @@
                         <input type="password" id="password" name="password" class="form-control"
                             placeholder="••••••••" data-i18n="login.password.placeholder">
                     </div>
+                    <?php
+                    $turnstileKey = $_ENV['TURNSTILE_SITE_KEY'] ?? '';
+                    if ($turnstileKey !== ''):
+                    ?>
+                    <div class="form-group mb-6 turnstile-wrap">
+                        <div class="cf-turnstile" data-sitekey="<?= e($turnstileKey) ?>" data-theme="light" data-size="normal"></div>
+                    </div>
+                    <?php endif; ?>
                     <button type="submit" class="btn-primary login-submit" data-i18n="login.submit">Se connecter</button>
                 </form>
 

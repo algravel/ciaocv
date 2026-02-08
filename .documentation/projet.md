@@ -42,6 +42,25 @@ CiaoCV révolutionne le marché de l'emploi en remplaçant les descriptions text
   - Dossier local : `.documentation/` (ne pas uploader).
   - Contient : `design.md`, `projet.md`, etc.
 
+## Modèle de données (hiérarchie des entités)
+
+**Entité centrale : l’Entreprise**
+
+1. **Entreprise** — entité principale
+   - Représente l’organisation (client employeur)
+   - Contient les infos de l’entreprise (nom, secteur, adresse, etc.)
+   - Possède le forfait / plan d’abonnement
+
+2. **Utilisateurs** — rattachés à l’entreprise
+   - Chaque utilisateur appartient à **une** entreprise
+   - Rôles possibles :
+     - **Administrateur** : gestion complète (paramètres, équipe, postes, affichages)
+     - **Évaluateur** : consultation et évaluation des candidats
+
+3. **Données liées à l’entreprise**
+   - Postes, affichages, candidats → filtrés par entreprise
+   - Les utilisateurs voient uniquement les données de leur entreprise
+
 ## Module Gestion (administration)
 
 - **Journalisation** : Chaque opération **Create**, **Update** ou **Delete** doit être journalisée dans `gestion_events` et affichée dans le dashboard (section « Journalisation des événements »).

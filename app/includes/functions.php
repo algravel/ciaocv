@@ -79,3 +79,50 @@ function send_zepto($to, $subject, $htmlbody) {
 
     return json_decode($response, true);
 }
+
+/**
+ * Dérive un nom d'entreprise plausible depuis l'email (ex: admin@olymel.com → Olymel).
+ */
+function company_name_from_email(string $email): string
+{
+    $email = trim($email);
+    if ($email === '') return '';
+    $at = strpos($email, '@');
+    if ($at === false) return '';
+    $domain = substr($email, $at + 1);
+    $part = strpos($domain, '.') !== false ? strstr($domain, '.', true) : $domain;
+    return $part !== false && $part !== '' ? ucfirst(strtolower($part)) : '';
+}
+
+/**
+ * Vérifie le token Cloudflare Turnstile.
+ *
+ * @param string $token Token cf-turnstile-response
+ * @param string|null $remoteIp IP du client (optionnel)
+ * @return array Réponse de l'API siteverify (success, error-codes, etc.)
+ */
+function turnstile_verify(string $token, ?string $remoteIp = null): array
+{
+    $secret = $_ENV['TURNSTILE_SECRET_KEY'] ?? '';
+    if ($secret === '' || $token === '') {
+        return ['success' => false, 'error-codes' => ['missing-input-response']];
+    }
+    $data = ['secret' => $secret, 'response' => $token];
+    if ($remoteIp !== null && $remoteIp !== '') {
+        $data['remoteip'] = $remoteIp;
+    }
+    $ctx = stream_context_create([
+        'http' => [
+            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+            'method'  => 'POST',
+            'content' => http_build_query($data),
+            'timeout' => 10,
+        ],
+    ]);
+    $response = @file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $ctx);
+    if ($response === false) {
+        return ['success' => false, 'error-codes' => ['internal-error']];
+    }
+    $result = json_decode($response, true);
+    return is_array($result) ? $result : ['success' => false, 'error-codes' => ['internal-error']];
+}

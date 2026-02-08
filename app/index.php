@@ -34,8 +34,13 @@ $router->post('/connexion',    'AuthController', 'authenticate');
 $router->get('/deconnexion',   'AuthController', 'logout');
 $router->get('/logout',       'AuthController', 'logout'); // alias, redirige vers /connexion après déco
 
-// Dashboard employeur
+// Dashboard employeur (sections accessibles par URL)
 $router->get('/tableau-de-bord', 'DashboardController', 'index');
+$router->get('/postes',       'DashboardController', 'index');
+$router->get('/affichages',   'DashboardController', 'index');
+$router->get('/candidats',    'DashboardController', 'index');
+$router->get('/parametres',   'DashboardController', 'index');
+$router->post('/parametres/entreprise', 'DashboardController', 'saveCompany');
 
 // Feedback (FAB bugs et idées)
 $router->post('/feedback', 'FeedbackController', 'submit');

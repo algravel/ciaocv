@@ -429,8 +429,6 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
     .pricing-grid { grid-template-columns: 1fr; }
     .settings-tabs { overflow-x: auto; flex-wrap: nowrap; }
     /* Masquer la colonne "Créé le" (6e colonne) du tableau des postes */
-    #postes-table th:nth-child(6),
-    #postes-table td:nth-child(6) { display: none; }
     /* Forfaits : mobile = Nom, Statut, Actions uniquement */
     .data-table-forfaits th.forfait-col-detail,
     .data-table-forfaits td.forfait-col-detail { display: none; }
@@ -875,5 +873,10 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 .d-inline { display: inline; }
 .config-delete-form { margin-left: 0.5rem; }
 .utilisateur-delete-form { margin-left: 0.5rem; display: inline; }
+.data-table .cell-actions { white-space: nowrap; display: flex; gap: 0.25rem; align-items: center; }
+.data-table .cell-actions .btn-icon { padding: 0.4rem; font-size: 0.9rem; }
+.data-table .cell-actions .btn-icon-edit:hover { color: var(--primary-color); }
+.data-table .cell-actions .btn-icon-delete { color: var(--text-secondary); }
+.data-table .cell-actions .btn-icon-delete:hover { color: var(--danger-color); }
 .data-table .btn-icon--danger { color: var(--text-secondary); }
 .data-table .btn-icon--danger:hover { color: var(--danger-color); }

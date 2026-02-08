@@ -38,6 +38,27 @@ class AuthController extends Controller
      */
     public function authenticate(): void
     {
+        $turnstileSecret = $_ENV['TURNSTILE_SECRET_KEY'] ?? '';
+        if ($turnstileSecret !== '') {
+            $token = trim($_POST['cf-turnstile-response'] ?? '');
+            $remoteIp = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? null;
+            if (is_string($remoteIp) && strpos($remoteIp, ',') !== false) {
+                $remoteIp = trim(explode(',', $remoteIp)[0]);
+            }
+            $validation = turnstile_verify($token, $remoteIp);
+            if (empty($validation['success'])) {
+                $loginType = $_GET['type'] ?? '';
+                $subtitleKey = $loginType === 'candidat' ? 'login.hero.subtitle.candidat' : ($loginType === 'entreprise' ? 'login.hero.subtitle.entreprise' : 'login.hero.subtitle');
+                $this->view('auth.login', [
+                    'subtitleKey' => $subtitleKey,
+                    'error'       => 'Vérification de sécurité échouée. Veuillez réessayer.',
+                    'errorKey'    => 'login.error.turnstile',
+                    'errorHtml'   => false,
+                ], 'auth');
+                return;
+            }
+        }
+
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 
@@ -54,9 +75,10 @@ class AuthController extends Controller
         }
 
         // Créer la session (mock)
-        $_SESSION['user_id']    = 1;
-        $_SESSION['user_email'] = $email;
-        $_SESSION['user_name']  = 'Utilisateur';
+        $_SESSION['user_id']       = 1;
+        $_SESSION['user_email']    = $email;
+        $_SESSION['user_name']     = 'Utilisateur';
+        $_SESSION['company_name']  = company_name_from_email($email) ?: 'Mon entreprise';
 
         $this->redirect('/tableau-de-bord');
     }

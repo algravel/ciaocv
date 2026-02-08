@@ -35,6 +35,7 @@ require_once $gestionBase . '/models/PlatformUser.php';
 require_once $gestionBase . '/models/StripeSale.php';
 require_once $gestionBase . '/models/Event.php';
 require_once $gestionBase . '/models/Feedback.php';
+require_once $gestionBase . '/models/Entrevue.php';
 
 // ─── Auto-init schéma DB si tables absentes ────────────────────────────────
 // ─── Auto-seed si tables vides ─────────────────────────────────────────────
@@ -99,6 +100,30 @@ try {
             INDEX idx_type (type)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
+    $stmt = $pdo->query("SHOW COLUMNS FROM gestion_events LIKE 'platform_user_id'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec('ALTER TABLE gestion_events ADD COLUMN platform_user_id INT UNSIGNED NULL COMMENT "Pour événements app (employeur)" AFTER admin_id');
+        $pdo->exec('ALTER TABLE gestion_events ADD INDEX idx_platform_user (platform_user_id)');
+        try {
+            $pdo->exec('ALTER TABLE gestion_events ADD CONSTRAINT fk_events_platform FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE SET NULL');
+        } catch (Throwable $e) {
+            // FK peut échouer si données incompatibles
+        }
+    }
+    $stmt = $pdo->query("SHOW COLUMNS FROM gestion_events LIKE 'acting_user_name'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec('ALTER TABLE gestion_events ADD COLUMN acting_user_name VARCHAR(255) NULL COMMENT "Nom utilisateur ayant agi (app)" AFTER platform_user_id');
+    }
+    $stmt = $pdo->query("SHOW TABLES LIKE 'app_entrevues'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("CREATE TABLE app_entrevues (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            platform_user_id INT UNSIGNED NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE,
+            INDEX idx_platform_created (platform_user_id, created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
     // Seed si gestion_plans vide
     $stmt = $pdo->query('SELECT COUNT(*) FROM gestion_plans');
     if ((int) $stmt->fetchColumn() === 0) {
@@ -131,6 +156,53 @@ try {
         foreach ([['modification','plan','1'], ['creation','plan',null], ['modification','user','2'], ['creation','user',null], ['suppression','plan',null], ['sale','sale',null]] as $i => $e) {
             $stmt->execute([$adminId, $e[0], $e[1], $e[2], $enc->encrypt($events[$i][0])]);
         }
+    }
+    // Seed données app dashboard (événements + candidatures par mois) pour platform_user 1
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'app_entrevues'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->query('SELECT COUNT(*) FROM app_entrevues WHERE platform_user_id = 1');
+            if ((int) $stmt->fetchColumn() === 0) {
+                $ins = $pdo->prepare('INSERT INTO app_entrevues (platform_user_id, created_at) VALUES (1, ?)');
+                $counts = [60, 100, 80, 140, 180, 120];
+                foreach ([[2025, 9], [2025, 10], [2025, 11], [2025, 12], [2026, 1], [2026, 2]] as $idx => $ym) {
+                    $cnt = $counts[$idx] ?? 50;
+                    for ($i = 0; $i < $cnt; $i++) {
+                        $ins->execute([sprintf('%d-%02d-%02d %02d:%02d:00', $ym[0], $ym[1], rand(1, 28), rand(9, 17), rand(0, 59))]);
+                    }
+                }
+            }
+        }
+        $stmt = $pdo->query("SHOW COLUMNS FROM gestion_events LIKE 'platform_user_id'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM gestion_events WHERE platform_user_id = 1');
+            if ((int) $stmt->fetchColumn() === 0) {
+                $enc = $enc ?? new Encryption();
+                $hasActing = $pdo->query("SHOW COLUMNS FROM gestion_events LIKE 'acting_user_name'")->rowCount() > 0;
+                $events = [
+                    ['Marie Tremblay', 'evaluation', 'A noté le candidat Jean Dupont — 4/5 étoiles', '2026-02-06 14:32:00'],
+                    ['Pierre Roy', 'creation', 'A créé un nouvel affichage pour Développeur Frontend', '2026-02-06 11:15:00'],
+                    ['Marie Tremblay', 'modification', 'A modifié les questions du poste Chef de projet', '2026-02-05 16:48:00'],
+                    ['Pierre Roy', 'invitation', 'A invité Sophie Martin à une entrevue vidéo', '2026-02-05 09:22:00'],
+                    ['Marie Tremblay', 'suppression', "A archivé le poste Analyste d'affaires", '2026-02-04 15:05:00'],
+                    ['Pierre Roy', 'evaluation', 'A visionné la vidéo de Luc Bergeron', '2026-02-04 10:30:00'],
+                ];
+                $cols = 'platform_user_id, action_type, entity_type, entity_id, details_encrypted, created_at';
+                if ($hasActing) {
+                    $cols = 'platform_user_id, acting_user_name, action_type, entity_type, entity_id, details_encrypted, created_at';
+                }
+                foreach ($events as $ev) {
+                    $det = $enc->encrypt($ev[2]);
+                    if ($hasActing) {
+                        $pdo->prepare('INSERT INTO gestion_events (platform_user_id, acting_user_name, action_type, entity_type, entity_id, details_encrypted, created_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?)')->execute([$ev[0], $ev[1], 'event', null, $det, $ev[3]]);
+                    } else {
+                        $pdo->prepare('INSERT INTO gestion_events (platform_user_id, action_type, entity_type, entity_id, details_encrypted, created_at) VALUES (1, ?, ?, ?, ?, ?)')->execute([$ev[1], 'event', null, $det, $ev[3]]);
+                    }
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        // Ignorer erreurs de seed app
     }
     // Admin supplémentaire : algravel@gmail.com (créé si absent)
     $extraEmail = 'algravel@gmail.com';
@@ -173,30 +245,38 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-function e(string $value): string
-{
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-}
-
-function csrf_token(): string
-{
-    if (empty($_SESSION['_csrf_token'])) {
-        $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+// ─── Helpers (éviter redeclaration si chargé depuis app) ─────────────────────
+if (!function_exists('e')) {
+    function e(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
-    return $_SESSION['_csrf_token'];
 }
 
-function csrf_field(): string
-{
-    return '<input type="hidden" name="_csrf_token" value="' . e(csrf_token()) . '">';
+if (!function_exists('csrf_token')) {
+    function csrf_token(): string
+    {
+        if (empty($_SESSION['_csrf_token'])) {
+            $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['_csrf_token'];
+    }
 }
 
-function csrf_verify(): bool
-{
-    $token = $_POST['_csrf_token'] ?? '';
-    $sessionToken = $_SESSION['_csrf_token'] ?? '';
-    return $token !== '' && $sessionToken !== '' && hash_equals($sessionToken, $token);
+if (!function_exists('csrf_field')) {
+    function csrf_field(): string
+    {
+        return '<input type="hidden" name="_csrf_token" value="' . e(csrf_token()) . '">';
+    }
+}
+
+if (!function_exists('csrf_verify')) {
+    function csrf_verify(): bool
+    {
+        $token = $_POST['_csrf_token'] ?? '';
+        $sessionToken = $_SESSION['_csrf_token'] ?? '';
+        return $token !== '' && $sessionToken !== '' && hash_equals($sessionToken, $token);
+    }
 }
 
 function zeptomail_send_otp(string $toEmail, string $toName, string $otpCode, string $lang = 'fr'): bool
@@ -442,6 +522,7 @@ function zeptomail_send_password_reset(string $toEmail, string $toName, string $
     return isset($data['request_id']) || (isset($data['data']) && !isset($data['error']));
 }
 
+if (!function_exists('turnstile_verify')) {
 function turnstile_verify(string $token, ?string $remoteIp = null): array
 {
     $secret = $_ENV['TURNSTILE_SECRET_KEY'] ?? '';
@@ -466,6 +547,7 @@ function turnstile_verify(string $token, ?string $remoteIp = null): array
     }
     $result = json_decode($response, true);
     return is_array($result) ? $result : ['success' => false, 'error-codes' => ['internal-error']];
+}
 }
 
 function gestion_asset(string $path, bool $noCache = false): string

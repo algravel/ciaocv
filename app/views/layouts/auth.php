@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
     <link rel="stylesheet" href="<?= asset('assets/css/design-system.css') ?>">
+    <?php if (!empty($_ENV['TURNSTILE_SITE_KEY'])): ?>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <?php endif; ?>
     <style>
         /* ─── Page de connexion ─── */
         .page-login .hero {
@@ -251,6 +254,7 @@
         }
         .login-forgot-link:hover { text-decoration: underline; }
         .login-footer-sep { color: var(--text-gray); font-size: 0.85rem; }
+        .turnstile-wrap { display: flex; justify-content: center; }
         .login-demo-cta {
             margin-top: 1rem;
             text-align: center;

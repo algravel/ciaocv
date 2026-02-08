@@ -437,7 +437,8 @@ function showPosteDetail(id) {
     else statusSelect.value = 'actif';
     applyPosteStatusStyle(statusSelect);
     document.getElementById('detail-poste-candidates').textContent = data.candidates;
-    document.getElementById('detail-poste-date').textContent = data.date;
+    var dateEl = document.getElementById('detail-poste-date');
+    if (dateEl) dateEl.textContent = data.date || '—';
 
     // Durée d'enregistrement
     var durationSelect = document.getElementById('detail-poste-record-duration');
@@ -453,31 +454,53 @@ function showPosteDetail(id) {
     window.scrollTo(0, 0);
 }
 
-// Clic sur une ligne du tableau Postes (délégation)
-var postesTable = document.getElementById('postes-table');
-if (postesTable && postesTable.tBodies && postesTable.tBodies[0]) {
-    postesTable.tBodies[0].addEventListener('click', function (e) {
-        var row = e.target && e.target.closest && e.target.closest('tr.row-clickable[data-poste-id]');
-        if (row) {
-            var id = row.getAttribute('data-poste-id');
-            if (id) showPosteDetail(id);
-        }
-    });
-    postesTable.tBodies[0].addEventListener('keydown', function (e) {
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        var row = e.target && e.target.closest && e.target.closest('tr.row-clickable[data-poste-id]');
-        if (row) {
-            e.preventDefault();
-            var id = row.getAttribute('data-poste-id');
-            if (id) showPosteDetail(id);
-        }
-    });
-}
+// Clic sur une ligne du tableau Postes (délégation sur document)
+document.addEventListener('click', function (e) {
+    var row = e.target && e.target.closest && e.target.closest('#postes-table tr.row-clickable[data-poste-id]');
+    if (row) {
+        var id = row.getAttribute('data-poste-id');
+        if (id && typeof showPosteDetail === 'function') showPosteDetail(id);
+    }
+});
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var row = e.target && e.target.closest && e.target.closest('#postes-table tr.row-clickable[data-poste-id]');
+    if (row) {
+        e.preventDefault();
+        var id = row.getAttribute('data-poste-id');
+        if (id && typeof showPosteDetail === 'function') showPosteDetail(id);
+    }
+});
 
 function goBackToPostes() {
     currentPosteId = null;
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
     document.getElementById('postes-section').classList.add('active');
+}
+
+var _pendingDeletePoste = null;
+
+function deletePoste(id, rowEl) {
+    var data = postesData[id] || postesData[String(id)];
+    var title = (data && data.title) ? data.title : '';
+    var msg = title
+        ? 'Êtes-vous sûr de vouloir supprimer le poste « ' + escapeHtml(title) + ' » ?'
+        : 'Êtes-vous sûr de vouloir supprimer ce poste ?';
+    _pendingDeletePoste = { id: id, rowEl: rowEl };
+    var msgEl = document.getElementById('delete-poste-message');
+    if (msgEl) msgEl.textContent = msg;
+    openModal('delete-poste');
+}
+
+function confirmDeletePoste() {
+    if (!_pendingDeletePoste) return;
+    var id = _pendingDeletePoste.id;
+    var rowEl = _pendingDeletePoste.rowEl;
+    _pendingDeletePoste = null;
+    closeModal('delete-poste');
+    if (postesData[id]) postesData[id].deleted = true;
+    else if (postesData[String(id)]) postesData[String(id)].deleted = true;
+    if (rowEl && rowEl.parentNode) rowEl.remove();
 }
 
 function applyPosteStatusStyle(select) {

@@ -25,65 +25,66 @@
             </div>
 
             <nav class="nav-links">
-                <a href="#dashboard" class="nav-item active" data-section="statistiques" data-i18n="nav_dashboard">
+                <?php $def = $defaultSection ?? 'statistiques'; ?>
+                <a href="/tableau-de-bord" class="nav-item<?= $def === 'statistiques' ? ' active' : '' ?>" data-section="statistiques" data-i18n="nav_dashboard">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Tableau de bord</span>
                 </a>
 
-                <a href="#postes" class="nav-item has-submenu" data-section="postes" data-i18n="nav_postes">
+                <a href="/postes" class="nav-item has-submenu<?= $def === 'postes' ? ' active' : '' ?>" data-section="postes" data-i18n="nav_postes">
                     <i class="fa-solid fa-briefcase"></i>
                     <span>Postes</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                 </a>
                 <div class="nav-submenu" data-parent="postes">
                     <div class="nav-submenu-inner">
-                        <a href="#postes-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
-                        <a href="#postes-actifs" class="nav-subitem" data-i18n="filter_active">Actifs</a>
-                        <a href="#postes-inactifs" class="nav-subitem" data-i18n="filter_inactive">Non actifs</a>
-                        <a href="#postes-archives" class="nav-subitem" data-i18n="filter_archived">Archivés</a>
+                        <a href="/postes#postes-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
+                        <a href="/postes#postes-actifs" class="nav-subitem" data-i18n="filter_active">Actifs</a>
+                        <a href="/postes#postes-inactifs" class="nav-subitem" data-i18n="filter_inactive">Non actifs</a>
+                        <a href="/postes#postes-archives" class="nav-subitem" data-i18n="filter_archived">Archivés</a>
                     </div>
                 </div>
 
-                <a href="#affichages" class="nav-item has-submenu" data-section="affichages" data-i18n="nav_affichages">
+                <a href="/affichages" class="nav-item has-submenu<?= $def === 'affichages' ? ' active' : '' ?>" data-section="affichages" data-i18n="nav_affichages">
                     <i class="fa-solid fa-bullhorn"></i>
                     <span>Affichages</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                 </a>
                 <div class="nav-submenu" data-parent="affichages">
                     <div class="nav-submenu-inner">
-                        <a href="#affichages-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
-                        <a href="#affichages-actifs" class="nav-subitem" data-i18n="filter_active">Actifs</a>
-                        <a href="#affichages-expires" class="nav-subitem" data-i18n="filter_expired">Expirés</a>
+                        <a href="/affichages#affichages-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
+                        <a href="/affichages#affichages-actifs" class="nav-subitem" data-i18n="filter_active">Actifs</a>
+                        <a href="/affichages#affichages-expires" class="nav-subitem" data-i18n="filter_expired">Expirés</a>
                     </div>
                 </div>
 
-                <a href="#candidats" class="nav-item has-submenu" data-section="candidats" data-i18n="nav_candidats">
+                <a href="/candidats" class="nav-item has-submenu<?= $def === 'candidats' ? ' active' : '' ?>" data-section="candidats" data-i18n="nav_candidats">
                     <i class="fa-solid fa-user-group"></i>
                     <span>Candidats</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                 </a>
                 <div class="nav-submenu" data-parent="candidats">
                     <div class="nav-submenu-inner">
-                        <a href="#candidats-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
-                        <a href="#candidats-nouveaux" class="nav-subitem" data-i18n="filter_new">Nouveaux</a>
-                        <a href="#candidats-evalues" class="nav-subitem" data-i18n="filter_reviewed">Évalués</a>
-                        <a href="#candidats-shortlistes" class="nav-subitem" data-i18n="filter_shortlisted">Shortlistés</a>
+                        <a href="/candidats#candidats-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
+                        <a href="/candidats#candidats-nouveaux" class="nav-subitem" data-i18n="filter_new">Nouveaux</a>
+                        <a href="/candidats#candidats-evalues" class="nav-subitem" data-i18n="filter_reviewed">Évalués</a>
+                        <a href="/candidats#candidats-shortlistes" class="nav-subitem" data-i18n="filter_shortlisted">Shortlistés</a>
                     </div>
                 </div>
 
-                <a href="#parametres" class="nav-item has-submenu" data-section="parametres" data-i18n="nav_parametres">
+                <a href="/parametres" class="nav-item has-submenu<?= $def === 'parametres' ? ' active' : '' ?>" data-section="parametres" data-i18n="nav_parametres">
                     <i class="fa-solid fa-gear"></i>
                     <span>Paramètres</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                 </a>
                 <div class="nav-submenu" data-parent="parametres">
                     <div class="nav-submenu-inner">
-                        <a href="#parametres-company" class="nav-subitem settings-subitem" data-target="settings-company" data-i18n="settings_company">Entreprise</a>
-                        <a href="#parametres-branding" class="nav-subitem settings-subitem" data-target="settings-branding" data-i18n="settings_branding">Marque employeur</a>
-                        <a href="#parametres-departments" class="nav-subitem settings-subitem" data-target="settings-departments" data-i18n="settings_departments">Départements</a>
-                        <a href="#parametres-team" class="nav-subitem settings-subitem" data-target="settings-team" data-i18n="settings_team">Équipe</a>
-                        <a href="#parametres-billing" class="nav-subitem settings-subitem" data-target="settings-billing" data-i18n="settings_billing">Facturation</a>
-                        <a href="#parametres-communications" class="nav-subitem settings-subitem" data-target="settings-communications">Communication</a>
+                        <a href="/parametres#parametres-company" class="nav-subitem settings-subitem" data-target="settings-company" data-i18n="settings_company">Entreprise</a>
+                        <a href="/parametres#parametres-branding" class="nav-subitem settings-subitem" data-target="settings-branding" data-i18n="settings_branding">Marque employeur</a>
+                        <a href="/parametres#parametres-departments" class="nav-subitem settings-subitem" data-target="settings-departments" data-i18n="settings_departments">Départements</a>
+                        <a href="/parametres#parametres-team" class="nav-subitem settings-subitem" data-target="settings-team" data-i18n="settings_team">Équipe</a>
+                        <a href="/parametres#parametres-billing" class="nav-subitem settings-subitem" data-target="settings-billing" data-i18n="settings_billing">Facturation</a>
+                        <a href="/parametres#parametres-communications" class="nav-subitem settings-subitem" data-target="settings-communications">Communication</a>
                     </div>
                 </div>
             </nav>
@@ -98,7 +99,7 @@
                 </button>
 
                 <div class="top-bar-center">
-                    <span class="company-name">OLYMEL</span>
+                    <span class="company-name"><?= e($companyName ?? company_name_from_email($user['email'] ?? '') ?: 'Mon entreprise') ?></span>
                 </div>
 
                 <div class="header-actions">

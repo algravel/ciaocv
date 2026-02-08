@@ -52,14 +52,14 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs et forfaits - CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1770567684">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1770580034">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         .pricing-hero { text-align: center; padding: 6rem 5% 3rem; max-width: 900px; margin: 0 auto; }
         .pricing-hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--text-white); letter-spacing: -0.02em; }
         .pricing-hero p { font-size: 1.25rem; color: var(--text-gray); line-height: 1.8; }
-        .pricing-section { width: 100%; padding: 0 10%; box-sizing: border-box; }
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; max-width: 1200px; width: 100%; margin: 0 auto 6rem; padding: 0; box-sizing: border-box; }
+        .pricing-section { width: 100%; padding: 0 10%; box-sizing: border-box; display: flex; }
+        .pricing-grid { flex: 1 1 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; max-width: 1200px; width: 100%; margin: 0 auto 6rem; padding: 0; box-sizing: border-box; }
         .pricing-card { background: white; border: 1px solid var(--border-dark); border-radius: var(--radius-lg); padding: 2rem 1.5rem; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
         .pricing-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1); }
         .pricing-card.featured { border: 2px solid var(--primary); box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1); transform: scale(1.05); z-index: 2; }
@@ -337,6 +337,6 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             });
         });
     </script>
-    <script src="assets/js/i18n.js?v=1770567684"></script>
+    <script src="assets/js/i18n.js?v=1770580034"></script>
 </body>
 </html>

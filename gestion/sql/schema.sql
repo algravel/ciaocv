@@ -57,14 +57,26 @@ CREATE TABLE IF NOT EXISTS gestion_stripe_sales (
 CREATE TABLE IF NOT EXISTS gestion_events (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     admin_id INT UNSIGNED NULL,
+    platform_user_id INT UNSIGNED NULL COMMENT 'Pour événements app (employeur)',
+    acting_user_name VARCHAR(255) NULL COMMENT 'Nom de l''utilisateur ayant agi (app)',
     action_type VARCHAR(50) NOT NULL,
     entity_type VARCHAR(50) NOT NULL,
     entity_id VARCHAR(100) NULL,
     details_encrypted TEXT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (admin_id) REFERENCES gestion_admins(id) ON DELETE SET NULL,
-    INDEX idx_created (created_at)
+    FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE SET NULL,
+    INDEX idx_created (created_at),
+    INDEX idx_platform_user (platform_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS app_entrevues (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    platform_user_id INT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE,
+    INDEX idx_platform_created (platform_user_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT 'Candidatures/entrevues pour graphique par mois';
 
 CREATE TABLE IF NOT EXISTS gestion_sync_logs (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
