@@ -44,6 +44,7 @@ files=(
   "app/models/Candidat.php:app/models/Candidat.php"
   "app/models/Poste.php:app/models/Poste.php"
   "app/views/dashboard/index.php:app/views/dashboard/index.php"
+  "app/views/layouts/app.php:app/views/layouts/app.php"
   "gestion/GestionController.php:gestion/GestionController.php"
   "gestion/assets/css/app.css:gestion/assets/css/app.css"
   "gestion/assets/img/favicon.png:gestion/assets/img/favicon.png"
