@@ -998,11 +998,36 @@ function deleteTeamMember(index) {
    ═══════════════════════════════════════════════ */
 function sendFeedback(e) {
     e.preventDefault();
-    var lang = getLanguage();
-    var msg = translations[lang] ? translations[lang].feedback_success : 'Merci !';
-    alert(msg);
-    closeModal('feedback');
-    e.target.reset();
+    var form = e.target;
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Envoi...';
+    }
+    var formData = new FormData(form);
+    fetch('/feedback', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+    .then(function (res) {
+        var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+        var msg = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang].feedback_success : 'Merci pour votre retour !';
+        alert(res.data.ok ? msg : (res.data.error || msg));
+        if (res.data.ok) {
+            closeModal('feedback');
+            form.reset();
+        }
+    })
+    .catch(function () {
+        alert('Une erreur est survenue. Réessayez plus tard.');
+    })
+    .finally(function () {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = typeof translations !== 'undefined' && translations.fr ? translations.fr.btn_send : 'Envoyer';
+        }
+    });
 }
 
 /* ═══════════════════════════════════════════════

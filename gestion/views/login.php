@@ -11,13 +11,13 @@
                 </div>
             </div>
 
-            <span class="gestion-badge">Administration</span>
-            <h1>Connexion <span class="highlight">administration</span></h1>
+            <span class="gestion-badge" data-i18n="login.admin.badge">Administration</span>
+            <h1 data-i18n="login.admin.hero">Connexion <span class="highlight">administration</span></h1>
         </div>
 
         <div class="hero-form">
             <div class="login-card">
-                <h2 class="login-form-title">Connexion</h2>
+                <h2 class="login-form-title" data-i18n="login.title">Connexion</h2>
 
                 <?php if (!empty($error)): ?>
                     <div class="login-error"<?php if (!empty($errorKey)): ?> data-i18n="<?= e($errorKey) ?>"<?php endif ?>>
@@ -25,15 +25,16 @@
                     </div>
                 <?php endif; ?>
 
-                <form action="<?= GESTION_BASE_PATH ?>/connexion" method="POST">
+                <form action="<?= GESTION_BASE_PATH ?>/connexion" method="POST" id="loginForm">
                     <?= csrf_field() ?>
+                    <input type="hidden" name="lang" id="login-lang-input" value="">
                     <div class="form-group mb-5">
-                        <label for="email">Courriel</label>
-                        <input type="email" id="email" name="email" class="form-control" placeholder="votre@courriel.com" autocomplete="email">
+                        <label for="email" data-i18n="login.email.label">Courriel</label>
+                        <input type="email" id="email" name="email" class="form-control" data-i18n-placeholder="login.email.placeholder" placeholder="votre@courriel.com" autocomplete="email">
                     </div>
                     <div class="form-group mb-6">
-                        <label for="password">Mot de passe</label>
-                        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" autocomplete="current-password">
+                        <label for="password" data-i18n="login.password.label">Mot de passe</label>
+                        <input type="password" id="password" name="password" class="form-control" data-i18n-placeholder="login.password.placeholder" placeholder="••••••••" autocomplete="current-password">
                     </div>
                     <?php
                     $turnstileKey = $_ENV['TURNSTILE_SITE_KEY'] ?? '';
@@ -43,13 +44,13 @@
                         <div class="cf-turnstile" data-sitekey="<?= e($turnstileKey) ?>" data-theme="light" data-size="normal"></div>
                     </div>
                     <?php endif; ?>
-                    <button type="submit" class="btn-primary login-submit">Se connecter</button>
+                    <button type="submit" class="btn-primary login-submit" data-i18n="login.submit">Se connecter</button>
                 </form>
 
                 <div class="login-footer">
-                    <a href="<?= GESTION_APP_URL ?>/connexion" class="login-forgot-link">Espace recruteur</a>
+                    <a href="<?= GESTION_APP_URL ?>/connexion" class="login-forgot-link" data-i18n="login.recruiter_link">Espace recruteur</a>
                     <span class="login-footer-sep">·</span>
-                    <a href="<?= GESTION_SITE_URL ?>" class="login-forgot-link">Retour au site</a>
+                    <a href="<?= GESTION_SITE_URL ?>" class="login-forgot-link" data-i18n="login.back_site">Retour au site</a>
                 </div>
             </div>
         </div>

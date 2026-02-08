@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <?php if (!empty($isDebugPage)): ?>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -14,6 +15,7 @@
     <link rel="stylesheet" href="<?= gestion_asset('assets/css/app.css', !empty($isDebugPage)) ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="<?= gestion_asset('assets/img/favicon.png', !empty($isDebugPage)) ?>">
 </head>
 
 <body>
@@ -23,41 +25,46 @@
 
         <aside class="sidebar">
             <div class="logo">
-                <a href="<?= GESTION_BASE_PATH ?>/tableau-de-bord" style="text-decoration: none;">
+                <a href="<?= GESTION_BASE_PATH ?>/dashboard" style="text-decoration: none;">
                     <span class="logo-text">ciao<span class="cv">cv</span></span>
                 </a>
             </div>
 
             <nav class="nav-links">
-                <?php $dashboardBase = GESTION_BASE_PATH ? GESTION_BASE_PATH . '/tableau-de-bord' : '/tableau-de-bord'; ?>
-                <a href="<?= $dashboardBase ?>#dashboard" class="nav-item active" data-section="statistiques" data-hash="#dashboard">
+                <?php $base = GESTION_BASE_PATH ?: ''; ?>
+                <a href="<?= $base ?>/dashboard" class="nav-item active" data-section="statistiques" data-path="/dashboard">
                     <i class="fa-solid fa-chart-line"></i>
                     <span data-i18n="nav_dashboard">Tableau de bord</span>
                 </a>
 
-                <a href="<?= $dashboardBase ?>#ventes-stripe" class="nav-item" data-section="ventes-stripe" data-hash="#ventes-stripe">
+                <a href="<?= $base ?>/sales" class="nav-item" data-section="ventes-stripe" data-path="/sales">
                     <i class="fa-solid fa-credit-card"></i>
                     <span data-i18n="nav_ventes">Ventes</span>
                 </a>
 
-                <a href="<?= $dashboardBase ?>#forfaits-crud" class="nav-item" data-section="forfaits-crud" data-hash="#forfaits-crud">
+                <a href="<?= $base ?>/forfaits" class="nav-item" data-section="forfaits-crud" data-path="/forfaits">
                     <i class="fa-solid fa-gear"></i>
                     <span data-i18n="nav_forfaits">Forfaits</span>
                 </a>
 
-                <a href="<?= $dashboardBase ?>#utilisateurs-liste" class="nav-item" data-section="utilisateurs-liste" data-hash="#utilisateurs-liste">
+                <a href="<?= $base ?>/utilisateurs" class="nav-item" data-section="utilisateurs-liste" data-path="/utilisateurs">
                     <i class="fa-solid fa-users"></i>
                     <span data-i18n="nav_utilisateurs">Utilisateurs</span>
                 </a>
 
-                <a href="<?= $dashboardBase ?>#synchronisation" class="nav-item" data-section="synchronisation" data-hash="#synchronisation">
+                <a href="<?= $base ?>/synchronisation" class="nav-item" data-section="synchronisation" data-path="/synchronisation">
                     <i class="fa-solid fa-arrows-rotate"></i>
                     <span data-i18n="nav_synchronisation">Synchronisation</span>
                 </a>
 
-                <a href="<?= $dashboardBase ?>#configuration" class="nav-item" data-section="configuration" data-hash="#configuration">
+                <a href="<?= $base ?>/configuration" class="nav-item" data-section="configuration" data-path="/configuration">
                     <i class="fa-solid fa-sliders"></i>
                     <span data-i18n="nav_configuration">Configuration</span>
+                </a>
+
+                <a href="<?= $base ?>/bugs-idees" class="nav-item" data-section="bugs-idees" data-path="/bugs-idees">
+                    <i class="fa-regular fa-lightbulb"></i>
+                    <span data-i18n="nav_bugs_idees">Bugs et idées</span>
                 </a>
 
                 <a href="<?= GESTION_BASE_PATH ?>/debug" class="nav-item <?= !empty($isDebugPage) ? 'active' : '' ?>" style="<?= !empty($isDebugPage) ? 'background-color: #F5E6EA; color: var(--primary-color);' : '' ?>">
@@ -116,6 +123,11 @@
             </div>
         </main>
     </div>
+
+    <button class="feedback-fab" onclick="openModal('feedback')" title="Bugs et idées">
+        <i class="fa-solid fa-bug"></i>
+        <i class="fa-regular fa-lightbulb"></i>
+    </button>
 
     <div class="modal-overlay" id="change-password-modal">
         <div class="modal modal--narrow">

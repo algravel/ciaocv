@@ -20,7 +20,7 @@ class GestionController
         header('Pragma: no-cache');
         header('Expires: 0');
         if ($this->isAuthenticated()) {
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord');
+            $this->redirect(GESTION_BASE_PATH . '/dashboard');
             return;
         }
         $step = $_GET['step'] ?? '';
@@ -107,7 +107,8 @@ class GestionController
             return;
         }
         $otpCode = (string) random_int(100000, 999999);
-        $sent = zeptomail_send_otp($admin['email'], $admin['name'] ?? 'Administrateur', $otpCode);
+        $lang = (trim($_POST['lang'] ?? '') === 'en') ? 'en' : 'fr';
+        $sent = zeptomail_send_otp($admin['email'], $admin['name'] ?? 'Administrateur', $otpCode, $lang);
         if (!$sent) {
             $this->view('login', [
                 'subtitle'  => "Accédez à l'espace d'administration CiaoCV.",
@@ -153,7 +154,7 @@ class GestionController
         $_SESSION[self::SESSION_USER_EMAIL] = $_SESSION[self::SESSION_OTP_EMAIL];
         $_SESSION[self::SESSION_USER_NAME] = $_SESSION[self::SESSION_OTP_ADMIN_NAME];
         $this->clearOtpSession();
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord');
+        $this->redirect(GESTION_BASE_PATH . '/dashboard');
     }
 
     private function clearOtpSession(): void
@@ -165,6 +166,17 @@ class GestionController
             $_SESSION[self::SESSION_OTP_ADMIN_ID],
             $_SESSION[self::SESSION_OTP_ADMIN_NAME]
         );
+    }
+
+    private function logEvent(string $actionType, string $entityType, ?string $entityId, ?string $details): void
+    {
+        try {
+            $adminId = (int) ($_SESSION[self::SESSION_USER_ID] ?? 0) ?: null;
+            $eventModel = new Event();
+            $eventModel->log($adminId, $actionType, $entityType, $entityId, $details);
+        } catch (Throwable $e) {
+            // Ne pas faire échouer l'action principale si la journalisation échoue
+        }
     }
 
     private function maskEmail(string $email): string
@@ -201,11 +213,12 @@ class GestionController
             foreach ($plans as $p) {
                 $stmt->execute($p);
             }
+            $this->logEvent('sync', 'plan', null, 'Synchronisation des forfaits avec www.ciaocv.com/tarifs');
             $_SESSION['gestion_flash_success'] = 'Forfaits synchronisés avec www.ciaocv.com/tarifs.';
         } catch (Throwable $e) {
             $_SESSION['gestion_flash_error'] = 'Impossible de synchroniser les forfaits.';
         }
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#forfaits-crud');
+        $this->redirect(GESTION_BASE_PATH . '/forfaits');
     }
 
     public function createPlan(): void
@@ -221,26 +234,27 @@ class GestionController
         $priceYearly = (float) str_replace(',', '.', $_POST['price_yearly'] ?? '0');
         if ($nameFr === '' || $nameEn === '') {
             $_SESSION['gestion_flash_error'] = 'Le nom en français et en anglais est requis.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#forfaits-crud');
+            $this->redirect(GESTION_BASE_PATH . '/forfaits');
             return;
         }
         if ($videoLimit < 1) {
             $_SESSION['gestion_flash_error'] = 'La limite vidéos doit être au moins 1.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#forfaits-crud');
+            $this->redirect(GESTION_BASE_PATH . '/forfaits');
             return;
         }
         if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord');
+            $this->redirect(GESTION_BASE_PATH . '/dashboard');
             return;
         }
         try {
             $planModel = new Plan();
-            $planModel->create($nameFr, $nameEn, $videoLimit, $priceMonthly, $priceYearly);
+            $planId = $planModel->create($nameFr, $nameEn, $videoLimit, $priceMonthly, $priceYearly);
+            $this->logEvent('create', 'plan', (string) $planId, "Forfait créé : {$nameFr} — {$videoLimit} vidéos, {$priceMonthly} \$/mois");
             $_SESSION['gestion_flash_success'] = 'Forfait créé avec succès.';
         } catch (Throwable $e) {
             $_SESSION['gestion_flash_error'] = 'Impossible de créer le forfait.';
         }
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#forfaits-crud');
+        $this->redirect(GESTION_BASE_PATH . '/forfaits');
     }
 
     public function updatePlan(): void
@@ -258,17 +272,18 @@ class GestionController
         $active = isset($_POST['active']) && $_POST['active'] === '1';
         if ($id <= 0 || $nameFr === '' || $nameEn === '') {
             $_SESSION['gestion_flash_error'] = 'Données invalides.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#forfaits-crud');
+            $this->redirect(GESTION_BASE_PATH . '/forfaits');
             return;
         }
         if ($videoLimit < 1) {
             $_SESSION['gestion_flash_error'] = 'La limite vidéos doit être au moins 1.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#forfaits-crud');
+            $this->redirect(GESTION_BASE_PATH . '/forfaits');
             return;
         }
         try {
             $planModel = new Plan();
             if ($planModel->update($id, $nameFr, $nameEn, $videoLimit, $priceMonthly, $priceYearly, $active)) {
+                $this->logEvent('update', 'plan', (string) $id, "Forfait modifié : {$nameFr} — {$videoLimit} vidéos, {$priceMonthly} \$/mois" . ($active ? '' : ', désactivé'));
                 $_SESSION['gestion_flash_success'] = 'Forfait mis à jour.';
             } else {
                 $_SESSION['gestion_flash_error'] = 'Impossible de mettre à jour le forfait.';
@@ -276,7 +291,7 @@ class GestionController
         } catch (Throwable $e) {
             $_SESSION['gestion_flash_error'] = 'Impossible de mettre à jour le forfait.';
         }
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#forfaits-crud');
+        $this->redirect(GESTION_BASE_PATH . '/forfaits');
     }
 
     public function createAdmin(): void
@@ -290,26 +305,27 @@ class GestionController
         $role = trim($_POST['role'] ?? 'admin');
         if ($name === '' || $email === '') {
             $_SESSION['gestion_flash_error'] = 'Nom et courriel requis.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         $role = in_array($role, ['admin', 'viewer'], true) ? $role : 'admin';
         $adminModel = new Admin();
         if ($adminModel->findByEmail($email)) {
             $_SESSION['gestion_flash_error'] = 'Un administrateur avec ce courriel existe déjà.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         $newPassword = bin2hex(random_bytes(8));
         try {
-            $adminModel->create($email, $newPassword, $name, $role);
+            $adminId = $adminModel->create($email, $newPassword, $name, $role);
+            $this->logEvent('create', 'admin', (string) $adminId, "Administrateur créé : {$name} ({$email}), rôle {$role}");
         } catch (Throwable $e) {
             $_SESSION['gestion_flash_error'] = 'Impossible de créer le compte.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         $sent = zeptomail_send_new_admin_credentials($email, $name, $newPassword);
@@ -318,7 +334,148 @@ class GestionController
         } else {
             $_SESSION['gestion_flash_error'] = 'Compte créé mais l\'envoi du courriel a échoué. Contactez l\'administrateur pour lui transmettre ses identifiants.';
         }
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+        $this->redirect(GESTION_BASE_PATH . '/configuration');
+    }
+
+    public function createPlatformUser(): void
+    {
+        if (!$this->isAuthenticated()) {
+            $this->redirect(GESTION_BASE_PATH . '/connexion');
+            return;
+        }
+        $prenom = trim($_POST['prenom'] ?? '');
+        $nom = trim($_POST['nom'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $role = trim($_POST['role'] ?? 'client');
+        $planId = isset($_POST['plan_id']) && $_POST['plan_id'] !== '' ? (int) $_POST['plan_id'] : null;
+        $billable = isset($_POST['billable']) && $_POST['billable'] === '1';
+        $active = !isset($_POST['active']) || $_POST['active'] === '1';
+
+        if ($nom === '' || $email === '') {
+            $_SESSION['gestion_flash_error'] = 'Nom et courriel requis.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs');
+            return;
+        }
+        if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
+            $_SESSION['gestion_flash_error'] = 'Session expirée. Veuillez réessayer.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs', 303);
+            return;
+        }
+        $role = in_array($role, ['client', 'evaluateur'], true) ? $role : 'client';
+        $newPassword = bin2hex(random_bytes(8));
+        $fullName = trim($prenom . ' ' . $nom) ?: $nom;
+
+        try {
+            $platformUserModel = new PlatformUser();
+            $userId = $platformUserModel->create([
+                'prenom' => $prenom,
+                'nom' => $nom,
+                'email' => $email,
+                'role' => $role,
+                'plan_id' => $planId > 0 ? $planId : null,
+                'billable' => $billable,
+                'active' => $active,
+                'password' => $newPassword,
+            ]);
+            file_put_contents(dirname(__DIR__) . '/.cursor/debug.log', json_encode(['timestamp' => round(microtime(true) * 1000), 'location' => 'GestionController.php:createPlatformUser', 'message' => 'create success, before zeptomail', 'data' => ['userId' => $userId], 'hypothesisId' => 'H4']) . "\n", FILE_APPEND | LOCK_EX);
+            $this->logEvent('create', 'platform_user', (string) $userId, "Utilisateur ajouté : {$fullName} ({$email}), rôle {$role}");
+            $sent = zeptomail_send_new_platform_user_credentials($email, $fullName, $newPassword);
+            file_put_contents(dirname(__DIR__) . '/.cursor/debug.log', json_encode(['timestamp' => round(microtime(true) * 1000), 'location' => 'GestionController.php:createPlatformUser', 'message' => 'after zeptomail', 'data' => ['sent' => $sent], 'hypothesisId' => 'H5']) . "\n", FILE_APPEND | LOCK_EX);
+            if ($sent) {
+                $_SESSION['gestion_flash_success'] = 'Utilisateur créé. Les identifiants ont été envoyés par courriel à ' . $email . '.';
+            } else {
+                $_SESSION['gestion_flash_error'] = 'Compte créé mais l\'envoi du courriel a échoué. Contactez l\'utilisateur pour lui transmettre ses identifiants.';
+            }
+        } catch (Throwable $e) {
+            $_SESSION['gestion_flash_error'] = 'Impossible de créer l\'utilisateur.';
+            error_log('PlatformUser::create failed: ' . $e->getMessage());
+        }
+        $this->redirect(GESTION_BASE_PATH . '/utilisateurs', 303);
+    }
+
+    public function updatePlatformUser(): void
+    {
+        if (!$this->isAuthenticated()) {
+            $this->redirect(GESTION_BASE_PATH . '/connexion');
+            return;
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        $prenom = trim($_POST['prenom'] ?? '');
+        $nom = trim($_POST['nom'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $role = trim($_POST['role'] ?? 'client');
+        $planId = isset($_POST['plan_id']) && $_POST['plan_id'] !== '' ? (int) $_POST['plan_id'] : null;
+        $billable = isset($_POST['billable']) && $_POST['billable'] === '1';
+        $active = !isset($_POST['active']) || $_POST['active'] === '1';
+
+        if ($id <= 0 || $nom === '' || $email === '') {
+            $_SESSION['gestion_flash_error'] = 'Données invalides.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs');
+            return;
+        }
+        if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
+            $_SESSION['gestion_flash_error'] = 'Session expirée. Veuillez réessayer.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs', 303);
+            return;
+        }
+        $role = in_array($role, ['client', 'evaluateur'], true) ? $role : 'client';
+
+        try {
+            $platformUserModel = new PlatformUser();
+            if ($platformUserModel->update($id, [
+                'prenom' => $prenom,
+                'nom' => $nom,
+                'email' => $email,
+                'role' => $role,
+                'plan_id' => $planId > 0 ? $planId : null,
+                'billable' => $billable,
+                'active' => $active,
+            ])) {
+                $fullName = trim($prenom . ' ' . $nom) ?: $nom;
+                $this->logEvent('update', 'platform_user', (string) $id, "Utilisateur modifié : {$fullName} ({$email}), rôle {$role}");
+                $_SESSION['gestion_flash_success'] = 'Utilisateur mis à jour.';
+            } else {
+                $_SESSION['gestion_flash_error'] = 'Impossible de mettre à jour l\'utilisateur.';
+            }
+        } catch (Throwable $e) {
+            $_SESSION['gestion_flash_error'] = 'Impossible de mettre à jour l\'utilisateur.';
+            error_log('PlatformUser::update failed: ' . $e->getMessage());
+        }
+        $this->redirect(GESTION_BASE_PATH . '/utilisateurs', 303);
+    }
+
+    public function deletePlatformUser(): void
+    {
+        if (!$this->isAuthenticated()) {
+            $this->redirect(GESTION_BASE_PATH . '/connexion');
+            return;
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $_SESSION['gestion_flash_error'] = 'Identifiant invalide.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs');
+            return;
+        }
+        if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
+            $_SESSION['gestion_flash_error'] = 'Session expirée. Veuillez réessayer.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs', 303);
+            return;
+        }
+        try {
+            $platformUserModel = new PlatformUser();
+            $user = $platformUserModel->findById($id);
+            if ($platformUserModel->delete($id)) {
+                $displayName = $user ? (($user['name'] ?? $user['nom'] ?? '') . ' (' . ($user['email'] ?? '') . ')') : (string) $id;
+                $this->logEvent('delete', 'platform_user', (string) $id, "Utilisateur supprimé : {$displayName}");
+                $_SESSION['gestion_flash_success'] = 'Utilisateur supprimé.';
+            } else {
+                $_SESSION['gestion_flash_error'] = 'Impossible de supprimer l\'utilisateur.';
+            }
+        } catch (Throwable $e) {
+            $_SESSION['gestion_flash_error'] = 'Impossible de supprimer l\'utilisateur.';
+            error_log('PlatformUser::delete failed: ' . $e->getMessage());
+        }
+        $this->redirect(GESTION_BASE_PATH . '/utilisateurs', 303);
     }
 
     public function updateAdmin(): void
@@ -333,21 +490,22 @@ class GestionController
         $role = trim($_POST['role'] ?? 'admin');
         if ($id <= 0 || $name === '' || $email === '') {
             $_SESSION['gestion_flash_error'] = 'Données invalides.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         $role = in_array($role, ['admin', 'viewer'], true) ? $role : 'admin';
         $adminModel = new Admin();
         if ($adminModel->update($id, $name, $email, $role)) {
+            $this->logEvent('update', 'admin', (string) $id, "Administrateur modifié : {$name} ({$email}), rôle {$role}");
             $_SESSION['gestion_flash_success'] = 'Administrateur mis à jour.';
         } else {
             $_SESSION['gestion_flash_error'] = 'Impossible de mettre à jour (courriel peut-être déjà utilisé).';
         }
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+        $this->redirect(GESTION_BASE_PATH . '/configuration');
     }
 
     public function changeOwnPassword(): void
@@ -361,28 +519,28 @@ class GestionController
         $newPasswordConfirm = $_POST['new_password_confirm'] ?? '';
         if ($currentPassword === '' || $newPassword === '' || $newPasswordConfirm === '') {
             $_SESSION['gestion_flash_error'] = 'Tous les champs sont requis.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         if ($newPassword !== $newPasswordConfirm) {
             $_SESSION['gestion_flash_error'] = 'Les mots de passe ne correspondent pas.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         if (strlen($newPassword) < 8) {
             $_SESSION['gestion_flash_error'] = 'Le nouveau mot de passe doit contenir au moins 8 caractères.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord');
+            $this->redirect(GESTION_BASE_PATH . '/dashboard');
             return;
         }
         if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord');
+            $this->redirect(GESTION_BASE_PATH . '/dashboard');
             return;
         }
         $adminModel = new Admin();
         $admin = $adminModel->findById((int) ($_SESSION[self::SESSION_USER_ID] ?? 0));
         if (!$admin || !$adminModel->verifyPassword($currentPassword, $admin['password_hash'])) {
             $_SESSION['gestion_flash_error'] = 'Mot de passe actuel incorrect.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord');
+            $this->redirect(GESTION_BASE_PATH . '/dashboard');
             return;
         }
         if ($adminModel->resetPassword($admin['id'], $newPassword)) {
@@ -390,7 +548,7 @@ class GestionController
         } else {
             $_SESSION['gestion_flash_error'] = 'Impossible de mettre à jour le mot de passe.';
         }
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord');
+        $this->redirect(GESTION_BASE_PATH . '/dashboard');
     }
 
     public function resetAdminPassword(): void
@@ -402,33 +560,74 @@ class GestionController
         $id = (int) ($_POST['id'] ?? 0);
         if ($id <= 0) {
             $_SESSION['gestion_flash_error'] = 'Identifiant invalide.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         $adminModel = new Admin();
         $admin = $adminModel->findById($id);
         if (!$admin) {
             $_SESSION['gestion_flash_error'] = 'Administrateur introuvable.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         $newPassword = bin2hex(random_bytes(8));
         if (!$adminModel->resetPassword($id, $newPassword)) {
             $_SESSION['gestion_flash_error'] = 'Impossible de réinitialiser le mot de passe.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
+        $this->logEvent('update', 'admin', (string) $id, "Mot de passe réinitialisé pour {$admin['name']} ({$admin['email']})");
         $sent = zeptomail_send_password_reset($admin['email'], $admin['name'], $newPassword);
         if ($sent) {
             $_SESSION['gestion_flash_success'] = 'Un nouveau mot de passe a été envoyé par courriel à ' . $admin['email'] . '.';
         } else {
             $_SESSION['gestion_flash_error'] = 'Mot de passe mis à jour mais l\'envoi du courriel a échoué. Contactez l\'administrateur.';
         }
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+        $this->redirect(GESTION_BASE_PATH . '/configuration');
+    }
+
+    public function resetPlatformUserPassword(): void
+    {
+        if (!$this->isAuthenticated()) {
+            $this->redirect(GESTION_BASE_PATH . '/connexion');
+            return;
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $_SESSION['gestion_flash_error'] = 'Identifiant invalide.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs');
+            return;
+        }
+        if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs');
+            return;
+        }
+        $platformUserModel = new PlatformUser();
+        $user = $platformUserModel->findById($id);
+        if (!$user) {
+            $_SESSION['gestion_flash_error'] = 'Utilisateur introuvable.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs');
+            return;
+        }
+        $newPassword = bin2hex(random_bytes(8));
+        if (!$platformUserModel->resetPassword($id, $newPassword)) {
+            $_SESSION['gestion_flash_error'] = 'Impossible de réinitialiser le mot de passe.';
+            $this->redirect(GESTION_BASE_PATH . '/utilisateurs');
+            return;
+        }
+        $fullName = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? $user['name'] ?? '')) ?: ($user['name'] ?? $user['email']);
+        $this->logEvent('update', 'platform_user', (string) $id, "Mot de passe réinitialisé pour {$fullName} ({$user['email']})");
+        $sent = zeptomail_send_platform_user_password_reset($user['email'], $fullName, $newPassword);
+        if ($sent) {
+            $_SESSION['gestion_flash_success'] = 'Un nouveau mot de passe a été envoyé par courriel à ' . $user['email'] . '.';
+        } else {
+            $_SESSION['gestion_flash_error'] = 'Mot de passe mis à jour mais l\'envoi du courriel a échoué. Contactez l\'utilisateur.';
+        }
+        $this->redirect(GESTION_BASE_PATH . '/utilisateurs', 303);
     }
 
     public function deleteAdmin(): void
@@ -440,25 +639,28 @@ class GestionController
         $currentId = (int) ($_SESSION[self::SESSION_USER_ID] ?? 0);
         $targetId = (int) ($_POST['id'] ?? 0);
         if ($targetId <= 0) {
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         if ($targetId === $currentId) {
             $_SESSION['gestion_flash_error'] = 'Vous ne pouvez pas vous supprimer vous-même.';
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         if (!isset($_POST['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
-            $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+            $this->redirect(GESTION_BASE_PATH . '/configuration');
             return;
         }
         $adminModel = new Admin();
+        $targetAdmin = $adminModel->findById($targetId);
         if ($adminModel->softDelete($targetId)) {
+            $targetName = $targetAdmin ? ($targetAdmin['name'] ?? '') . ' (' . ($targetAdmin['email'] ?? '') . ')' : (string) $targetId;
+            $this->logEvent('delete', 'admin', (string) $targetId, "Administrateur désactivé : {$targetName}");
             $_SESSION['gestion_flash_success'] = 'Administrateur désactivé.';
         } else {
             $_SESSION['gestion_flash_error'] = 'Impossible de désactiver cet administrateur.';
         }
-        $this->redirect(GESTION_BASE_PATH . '/tableau-de-bord#configuration');
+        $this->redirect(GESTION_BASE_PATH . '/configuration');
     }
 
     public function logout(): void
@@ -505,24 +707,41 @@ class GestionController
         } catch (Throwable $e) {
             $plans = [];
         }
+        $kpiUsers = 0;
+        $kpiVideos = 0;
+        $kpiSalesCents = 0;
+        $platformUsers = [];
+        $sales = [];
+        $events = [];
+
         try {
             $platformUserModel = new PlatformUser();
-            $stripeSaleModel = new StripeSale();
-            $eventModel = new Event();
-
             $kpiUsers = $platformUserModel->count();
-            $kpiVideos = 0;
-            $kpiSalesCents = $stripeSaleModel->totalAmountCentsThisMonth();
             $platformUsers = $platformUserModel->all();
+        } catch (Throwable $e) {
+            // Garder 0 et [] par défaut
+        }
+
+        try {
+            $stripeSaleModel = new StripeSale();
+            $kpiSalesCents = $stripeSaleModel->totalAmountCentsThisMonth();
             $sales = $stripeSaleModel->all();
+        } catch (Throwable $e) {
+            // Garder 0 et [] par défaut
+        }
+
+        try {
+            $eventModel = new Event();
             $events = $eventModel->recent(20);
         } catch (Throwable $e) {
-            $kpiUsers = 0;
-            $kpiVideos = 0;
-            $kpiSalesCents = 0;
-            $platformUsers = [];
-            $sales = [];
-            $events = [];
+            // Garder [] par défaut
+        }
+
+        $feedback = [];
+        try {
+            $feedback = Feedback::all();
+        } catch (Throwable $e) {
+            // Garder [] par défaut
         }
 
         $this->view('dashboard/index', [
@@ -546,9 +765,37 @@ class GestionController
             'currentUserId'    => (int) ($_SESSION[self::SESSION_USER_ID] ?? 0),
             'flashSuccess'     => $_SESSION['gestion_flash_success'] ?? '',
             'flashError'       => $_SESSION['gestion_flash_error'] ?? '',
+            'feedback'         => $feedback,
             'isDebugPage'      => false,
         ], 'app');
         unset($_SESSION['gestion_flash_success'], $_SESSION['gestion_flash_error']);
+    }
+
+    public function submitFeedback(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $type = trim($_POST['feedback_type'] ?? '');
+        $message = trim($_POST['message'] ?? '');
+        if (!in_array($type, ['problem', 'idea'], true)) {
+            $type = 'problem';
+        }
+        if ($message === '') {
+            echo json_encode(['ok' => false, 'error' => 'Message requis']);
+            return;
+        }
+        $data = ['type' => $type, 'message' => $message, 'source' => 'gestion'];
+        if (!empty($_SESSION[self::SESSION_USER_EMAIL])) {
+            $data['user_email'] = $_SESSION[self::SESSION_USER_EMAIL];
+        }
+        if (!empty($_SESSION[self::SESSION_USER_NAME])) {
+            $data['user_name'] = $_SESSION[self::SESSION_USER_NAME];
+        }
+        if (Feedback::create($data)) {
+            echo json_encode(['ok' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'Erreur lors de l\'enregistrement']);
+        }
     }
 
     public function debug(): void
@@ -577,6 +824,7 @@ class GestionController
                 'gestion_stripe_sales'  => 'Ventes Stripe',
                 'gestion_events'        => 'Événements',
                 'gestion_sync_logs'     => 'Logs sync',
+                'gestion_feedback'      => 'Bugs et idées',
             ];
             foreach ($tables as $table => $label) {
                 $stmt = $pdo->query("SHOW TABLES LIKE '$table'");
@@ -653,6 +901,9 @@ class GestionController
     private function redirect(string $url, int $status = 302): void
     {
         http_response_code($status);
+        if ($status === 303) {
+            header('Cache-Control: no-store, no-cache, must-revalidate');
+        }
         header('Location: ' . $url);
         exit;
     }

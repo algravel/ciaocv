@@ -52,7 +52,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs et forfaits - CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1770515615">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1770567477">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         .pricing-hero { text-align: center; padding: 6rem 5% 3rem; max-width: 900px; margin: 0 auto; }
@@ -239,6 +239,14 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
                     <?php endforeach; ?>
                 </tr>
                 <tr>
+                    <td data-i18n="compare.row.collab">Outils collaboratifs</td>
+                    <?php foreach ($plans as $p): ?><td><span class="check-icon">✓</span></td><?php endforeach; ?>
+                </tr>
+                <tr>
+                    <td data-i18n="compare.row.brand">Marque employeur</td>
+                    <?php foreach ($plans as $p): ?><td><span class="check-icon">✓</span></td><?php endforeach; ?>
+                </tr>
+                <tr>
                     <td data-i18n="compare.row.questions">Questions personnalisées</td>
                     <?php foreach ($plans as $p): ?><td><span class="check-icon">✓</span></td><?php endforeach; ?>
                 </tr>
@@ -285,9 +293,9 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
                 </ul>
             </div>
         </div>
-        <div class="footer-bottom">
-            <p>© 2026 CiaoCV</p>
-            <p style="margin-top: 0.5rem; opacity: 0.8;" data-i18n="footer.proudly">Fièrement humain ❤️</p>
+        <div class="footer-bottom" style="display:block; text-align:center;">
+            <p style="margin-bottom: 0.5rem; opacity: 0.8; text-align:center;" data-i18n="footer.proudly">❤️<br>Fièrement humain</p>
+            <p style="text-align:center;">© 2026 CiaoCV</p>
         </div>
     </footer>
 
@@ -329,6 +337,6 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             });
         });
     </script>
-    <script src="assets/js/i18n.js?v=1770515615"></script>
+    <script src="assets/js/i18n.js?v=1770567477"></script>
 </body>
 </html>

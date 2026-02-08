@@ -96,30 +96,6 @@ if ((int) $stmt->fetchColumn() > 0) {
     echo "Utilisateurs plateforme créés.\n";
 }
 
-// ─── Ventes Stripe de test ────────────────────────────────────────────────
-$stmt = $pdo->query('SELECT id FROM gestion_platform_users ORDER BY id LIMIT 2');
-$userIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
-$stmt = $pdo->query('SELECT COUNT(*) FROM gestion_stripe_sales');
-if ((int) $stmt->fetchColumn() > 0) {
-    echo "Ventes existent déjà. Ignoré.\n";
-} else {
-    $sales = [
-        ['pi_xxx123', 'user@example.com', 2999, 'paid', $userIds[0] ?? null],
-        ['pi_xxx124', 'autre@example.com', 9999, 'paid', $userIds[1] ?? null],
-    ];
-    $stmt = $pdo->prepare('INSERT INTO gestion_stripe_sales (stripe_payment_id, customer_email_encrypted, amount_cents, status, platform_user_id) VALUES (?, ?, ?, ?, ?)');
-    foreach ($sales as $s) {
-        $stmt->execute([
-            $s[0],
-            $encryption->encrypt($s[1]),
-            $s[2],
-            $s[3],
-            $s[4],
-        ]);
-    }
-    echo "Ventes de test créées.\n";
-}
-
 // ─── Événements de test ───────────────────────────────────────────────────
 $stmt = $pdo->query('SELECT id FROM gestion_admins ORDER BY id LIMIT 1');
 $adminId = $stmt->fetchColumn();

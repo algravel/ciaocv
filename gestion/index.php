@@ -26,6 +26,17 @@ if ($path === '') {
 }
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+// ─── POST /feedback ───────────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/feedback') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'error' => 'CSRF invalide']);
+        exit;
+    }
+    $controller->submitFeedback();
+    exit;
+}
+
 // ─── POST /connexion (authenticate) ───────────────────────────────────────
 if ($method === 'POST' && $path === '/connexion') {
     if (!csrf_verify()) {
@@ -114,6 +125,50 @@ if ($method === 'POST' && $path === '/admin/reinitialiser-mot-de-passe') {
     exit;
 }
 
+// ─── POST /utilisateurs/ajouter ─────────────────────────────────────────────
+if ($method === 'POST' && $path === '/utilisateurs/ajouter') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->createPlatformUser();
+    exit;
+}
+
+// ─── POST /utilisateurs/modifier ───────────────────────────────────────────
+if ($method === 'POST' && $path === '/utilisateurs/modifier') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->updatePlatformUser();
+    exit;
+}
+
+// ─── POST /utilisateurs/reinitialiser-mot-de-passe ───────────────────────────
+if ($method === 'POST' && $path === '/utilisateurs/reinitialiser-mot-de-passe') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->resetPlatformUserPassword();
+    exit;
+}
+
+// ─── POST /utilisateurs/supprimer ───────────────────────────────────────────
+if ($method === 'POST' && $path === '/utilisateurs/supprimer') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->deletePlatformUser();
+    exit;
+}
+
 // ─── POST /admin/supprimer ─────────────────────────────────────────────────
 if ($method === 'POST' && $path === '/admin/supprimer') {
     if (!csrf_verify()) {
@@ -147,6 +202,15 @@ switch ($path) {
         $controller->logout();
         break;
     case '/tableau-de-bord':
+        header('Location: ' . (GESTION_BASE_PATH ?: '') . '/dashboard', true, 301);
+        exit;
+    case '/dashboard':
+    case '/sales':
+    case '/forfaits':
+    case '/utilisateurs':
+    case '/synchronisation':
+    case '/configuration':
+    case '/bugs-idees':
         $controller->index();
         break;
     case '/debug':

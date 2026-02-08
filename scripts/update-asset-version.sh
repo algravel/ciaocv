@@ -6,9 +6,9 @@ set -e
 cd "$(dirname "$0")/.."
 VERSION=$(date +%s)
 count=0
-for f in public_html/*.html; do
+for f in public_html/*.html public_html/tarifs.php public_html/offre.php; do
   [ -f "$f" ] || continue
   perl -i -pe "s/\?v=[0-9][0-9.]*/\?v=$VERSION/g" "$f"
   count=$((count + 1))
 done
-echo "Cache bust: ?v=$VERSION appliqué dans $count fichier(s) HTML (public_html)."
+echo "Cache bust: ?v=$VERSION appliqué dans $count fichier(s) (public_html)."

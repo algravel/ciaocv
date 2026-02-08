@@ -246,7 +246,8 @@ if ($jobId) {
     </div>
 
     <footer>
-        <p>© 2026 CiaoCV - Fièrement humain ❤️</p>
+        <p>❤️<br>Fièrement humain</p>
+        <p>© 2026 CiaoCV</p>
     </footer>
 
     <script>

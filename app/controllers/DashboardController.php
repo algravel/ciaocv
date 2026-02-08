@@ -13,11 +13,13 @@ class DashboardController extends Controller
         // TODO : activer l'authentification quand la DB sera en place
         // $this->requireAuth();
 
-        // Charger les données depuis les modèles
-        $postes         = Poste::getAll();
-        $affichages     = Affichage::getAll();
-        $candidats      = Candidat::getAll();
-        $candidatsByAff = Candidat::getByAffichage();
+        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        // Charger les données depuis les modèles (filtrées par entreprise si connecté)
+        $postes         = Poste::getAll($platformUserId);
+        $affichages     = Affichage::getAll($platformUserId);
+        $candidats      = Candidat::getAll($platformUserId);
+        $candidatsByAff = Candidat::getByAffichage($platformUserId);
         $emailTemplates = EmailTemplate::getAll();
         $departments = ['Technologie', 'Gestion', 'Design', 'Stratégie', 'Marketing', 'Ressources humaines', 'Finance', 'Opérations'];
 

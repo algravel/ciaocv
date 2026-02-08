@@ -2,15 +2,17 @@
 /**
  * Modèle Affichage
  * Données mock – à remplacer par des requêtes DB.
+ * Filtre par platform_user_id (entreprise) quand fourni.
  */
 class Affichage
 {
     /**
+     * @param int|null $platformUserId Filtrer par entreprise (utilisateur plateforme)
      * @return array<string, array<string, mixed>>
      */
-    public static function getAll(): array
+    public static function getAll(?int $platformUserId = null): array
     {
-        return [
+        $all = [
             'frontend-linkedin' => [
                 'id'          => 'frontend-linkedin',
                 'shareLongId' => '0cb075d860fa55c4',
@@ -71,6 +73,12 @@ class Affichage
                 ],
             ],
         ];
+
+        if ($platformUserId !== null) {
+            $posteIds = array_column(Poste::getAll($platformUserId), 'id');
+            $all = array_filter($all, fn ($a) => in_array($a['posteId'] ?? '', $posteIds, true));
+        }
+        return $all;
     }
 
     /**

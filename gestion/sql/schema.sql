@@ -28,10 +28,14 @@ CREATE TABLE IF NOT EXISTS gestion_admins (
 
 CREATE TABLE IF NOT EXISTS gestion_platform_users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name_encrypted TEXT NOT NULL,
+    prenom_encrypted TEXT NULL COMMENT 'Prénom',
+    name_encrypted TEXT NOT NULL COMMENT 'Nom de famille',
     email_encrypted TEXT NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
+    password_hash VARCHAR(255) NULL COMMENT 'Hash bcrypt',
+    role VARCHAR(50) NOT NULL DEFAULT 'client',
     plan_id INT UNSIGNED NULL,
+    billable TINYINT(1) NOT NULL DEFAULT 1 COMMENT '0=non facturable',
+    active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '0=désactivé',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (plan_id) REFERENCES gestion_plans(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -70,4 +74,18 @@ CREATE TABLE IF NOT EXISTS gestion_sync_logs (
     completed_at DATETIME NULL,
     details TEXT NULL,
     INDEX idx_started (started_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS gestion_feedback (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    type ENUM('problem', 'idea') NOT NULL DEFAULT 'problem',
+    message TEXT NOT NULL,
+    source VARCHAR(50) NOT NULL DEFAULT 'app' COMMENT 'app|gestion',
+    user_email VARCHAR(255) NULL,
+    user_name VARCHAR(255) NULL,
+    platform_user_id INT UNSIGNED NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE SET NULL,
+    INDEX idx_created (created_at),
+    INDEX idx_type (type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

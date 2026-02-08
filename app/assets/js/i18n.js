@@ -48,7 +48,7 @@ const translations = {
         "footer.privacy": "Politique de confidentialité",
         "footer.terms": "Conditions d'utilisation",
         "footer.contact": "Contact",
-        "footer.proudly": "Fièrement humain ❤️",
+        "footer.proudly": "❤️<br>Fièrement humain",
 
         // ─── Dashboard – Navigation ───
         nav_dashboard: "Tableau de bord",
@@ -222,7 +222,7 @@ const translations = {
         "footer.privacy": "Privacy Policy",
         "footer.terms": "Terms of Use",
         "footer.contact": "Contact",
-        "footer.proudly": "Proudly human ❤️",
+        "footer.proudly": "❤️<br>Proudly human",
 
         // ─── Dashboard ───
         nav_dashboard: "Dashboard",

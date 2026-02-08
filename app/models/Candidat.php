@@ -2,16 +2,18 @@
 /**
  * Modèle Candidat
  * Données mock – à remplacer par des requêtes DB.
+ * Filtre par platform_user_id (entreprise) quand fourni.
  */
 class Candidat
 {
     /**
      * Tous les candidats (vue globale).
+     * @param int|null $platformUserId Filtrer par entreprise (utilisateur plateforme)
      * @return array<string, array<string, mixed>>
      */
-    public static function getAll(): array
+    public static function getAll(?int $platformUserId = null): array
     {
-        return [
+        $all = [
             'sophie' => [
                 'id'         => 'sophie',
                 'name'       => 'Sophie Martin',
@@ -74,15 +76,28 @@ class Candidat
                 ],
             ],
         ];
+
+        if ($platformUserId !== null) {
+            $byAff = self::getByAffichage($platformUserId);
+            $candidatIds = [];
+            foreach ($byAff as $list) {
+                foreach ($list as $c) {
+                    $candidatIds[$c['id'] ?? ''] = true;
+                }
+            }
+            $all = array_filter($all, fn ($c, $id) => isset($candidatIds[$id]), ARRAY_FILTER_USE_BOTH);
+        }
+        return $all;
     }
 
     /**
      * Candidats regroupés par affichage.
+     * @param int|null $platformUserId Filtrer par entreprise (utilisateur plateforme)
      * @return array<string, array<int, array<string, mixed>>>
      */
-    public static function getByAffichage(): array
+    public static function getByAffichage(?int $platformUserId = null): array
     {
-        return [
+        $all = [
             'frontend-linkedin' => [
                 ['name' => 'Sophie Martin',  'email' => 'sophie.martin@email.com', 'color' => '3B82F6', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true,  'stars' => 4, 'date' => '2026-02-01', 'id' => 'sophie', 'isFavorite' => false],
                 ['name' => 'Pierre Lavoie',  'email' => 'pierre.l@email.com',      'color' => 'EC4899', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true,  'stars' => 4, 'date' => '2026-01-22', 'id' => 'pierre', 'isFavorite' => true],
@@ -100,6 +115,12 @@ class Candidat
                 ['name' => 'François Léger',  'email' => 'francois.l@email.com',  'color' => 'F59E0B', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true, 'stars' => 4, 'date' => '2026-01-26', 'id' => 'francois', 'isFavorite' => false],
             ],
         ];
+
+        if ($platformUserId !== null) {
+            $affichageIds = array_keys(Affichage::getAll($platformUserId));
+            $all = array_intersect_key($all, array_flip($affichageIds));
+        }
+        return $all;
     }
 
     /**

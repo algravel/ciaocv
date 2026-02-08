@@ -243,6 +243,10 @@ a { text-decoration: none; color: inherit; }
    ═══════════════════════════════════════════════ */
 .data-table { width: 100%; border-collapse: collapse; background-color: white; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
 .data-table th { text-align: left; padding: 1rem; background-color: #F9FAFB; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.875rem; font-weight: 500; }
+.data-table th.text-center,
+.data-table td.text-center { text-align: center; }
+.data-table td.cell-nom,
+.data-table td.cell-nom strong { font-weight: normal; }
 .data-table td { padding: 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover { background-color: #F9FAFB; }
@@ -399,6 +403,18 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 .empty-state { text-align: center; padding: 3rem; color: var(--text-secondary); }
 .empty-state i { font-size: 3rem; margin-bottom: 1rem; color: var(--border-color); }
 
+/* Feedback FAB */
+.feedback-fab {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background-color: var(--primary-color); color: white; border: none;
+    border-radius: 50px; padding: 1rem 1.5rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(128, 0, 32, 0.4);
+    cursor: pointer; z-index: 2000; transition: all 0.2s ease;
+}
+.feedback-fab:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(128, 0, 32, 0.5); }
+.feedback-fab i { font-size: 1.25rem; }
+
 /* ═══════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════ */
@@ -415,12 +431,45 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
     /* Masquer la colonne "Créé le" (6e colonne) du tableau des postes */
     #postes-table th:nth-child(6),
     #postes-table td:nth-child(6) { display: none; }
+    /* Forfaits : mobile = Nom, Statut, Actions uniquement */
+    .data-table-forfaits th.forfait-col-detail,
+    .data-table-forfaits td.forfait-col-detail { display: none; }
+    /* Configuration : tableau caché, cartes affichées */
+    .config-admins-desktop { display: none !important; }
+    .config-admins-mobile { display: block; }
     /* Détail affichage : passer en 1 colonne en mobile */
     .grid-detail { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1024px) {
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Configuration admins : mobile = cartes */
+.config-admins-mobile { display: none; }
+.config-admin-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    background: #fff;
+}
+.config-admin-card-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+.config-admin-card-main strong { font-size: 1rem; color: var(--text-primary); }
+.config-admin-card-email { font-size: 0.875rem; color: var(--text-secondary); }
+.config-admin-card-date { font-size: 0.8rem; color: var(--text-muted); }
+.config-admin-card-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.config-admin-card-actions .config-delete-form { display: inline; }
+@media (min-width: 769px) {
+    .config-admins-mobile { display: none !important; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -825,5 +874,6 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 .config-flash--error { background: #FEE2E2; color: #991B1B; }
 .d-inline { display: inline; }
 .config-delete-form { margin-left: 0.5rem; }
+.utilisateur-delete-form { margin-left: 0.5rem; display: inline; }
 .data-table .btn-icon--danger { color: var(--text-secondary); }
 .data-table .btn-icon--danger:hover { color: var(--danger-color); }

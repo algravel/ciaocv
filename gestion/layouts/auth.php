@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -242,6 +243,12 @@
                     });
                 }
                 setActive(stored);
+                var langInput = document.getElementById('login-lang-input');
+                function syncLangInput() {
+                    var l = localStorage.getItem('language') || 'fr';
+                    if (langInput) langInput.value = l;
+                }
+                syncLangInput();
                 btns.forEach(function(btn) {
                     btn.onclick = function() {
                         var lang = this.getAttribute('data-lang');
@@ -250,8 +257,10 @@
                         document.documentElement.lang = lang;
                         setActive(lang);
                         if (typeof updateContent === 'function') updateContent();
+                        if (langInput) langInput.value = lang;
                     };
                 });
+                document.getElementById('loginForm') && document.getElementById('loginForm').addEventListener('submit', syncLangInput);
             }
             function initOtpInput() {
                 var el = document.getElementById('otp');

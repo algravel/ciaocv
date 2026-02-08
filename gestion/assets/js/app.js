@@ -165,67 +165,32 @@ document.querySelectorAll('.nav-subitem[data-section]').forEach(function (subite
     });
 });
 
-// ─── Hash Navigation ───
-function handleHashNavigation() {
-    if (window.location.pathname.indexOf('debug') !== -1) return;
-    var hash = window.location.hash || '#dashboard';
-    var subitem = document.querySelector('.nav-subitem[href="' + hash + '"]');
-    if (subitem) {
-        var submenu = subitem.closest('.nav-submenu');
-        if (submenu) {
-            var parentNavItem = document.querySelector('.nav-item[data-section="' + submenu.dataset.parent + '"]');
-            if (parentNavItem) activateNavItem(parentNavItem);
-        }
-        if (subitem.classList.contains('settings-subitem')) {
-            var targetId = subitem.getAttribute('data-target');
-            if (targetId) {
-                setTimeout(function () {
-                    document.querySelectorAll('.settings-pane').forEach(function (pane) { pane.style.display = 'none'; });
-                    var pane = document.getElementById(targetId);
-                    if (pane) {
-                        pane.style.display = 'block';
-                        if (targetId === 'settings-team') renderTeamMembers();
-                        if (targetId === 'settings-departments') renderDepartments();
-                    }
-                }, 0);
-            }
-            return;
-        }
-        var subitemSection = subitem.getAttribute('data-section');
-        if (subitemSection) {
-            document.querySelectorAll('.content-section').forEach(function (sec) { sec.classList.remove('active'); });
-            var sectionEl = document.getElementById(subitemSection + '-section');
-            if (sectionEl) sectionEl.classList.add('active');
-            document.querySelectorAll('.nav-subitem').forEach(function (s) { s.classList.remove('active'); });
-            subitem.classList.add('active');
-            return;
-        }
-        var i18nKey = subitem.getAttribute('data-i18n');
-        if (i18nKey) {
-            setTimeout(function () {
-                var activeSection = document.querySelector('.content-section.active');
-                if (activeSection) {
-                    var tab = activeSection.querySelector('.view-tab[data-i18n="' + i18nKey + '"]');
-                    if (tab) tab.click();
-                }
-            }, 0);
-        }
-        return;
+// ─── Path Navigation ───
+function getCurrentPath() {
+    var pathname = window.location.pathname || '/';
+    var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
+    if (basePath && pathname.indexOf(basePath) === 0) {
+        pathname = pathname.slice(basePath.length) || '/';
     }
-    var navItem = document.querySelector('.nav-item[href="' + hash + '"]') ||
-        document.querySelector('.nav-item[data-hash="' + hash + '"]') ||
-        document.querySelector('.nav-item[href$="' + hash + '"]');
+    return pathname.replace(/\/$/, '') || '/dashboard';
+}
+
+function handlePathNavigation() {
+    if (window.location.pathname.indexOf('debug') !== -1) return;
+    var path = getCurrentPath();
+    var navItem = document.querySelector('.nav-item[data-path="' + path + '"]') ||
+        document.querySelector('.nav-item[href$="' + path + '"]');
     if (navItem) {
         activateNavItem(navItem);
     } else {
-        var dashboard = document.querySelector('.nav-item[data-hash="#dashboard"]') || document.querySelector('.nav-item[href="#dashboard"]') || document.querySelector('.nav-item[href$="#dashboard"]');
+        var dashboard = document.querySelector('.nav-item[data-path="/dashboard"]') || document.querySelector('.nav-item[data-section="statistiques"]');
         if (dashboard) activateNavItem(dashboard);
     }
 }
 
-window.addEventListener('hashchange', handleHashNavigation);
+window.addEventListener('popstate', handlePathNavigation);
 window.addEventListener('load', function () {
-    handleHashNavigation();
+    handlePathNavigation();
 });
 
 /* ═══════════════════════════════════════════════
@@ -239,17 +204,152 @@ function closeModal(type) {
     document.getElementById(type + '-modal').classList.remove('active');
 }
 
-function openForfaitEditModal(btn) {
-    var row = btn.closest('tr');
-    if (!row) return;
-    document.getElementById('forfait-edit-id').value = row.dataset.planId || '';
-    document.getElementById('forfait-edit-status').value = row.dataset.active === '1' ? '1' : '0';
-    document.getElementById('forfait-edit-name-fr').value = row.dataset.nameFr || '';
-    document.getElementById('forfait-edit-name-en').value = row.dataset.nameEn || '';
-    document.getElementById('forfait-edit-video-limit').value = row.dataset.videoLimit || '';
-    document.getElementById('forfait-edit-price-monthly').value = row.dataset.priceMonthly || '';
-    document.getElementById('forfait-edit-price-yearly').value = row.dataset.priceYearly || '';
+function openForfaitEditModal(row) {
+    if (!row || !row.dataset.planId) return;
+    var idEl = document.getElementById('forfait-edit-id');
+    var statusEl = document.getElementById('forfait-edit-status');
+    var nameFrEl = document.getElementById('forfait-edit-name-fr');
+    var nameEnEl = document.getElementById('forfait-edit-name-en');
+    var videoEl = document.getElementById('forfait-edit-video-limit');
+    var priceMoEl = document.getElementById('forfait-edit-price-monthly');
+    var priceYrEl = document.getElementById('forfait-edit-price-yearly');
+    if (!idEl || !statusEl) return;
+    idEl.value = row.dataset.planId || '';
+    statusEl.value = row.dataset.active === '1' ? '1' : '0';
+    if (nameFrEl) nameFrEl.value = row.dataset.nameFr || '';
+    if (nameEnEl) nameEnEl.value = row.dataset.nameEn || '';
+    if (videoEl) videoEl.value = row.dataset.videoLimit || '';
+    if (priceMoEl) priceMoEl.value = row.dataset.priceMonthly || '';
+    if (priceYrEl) priceYrEl.value = row.dataset.priceYearly || '';
     openModal('forfait-edit');
+}
+
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.forfait-edit-btn');
+    if (!btn) return;
+    e.preventDefault();
+    var row = btn.closest('tr');
+    if (row) openForfaitEditModal(row);
+});
+
+/* ─── Modal édition / suppression utilisateur plateforme ─── */
+function openUtilisateurEditModal(btn) {
+    if (!btn) return;
+    var modal = document.getElementById('utilisateur-edit-modal');
+    if (!modal) return;
+    var id = btn.getAttribute('data-user-id') || '';
+    var prenom = btn.getAttribute('data-user-prenom') || '';
+    var nom = btn.getAttribute('data-user-nom') || '';
+    var email = btn.getAttribute('data-user-email') || '';
+    var role = btn.getAttribute('data-user-role') || 'client';
+    var planId = btn.getAttribute('data-user-plan-id') || '';
+    var billable = btn.getAttribute('data-user-billable') === '1';
+    var active = btn.getAttribute('data-user-active') !== '0';
+
+    var idEl = document.getElementById('utilisateur-edit-id');
+    if (idEl) idEl.value = id;
+    var prenomEl = document.getElementById('utilisateur-edit-prenom');
+    if (prenomEl) prenomEl.value = prenom;
+    var nomEl = document.getElementById('utilisateur-edit-nom');
+    if (nomEl) nomEl.value = nom;
+    var emailEl = document.getElementById('utilisateur-edit-email');
+    if (emailEl) emailEl.value = email;
+    var roleEl = document.getElementById('utilisateur-edit-role');
+    if (roleEl) roleEl.value = role;
+    var planEl = document.getElementById('utilisateur-edit-plan');
+    if (planEl) planEl.value = planId;
+    var billableEl = document.getElementById('utilisateur-edit-billable');
+    if (billableEl) billableEl.checked = billable;
+    var activeEl = document.getElementById('utilisateur-edit-active');
+    if (activeEl) activeEl.value = active ? '1' : '0';
+    if (typeof updateContent === 'function') updateContent();
+    modal.classList.add('active');
+}
+
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.utilisateur-edit-btn');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openUtilisateurEditModal(btn);
+}, true);
+
+var _utilisateurDeleteFormPending = null;
+
+function openUtilisateurDeleteConfirm(formOrEditModal) {
+    var displayName, formToSubmit;
+    if (formOrEditModal && formOrEditModal.tagName === 'FORM') {
+        displayName = formOrEditModal.getAttribute('data-user-name') || formOrEditModal.getAttribute('data-user-email') || '';
+        formToSubmit = formOrEditModal;
+    } else {
+        var id = document.getElementById('utilisateur-edit-id').value;
+        var prenom = document.getElementById('utilisateur-edit-prenom').value;
+        var nom = document.getElementById('utilisateur-edit-nom').value;
+        var email = document.getElementById('utilisateur-edit-email').value;
+        if (!id) return;
+        displayName = (prenom || nom ? (prenom + ' ' + nom).trim() : '') || email || id;
+        document.getElementById('utilisateur-delete-id').value = id;
+        formToSubmit = document.getElementById('utilisateur-delete-form');
+    }
+    var msgKey = 'utilisateur_delete_modal_message';
+    var t = typeof translations !== 'undefined' && typeof getLanguage === 'function' ? (translations[getLanguage()] || {}) : {};
+    var msg = t[msgKey] ? t[msgKey].replace('{name}', displayName) : 'Êtes-vous sûr de vouloir supprimer l\'utilisateur « ' + displayName + ' » ? Cette action est irréversible.';
+    document.getElementById('utilisateur-delete-message').textContent = msg;
+    _utilisateurDeleteFormPending = formToSubmit;
+    if (typeof updateContent === 'function') updateContent();
+    if (formOrEditModal && formOrEditModal.tagName === 'FORM') {
+        openModal('utilisateur-delete');
+    } else {
+        closeModal('utilisateur-edit');
+        openModal('utilisateur-delete');
+    }
+}
+
+var utilisateurDeleteBtn = document.getElementById('utilisateur-delete-btn');
+if (utilisateurDeleteBtn) {
+    utilisateurDeleteBtn.addEventListener('click', function () {
+        openUtilisateurDeleteConfirm(null);
+    });
+}
+
+var utilisateurResetPasswordBtn = document.getElementById('utilisateur-reset-password-btn');
+if (utilisateurResetPasswordBtn) {
+    utilisateurResetPasswordBtn.addEventListener('click', function () {
+        var id = document.getElementById('utilisateur-edit-id') && document.getElementById('utilisateur-edit-id').value;
+        var email = document.getElementById('utilisateur-edit-email') && document.getElementById('utilisateur-edit-email').value;
+        var prenom = document.getElementById('utilisateur-edit-prenom') && document.getElementById('utilisateur-edit-prenom').value;
+        var nom = document.getElementById('utilisateur-edit-nom') && document.getElementById('utilisateur-edit-nom').value;
+        if (!id) return;
+        var displayName = (prenom || nom ? (prenom + ' ' + nom).trim() : '') || email;
+        var msgKey = 'config_reset_password_message';
+        var t = typeof translations !== 'undefined' && typeof getLanguage === 'function' ? (translations[getLanguage()] || {}) : {};
+        var msg = t[msgKey] ? t[msgKey].replace('{email}', email).replace('{name}', displayName) : 'Un nouveau mot de passe sera généré et envoyé à ' + email + '.';
+        document.getElementById('utilisateur-reset-password-id').value = id;
+        document.getElementById('utilisateur-reset-password-message').textContent = msg;
+        if (typeof updateContent === 'function') updateContent();
+        closeModal('utilisateur-edit');
+        openModal('utilisateur-reset-password-confirm');
+    });
+}
+
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.utilisateur-delete-btn');
+    if (!btn) return;
+    e.preventDefault();
+    var form = btn.closest('.utilisateur-delete-form');
+    if (!form) return;
+    openUtilisateurDeleteConfirm(form);
+});
+
+var utilisateurDeleteConfirmBtn = document.getElementById('utilisateur-delete-confirm');
+if (utilisateurDeleteConfirmBtn) {
+    utilisateurDeleteConfirmBtn.addEventListener('click', function () {
+        if (_utilisateurDeleteFormPending) {
+            _utilisateurDeleteFormPending.submit();
+            _utilisateurDeleteFormPending = null;
+        }
+        closeModal('utilisateur-delete');
+    });
 }
 
 document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
@@ -1074,11 +1174,33 @@ function deleteTeamMember(index) {
    ═══════════════════════════════════════════════ */
 function sendFeedback(e) {
     e.preventDefault();
-    var lang = getLanguage();
-    var msg = translations[lang] ? translations[lang].feedback_success : 'Merci !';
-    alert(msg);
-    closeModal('feedback');
-    e.target.reset();
+    var form = e.target;
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Envoi...';
+    }
+    var formData = new FormData(form);
+    var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
+    fetch(basePath + '/feedback', { method: 'POST', body: formData })
+    .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+    .then(function (res) {
+        var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+        var msg = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang].feedback_success : 'Merci pour votre retour !';
+        alert(res.data.ok ? msg : (res.data.error || msg));
+        if (res.data.ok) {
+            closeModal('feedback');
+            form.reset();
+            if (typeof refreshFeedbackList === 'function') refreshFeedbackList();
+        }
+    })
+    .catch(function () { alert('Une erreur est survenue. Réessayez plus tard.'); })
+    .finally(function () {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = (typeof translations !== 'undefined' && translations.fr) ? translations.fr.btn_send : 'Envoyer';
+        }
+    });
 }
 
 /* ═══════════════════════════════════════════════

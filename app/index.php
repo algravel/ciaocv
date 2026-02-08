@@ -37,6 +37,9 @@ $router->get('/logout',       'AuthController', 'logout'); // alias, redirige ve
 // Dashboard employeur
 $router->get('/tableau-de-bord', 'DashboardController', 'index');
 
+// Feedback (FAB bugs et idées)
+$router->post('/feedback', 'FeedbackController', 'submit');
+
 // Page candidat – entrevue de présélection (slug: /entrevue/{longId})
 $router->getPattern('#^/entrevue/([a-f0-9]{16})$#', 'RecController', 'show');
 
