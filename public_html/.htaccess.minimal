@@ -1,0 +1,2 @@
+# Version minimale pour tester 403 – à renommer en .htaccess si besoin
+DirectoryIndex index.html

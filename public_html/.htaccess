@@ -10,7 +10,7 @@
     # Servir le fichier .html si la requête est un slug (pas de fichier/dossier existant)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^tarifs/?$ tarifs.html [L]
+    RewriteRule ^tarifs/?$ tarifs.php [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^guide-candidat/?$ guide-candidat.html [L]

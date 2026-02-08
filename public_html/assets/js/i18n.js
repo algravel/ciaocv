@@ -1,6 +1,6 @@
 const translations = {
     fr: {
-        "nav.service": "Notre service",
+        "nav.service": "Nos forfaits",
         "nav.guide": "Préparez votre entrevue de présélection",
         "nav.gestion": "Gestion",
         "nav.recruiter": "Espace Recruteur",
@@ -40,7 +40,7 @@ const translations = {
         "card.3.title": "Données de recrutement",
         "card.3.text": "Suivez vos KPIs et optimisez votre processus.",
 
-        "footer.service": "Notre service",
+        "footer.service": "Nos forfaits",
         "footer.guide": "Préparez votre entrevue de présélection",
         "footer.legal": "Légal",
         "footer.privacy": "Politique de confidentialité",
@@ -49,7 +49,7 @@ const translations = {
         "footer.rights": "Tous droits réservés.",
         "footer.proudly": "Fièrement humain ❤️",
 
-        "pricing.title": "Investissez dans l'humain.",
+        "pricing.title": "Identifiez le candidat parfait sans perdre une seconde.",
         "pricing.subtitle": "Des tarifs simples et transparents pour moderniser votre processus de recrutement. Commencez gratuitement, évoluez selon vos besoins.",
 
         "pricing.card.free.title": "Découverte",
@@ -167,7 +167,7 @@ const translations = {
         "login.oauth.google": "Continuer avec Google"
     },
     en: {
-        "nav.service": "Our Service",
+        "nav.service": "Our plans",
         "nav.guide": "Prepare your pre-selection interview",
         "nav.gestion": "Admin",
         "nav.recruiter": "Recruiter Login",
@@ -207,7 +207,7 @@ const translations = {
         "card.3.title": "Recruitment Data",
         "card.3.text": "Track your KPIs and optimize your process.",
 
-        "footer.service": "Our Service",
+        "footer.service": "Our plans",
         "footer.guide": "Prepare your pre-selection interview",
         "footer.legal": "Legal",
         "footer.privacy": "Privacy Policy",
@@ -216,7 +216,7 @@ const translations = {
         "footer.rights": "All rights reserved.",
         "footer.proudly": "Proudly human ❤️",
 
-        "pricing.title": "Invest in people.",
+        "pricing.title": "Identify the perfect candidate without wasting a second.",
         "pricing.subtitle": "Simple and transparent pricing to modernize your recruitment process. Start for free, scale as needed.",
 
         "pricing.card.free.title": "Discovery",

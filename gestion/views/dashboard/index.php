@@ -342,36 +342,42 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
 <!-- ─── STATISTIQUES / TABLEAU DE BORD Section ─── -->
 <div id="statistiques-section" class="content-section active">
     <div class="page-header"><h1 class="page-title" data-i18n="statistiques_title">Tableau de bord</h1></div>
+    <?php
+    $kpiUsers = $kpiUsers ?? 0;
+    $kpiVideos = $kpiVideos ?? 0;
+    $kpiSalesCents = $kpiSalesCents ?? 0;
+    $kpiSalesFormatted = number_format($kpiSalesCents / 100, 2, ',', ' ');
+    ?>
     <div class="kpi-grid">
         <div class="kpi-card">
             <div class="flex-between-start">
                 <div>
                     <div class="kpi-label" data-i18n="dashboard_kpi_users">Nombre d'utilisateurs</div>
-                    <div class="kpi-value">247</div>
+                    <div class="kpi-value"><?= e((string) $kpiUsers) ?></div>
                 </div>
                 <div class="kpi-icon kpi-icon--blue"><i class="fa-solid fa-users"></i></div>
             </div>
-            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 12</span> <span data-i18n="dashboard_this_month">ce mois</span></div>
+            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i></span> <span data-i18n="dashboard_this_month">ce mois</span></div>
         </div>
         <div class="kpi-card">
             <div class="flex-between-start">
                 <div>
                     <div class="kpi-label" data-i18n="dashboard_kpi_videos">Nombre de vidéos sous gestion</div>
-                    <div class="kpi-value">1 842</div>
+                    <div class="kpi-value"><?= e((string) $kpiVideos) ?></div>
                 </div>
                 <div class="kpi-icon kpi-icon--gray"><i class="fa-solid fa-video"></i></div>
             </div>
-            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 156</span> <span data-i18n="dashboard_this_month">ce mois</span></div>
+            <div class="kpi-trend"><span data-i18n="dashboard_this_month">ce mois</span></div>
         </div>
         <div class="kpi-card">
             <div class="flex-between-start">
                 <div>
                     <div class="kpi-label" data-i18n="dashboard_kpi_sales">Ventes du mois</div>
-                    <div class="kpi-value">8 450 $</div>
+                    <div class="kpi-value"><?= e($kpiSalesFormatted) ?> $</div>
                 </div>
                 <div class="kpi-icon kpi-icon--red"><i class="fa-solid fa-credit-card"></i></div>
             </div>
-            <div class="kpi-trend"><span class="kpi-trend--up"><i class="fa-solid fa-arrow-up"></i> 23 %</span> <span data-i18n="dashboard_vs_prev_month">vs mois précédent</span></div>
+            <div class="kpi-trend"><span data-i18n="dashboard_vs_prev_month">vs mois précédent</span></div>
         </div>
     </div>
     <div class="chart-card">
@@ -401,12 +407,25 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
         <table class="data-table">
             <thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_user">Utilisateur</th><th data-i18n="th_action">Action</th><th data-i18n="th_details">Détails</th></tr></thead>
             <tbody>
-                <tr><td class="cell-date">6 fév 2026, 14:32</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--modification" data-i18n="event_modification">Modification</span></td><td class="cell-muted">A modifié le forfait <strong>Pro</strong> — limite vidéos : 50 → 75</td></tr>
-                <tr><td class="cell-date">6 fév 2026, 11:15</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--creation" data-i18n="event_creation">Création</span></td><td class="cell-muted">A créé le forfait <strong>Entreprise</strong> — 500 vidéos, 199 $/mois</td></tr>
-                <tr><td class="cell-date">5 fév 2026, 16:48</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--modification" data-i18n="event_modification">Modification</span></td><td class="cell-muted">A modifié l’utilisateur <strong>Sophie Martin</strong> — rôle : Évaluateur → Admin</td></tr>
-                <tr><td class="cell-date">5 fév 2026, 09:22</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--creation" data-i18n="event_creation">Création</span></td><td class="cell-muted">A ajouté l’utilisateur <strong>Luc Bergeron</strong> (luc@example.com)</td></tr>
-                <tr><td class="cell-date">4 fév 2026, 15:05</td><td><strong>Marie Tremblay</strong></td><td><span class="event-badge event-badge--suppression" data-i18n="event_deletion">Suppression</span></td><td class="cell-muted">A supprimé le forfait <strong>Starter</strong></td></tr>
-                <tr><td class="cell-date">4 fév 2026, 10:30</td><td><strong>Pierre Roy</strong></td><td><span class="event-badge event-badge--evaluation" data-i18n="event_sale">Vente</span></td><td class="cell-muted">Nouvelle vente Stripe — Forfait Platine, 99,99 $ (user@example.com)</td></tr>
+                <?php
+                $events = $events ?? [];
+                $eventBadgeMap = ['creation' => 'event-badge--creation', 'modification' => 'event-badge--modification', 'suppression' => 'event-badge--suppression', 'sale' => 'event-badge--evaluation'];
+                if (empty($events)): ?>
+                <tr><td colspan="4" class="cell-muted">Aucun événement enregistré.</td></tr>
+                <?php else:
+                $moisFr = ['Jan'=>'janv','Feb'=>'fév','Mar'=>'mars','Apr'=>'avr','May'=>'mai','Jun'=>'juin','Jul'=>'juil','Aug'=>'août','Sep'=>'sept','Oct'=>'oct','Nov'=>'nov','Dec'=>'déc'];
+                foreach ($events as $ev):
+                    $badgeClass = $eventBadgeMap[$ev['action_type']] ?? 'event-badge--modification';
+                    $d = date('j M Y, H:i', strtotime($ev['created_at']));
+                    $createdFormatted = preg_replace_callback('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/', function ($m) use ($moisFr) { return $moisFr[$m[1]] ?? $m[1]; }, $d);
+                ?>
+                <tr>
+                    <td class="cell-date"><?= e($createdFormatted) ?></td>
+                    <td><strong><?= e($ev['admin_name']) ?></strong></td>
+                    <td><span class="event-badge <?= e($badgeClass) ?>"><?= e(ucfirst($ev['action_type'])) ?></span></td>
+                    <td class="cell-muted"><?= e($ev['details']) ?></td>
+                </tr>
+                <?php endforeach; endif; ?>
             </tbody>
         </table>
     </div>
@@ -420,8 +439,25 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
         <table class="data-table">
             <thead><tr><th>ID</th><th data-i18n="th_date">Date</th><th data-i18n="th_client">Client</th><th data-i18n="th_amount">Montant</th><th data-i18n="th_status">Statut</th></tr></thead>
             <tbody>
-                <tr><td>pi_xxx123</td><td>6 fév 2026</td><td>user@example.com</td><td>29,99 $</td><td><span class="status-badge status-active" data-i18n="status_paid">Payé</span></td></tr>
-                <tr><td>pi_xxx124</td><td>5 fév 2026</td><td>autre@example.com</td><td>99,99 $</td><td><span class="status-badge status-active" data-i18n="status_paid">Payé</span></td></tr>
+                <?php
+                $sales = $sales ?? [];
+                if (empty($sales)): ?>
+                <tr><td colspan="5" class="cell-muted">Aucune vente enregistrée.</td></tr>
+                <?php else:
+                $moisFr = ['Jan'=>'janv','Feb'=>'fév','Mar'=>'mars','Apr'=>'avr','May'=>'mai','Jun'=>'juin','Jul'=>'juil','Aug'=>'août','Sep'=>'sept','Oct'=>'oct','Nov'=>'nov','Dec'=>'déc'];
+                foreach ($sales as $sale):
+                    $amountFormatted = number_format($sale['amount_cents'] / 100, 2, ',', ' ');
+                    $d = date('j M Y', strtotime($sale['created_at']));
+                    $dateFormatted = preg_replace_callback('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/', function ($m) use ($moisFr) { return $moisFr[$m[1]] ?? $m[1]; }, $d);
+                ?>
+                <tr>
+                    <td><?= e($sale['stripe_payment_id']) ?></td>
+                    <td><?= e($dateFormatted) ?></td>
+                    <td><?= e($sale['customer_email']) ?></td>
+                    <td><?= e($amountFormatted) ?> $</td>
+                    <td><span class="status-badge status-active"><?= e($sale['status']) ?></span></td>
+                </tr>
+                <?php endforeach; endif; ?>
             </tbody>
         </table>
     </div>
@@ -431,17 +467,121 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
 <div id="forfaits-crud-section" class="content-section">
     <div class="page-header">
         <h1 class="page-title" data-i18n="nav_forfaits">Forfaits</h1>
-        <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> <span data-i18n="btn_add">Ajouter</span></button>
+        <button type="button" class="btn btn-primary" onclick="openModal('forfait-add')"><i class="fa-solid fa-plus"></i> <span data-i18n="btn_add">Ajouter</span></button>
     </div>
     <div class="card">
         <table class="data-table">
-            <thead><tr><th data-i18n="th_name">Nom</th><th data-i18n="th_video_limit">Limite vidéos</th><th data-i18n="th_price_monthly">Prix mensuel</th><th data-i18n="th_price_yearly">Prix annuel</th><th data-i18n="th_actions">Actions</th></tr></thead>
+            <thead><tr><th data-i18n="th_name">Nom</th><th data-i18n="th_status">Statut</th><th data-i18n="th_video_limit">Limite vidéos</th><th data-i18n="th_price_monthly">Prix mensuel</th><th data-i18n="th_price_yearly">Prix annuel</th><th data-i18n="th_actions">Actions</th></tr></thead>
             <tbody>
-                <tr><td>Starter</td><td>10</td><td>9,99 $</td><td>99 $</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
-                <tr><td>Pro</td><td>50</td><td>29,99 $</td><td>299 $</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
-                <tr><td>Platine</td><td>200</td><td>99,99 $</td><td>999 $</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
+                <?php
+                $plans = $plans ?? [];
+                if (empty($plans)): ?>
+                <tr><td colspan="6" class="cell-muted">Aucun forfait configuré.</td></tr>
+                <?php else:
+                foreach ($plans as $p):
+                    $priceMonthly = number_format($p['price_monthly'], 2, ',', ' ');
+                    $priceYearly = number_format($p['price_yearly'], 2, ',', ' ');
+                    $isActive = $p['active'] ?? true;
+                ?>
+                <tr data-plan-id="<?= (int) $p['id'] ?>" data-name-fr="<?= e($p['name_fr']) ?>" data-name-en="<?= e($p['name_en']) ?>" data-video-limit="<?= (int) $p['video_limit'] ?>" data-price-monthly="<?= e((string) $p['price_monthly']) ?>" data-price-yearly="<?= e((string) $p['price_yearly']) ?>" data-active="<?= $isActive ? '1' : '0' ?>" <?= !$isActive ? 'style="opacity:0.7;"' : '' ?>>
+                    <td><?= e($p['name']) ?></td>
+                    <td>
+                        <?php if ($isActive): ?>
+                        <span class="status-badge status-active" data-i18n="status_active">Actif</span>
+                        <?php else: ?>
+                        <span class="status-badge" data-i18n="status_inactive">Désactivé</span>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= e((string) $p['video_limit']) ?></td>
+                    <td><?= e($priceMonthly) ?> $</td>
+                    <td><?= e($priceYearly) ?> $</td>
+                    <td>
+                        <button type="button" class="btn-icon" data-i18n-title="action_edit" title="Modifier" onclick="openForfaitEditModal(this)"><i class="fa-solid fa-pen"></i></button>
+                    </td>
+                </tr>
+                <?php endforeach; endif; ?>
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="modal-overlay" id="forfait-edit-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" data-i18n="forfait_edit_title">Modifier le forfait</h2>
+            <button class="btn-icon" onclick="closeModal('forfait-edit')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form method="POST" action="<?= GESTION_BASE_PATH ?>/forfaits/modifier" id="forfait-edit-form">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="forfait-edit-id">
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-edit-status" data-i18n="th_status">Statut</label>
+                <select id="forfait-edit-status" name="active" class="form-select">
+                    <option value="1" data-i18n="status_active">Actif</option>
+                    <option value="0" data-i18n="status_inactive">Désactivé</option>
+                </select>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-edit-name-fr" data-i18n="forfait_name_fr">Nom (français)</label>
+                <input type="text" id="forfait-edit-name-fr" name="name_fr" class="form-input" required>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-edit-name-en" data-i18n="forfait_name_en">Nom (anglais)</label>
+                <input type="text" id="forfait-edit-name-en" name="name_en" class="form-input" required>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-edit-video-limit" data-i18n="th_video_limit">Limite vidéos</label>
+                <input type="number" id="forfait-edit-video-limit" name="video_limit" class="form-input" required min="1">
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-edit-price-monthly" data-i18n="th_price_monthly">Prix mensuel ($)</label>
+                <input type="number" id="forfait-edit-price-monthly" name="price_monthly" class="form-input" required min="0" step="0.01">
+            </div>
+            <div class="form-group mb-5">
+                <label class="form-label" for="forfait-edit-price-yearly" data-i18n="th_price_yearly">Prix annuel ($)</label>
+                <input type="number" id="forfait-edit-price-yearly" name="price_yearly" class="form-input" required min="0" step="0.01">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('forfait-edit')" data-i18n="btn_cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="forfait-add-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" data-i18n="forfait_add_title">Ajouter un forfait</h2>
+            <button class="btn-icon" onclick="closeModal('forfait-add')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form method="POST" action="<?= GESTION_BASE_PATH ?>/forfaits/ajouter" id="forfait-add-form">
+            <?= csrf_field() ?>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-name-fr" data-i18n="forfait_name_fr">Nom (français)</label>
+                <input type="text" id="forfait-name-fr" name="name_fr" class="form-input" required placeholder="Ex: Starter">
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-name-en" data-i18n="forfait_name_en">Nom (anglais)</label>
+                <input type="text" id="forfait-name-en" name="name_en" class="form-input" required placeholder="Ex: Starter">
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-video-limit" data-i18n="th_video_limit">Limite vidéos</label>
+                <input type="number" id="forfait-video-limit" name="video_limit" class="form-input" required min="1" value="10">
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-price-monthly" data-i18n="th_price_monthly">Prix mensuel ($)</label>
+                <input type="number" id="forfait-price-monthly" name="price_monthly" class="form-input" required min="0" step="0.01" value="0">
+            </div>
+            <div class="form-group mb-5">
+                <label class="form-label" for="forfait-price-yearly" data-i18n="th_price_yearly">Prix annuel ($)</label>
+                <input type="number" id="forfait-price-yearly" name="price_yearly" class="form-input" required min="0" step="0.01" value="0">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('forfait-add')" data-i18n="btn_cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -457,10 +597,76 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
     <table class="data-table">
         <thead><tr><th data-i18n="th_name">Nom</th><th>Email</th><th data-i18n="th_role">Rôle</th><th data-i18n="th_created">Créé le</th><th data-i18n="th_actions">Actions</th></tr></thead>
         <tbody>
-            <tr><td><strong>Marie Tremblay</strong></td><td>marie@example.com</td><td><span class="status-badge status-active">Admin</span></td><td>2026-01-15</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
-            <tr><td><strong>Pierre Roy</strong></td><td>pierre@example.com</td><td><span class="status-badge">Utilisateur</span></td><td>2026-02-01</td><td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td></tr>
+            <?php
+            $platformUsers = $platformUsers ?? [];
+            if (empty($platformUsers)): ?>
+            <tr><td colspan="5" class="cell-muted">Aucun utilisateur.</td></tr>
+            <?php else:
+            foreach ($platformUsers as $u):
+                $createdFormatted = date('Y-m-d', strtotime($u['created_at']));
+                $roleBadgeClass = strtolower($u['role']) === 'admin' ? 'status-active' : '';
+            ?>
+            <tr>
+                <td><strong><?= e($u['name']) ?></strong></td>
+                <td><?= e($u['email']) ?></td>
+                <td><span class="status-badge <?= e($roleBadgeClass) ?>"><?= e($u['role']) ?></span></td>
+                <td><?= e($createdFormatted) ?></td>
+                <td><button class="btn-icon" data-i18n-title="action_edit" title="Modifier"><i class="fa-solid fa-pen"></i></button></td>
+            </tr>
+            <?php endforeach; endif; ?>
         </tbody>
     </table>
+</div>
+
+<!-- ─── CONFIGURATION Section ─── -->
+<div id="configuration-section" class="content-section">
+    <div class="page-header">
+        <h1 class="page-title" data-i18n="nav_configuration">Configuration</h1>
+        <button type="button" class="btn btn-primary" onclick="openModal('config-add-admin')">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="config_add_admin_btn">Ajouter un administrateur</span>
+        </button>
+    </div>
+    <div class="card">
+        <h3 class="card-subtitle mb-4" data-i18n="config_admins_title">Administrateurs</h3>
+        <p class="subtitle-muted mb-4" data-i18n="config_admins_desc">Comptes ayant accès à l'interface d'administration.</p>
+        <table class="data-table">
+            <thead><tr><th data-i18n="th_name">Nom</th><th data-i18n="th_email">Email</th><th data-i18n="th_role">Rôle</th><th data-i18n="th_created">Créé le</th><th data-i18n="th_actions">Actions</th></tr></thead>
+            <tbody>
+                <?php
+                $admins = $admins ?? [];
+                $currentUserId = (int) ($currentUserId ?? 0);
+                if (empty($admins)): ?>
+                <tr><td colspan="5" class="cell-muted"><span data-i18n="config_no_admins">Aucun administrateur.</span></td></tr>
+                <?php else:
+                foreach ($admins as $a):
+                    $createdFormatted = date('Y-m-d', strtotime($a['created_at']));
+                    $canDelete = ($currentUserId > 0 && $a['id'] !== $currentUserId);
+                ?>
+                <tr>
+                    <td><strong><?= e($a['name']) ?></strong></td>
+                    <td><?= e($a['email']) ?></td>
+                    <td><span class="status-badge status-active" data-i18n="role_<?= e($a['role']) ?>"><?= e($a['role']) ?></span></td>
+                    <td><?= e($createdFormatted) ?></td>
+                    <td>
+                        <button type="button" class="btn-icon config-edit-admin-btn" data-i18n-title="action_edit" title="Modifier"
+                            data-admin-id="<?= (int) $a['id'] ?>"
+                            data-admin-name="<?= e($a['name']) ?>"
+                            data-admin-email="<?= e($a['email']) ?>"
+                            data-admin-role="<?= e($a['role']) ?>"
+                            onclick="openConfigEditAdminModal(this); return false;"><i class="fa-solid fa-pen"></i></button>
+                        <?php if ($canDelete): ?>
+                        <form method="POST" action="<?= GESTION_BASE_PATH ?>/admin/supprimer" class="d-inline config-delete-form" data-admin-email="<?= e($a['email']) ?>" data-admin-name="<?= e($a['name']) ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="id" value="<?= (int) $a['id'] ?>">
+                            <button type="button" class="btn-icon btn-icon--danger config-delete-btn" data-i18n-title="action_delete" title="Désactiver"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- ─── SYNCHRONISATION Section ─── -->
@@ -618,6 +824,101 @@ $appUrl = defined('GESTION_APP_URL') ? GESTION_APP_URL : 'https://app.ciaocv.com
         <div class="modal-actions">
             <button type="button" class="btn btn-secondary" onclick="closeModal('notify-candidats')">Annuler</button>
             <button type="button" class="btn btn-primary" onclick="confirmNotifyCandidats()"><i class="fa-solid fa-paper-plane"></i> Envoyer</button>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="config-add-admin-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" data-i18n="config_add_admin_title">Ajouter un administrateur</h2>
+            <button class="btn-icon" onclick="closeModal('config-add-admin')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form method="POST" action="<?= GESTION_BASE_PATH ?>/admin/ajouter" id="config-add-admin-form">
+            <?= csrf_field() ?>
+            <div class="form-group mb-4">
+                <label class="form-label" for="config-add-admin-name" data-i18n="th_name">Nom</label>
+                <input type="text" id="config-add-admin-name" name="name" class="form-input" required>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="config-add-admin-email" data-i18n="th_email">Email</label>
+                <input type="email" id="config-add-admin-email" name="email" class="form-input" required>
+            </div>
+            <div class="form-group mb-5">
+                <label class="form-label" for="config-add-admin-role" data-i18n="th_role">Rôle</label>
+                <select id="config-add-admin-role" name="role" class="form-select">
+                    <option value="admin" data-i18n="role_admin">admin</option>
+                    <option value="viewer" data-i18n="role_viewer">viewer</option>
+                </select>
+                <p class="form-help" data-i18n="config_add_admin_help">Un mot de passe temporaire sera généré et envoyé par courriel à l'administrateur.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('config-add-admin')" data-i18n="btn_cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary" data-i18n="config_add_admin_submit">Créer et envoyer les identifiants</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-overlay" id="config-edit-admin-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" data-i18n="config_edit_admin_title">Modifier l'administrateur</h2>
+            <button class="btn-icon" onclick="closeModal('config-edit-admin')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form method="POST" action="<?= GESTION_BASE_PATH ?>/admin/modifier" id="config-edit-admin-form">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="config-edit-admin-id" value="">
+            <div class="form-group mb-4">
+                <label class="form-label" for="config-edit-admin-name" data-i18n="th_name">Nom</label>
+                <input type="text" id="config-edit-admin-name" name="name" class="form-input" required>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="config-edit-admin-email" data-i18n="th_email">Email</label>
+                <input type="email" id="config-edit-admin-email" name="email" class="form-input" required>
+            </div>
+            <div class="form-group mb-5">
+                <label class="form-label" for="config-edit-admin-role" data-i18n="th_role">Rôle</label>
+                <select id="config-edit-admin-role" name="role" class="form-select">
+                    <option value="admin" data-i18n="role_admin">admin</option>
+                    <option value="viewer" data-i18n="role_viewer">viewer</option>
+                </select>
+            </div>
+            <div class="modal-actions" style="flex-wrap: wrap; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('config-edit-admin')" data-i18n="btn_cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
+                <button type="button" class="btn btn-secondary" id="config-reset-password-btn">
+                    <i class="fa-solid fa-key"></i> <span data-i18n="config_reset_password_btn">Réinitialiser le mot de passe</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-overlay" id="config-reset-password-confirm-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" data-i18n="config_reset_password_title">Réinitialiser le mot de passe</h2>
+            <button class="btn-icon" onclick="closeModal('config-reset-password-confirm')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="subtitle-muted mb-4" id="config-reset-password-message"></p>
+        <form method="POST" action="<?= GESTION_BASE_PATH ?>/admin/reinitialiser-mot-de-passe" id="config-reset-password-form">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="config-reset-password-id" value="">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('config-reset-password-confirm')" data-i18n="btn_cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary" data-i18n="config_reset_password_confirm_btn">Envoyer le nouveau mot de passe par courriel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-overlay" id="config-delete-admin-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" data-i18n="config_delete_modal_title">Confirmer la désactivation</h2>
+            <button class="btn-icon" onclick="closeModal('config-delete-admin')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="subtitle-muted mb-4" id="config-delete-admin-message"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('config-delete-admin')" data-i18n="btn_cancel">Annuler</button>
+            <button type="button" class="btn btn-danger" id="config-delete-admin-confirm" data-i18n="config_delete_confirm_btn">Désactiver</button>
         </div>
     </div>
 </div>

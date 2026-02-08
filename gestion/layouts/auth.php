@@ -4,10 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>CIAOCV - GESTION</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="<?= gestion_asset('assets/img/favicon.png') ?>">
-    <link rel="stylesheet" href="<?= gestion_asset('assets/css/design-system.css') ?>">
+    <link rel="icon" type="image/png" href="<?= gestion_asset('assets/img/favicon.png', true) ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?= gestion_asset('assets/css/design-system.css', true) ?>">
+    <?php if (!empty($_ENV['TURNSTILE_SITE_KEY'])): ?>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <?php endif; ?>
     <style>
         .page-login .hero {
             min-height: 100vh;
@@ -144,6 +151,11 @@
             font-weight: 600;
             font-size: 0.85rem;
             color: var(--text-secondary);
+            transition: background 0.2s, color 0.2s;
+        }
+        .login-lang-btn.active {
+            background: var(--primary);
+            color: white;
         }
         .login-form-title {
             font-size: 1.75rem;
@@ -183,33 +195,78 @@
         }
         .login-forgot-link:hover { text-decoration: underline; }
         .login-footer-sep { color: var(--text-muted); font-size: 0.85rem; }
+        .turnstile-wrap { display: flex; justify-content: center; }
+        .mb-4 { margin-bottom: 1rem; }
+        .otp-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity 0.25s, visibility 0.25s;
+        }
+        .otp-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
+        .otp-modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            width: 90%; max-width: 400px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        }
+        .otp-modal-title { font-size: 1.35rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text); }
+        .otp-modal-desc { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5; }
+        .otp-input { text-align: center; font-size: 1.5rem; letter-spacing: 0.5em; }
+        .otp-modal-help { margin-top: 1rem; text-align: center; font-size: 0.9rem; }
     </style>
 </head>
 
 <body class="page-login">
     <?= $content ?>
 
-    <script src="<?= gestion_asset('assets/js/i18n.js') ?>"></script>
+    <script src="<?= (GESTION_BASE_PATH ? GESTION_BASE_PATH . '/' : '') . gestion_asset('assets/js/i18n.js', true) ?>"></script>
     <script>
-        function changeLanguage(lang) {
-            localStorage.setItem('language', lang);
-            document.documentElement.lang = lang;
-            if (typeof updateContent === 'function') updateContent();
-            var btnFr = document.getElementById('btn-fr');
-            var btnEn = document.getElementById('btn-en');
-            if (lang === 'fr') {
-                if (btnFr) { btnFr.style.backgroundColor = 'var(--primary)'; btnFr.style.color = 'white'; }
-                if (btnEn) { btnEn.style.backgroundColor = 'transparent'; btnEn.style.color = 'var(--text-secondary)'; }
-            } else {
-                if (btnFr) { btnFr.style.backgroundColor = 'transparent'; btnFr.style.color = 'var(--text-secondary)'; }
-                if (btnEn) { btnEn.style.backgroundColor = 'var(--primary)'; btnEn.style.color = 'white'; }
+        (function() {
+            function initLoginLang() {
+                var btns = document.querySelectorAll('.login-lang-switcher button');
+                if (!btns.length) return;
+                var stored = localStorage.getItem('language') || (navigator.language && navigator.language.toLowerCase().startsWith('fr') ? 'fr' : 'en');
+                if (!localStorage.getItem('language')) localStorage.setItem('language', stored);
+                function setActive(lang) {
+                    btns.forEach(function(b) {
+                        var isActive = b.getAttribute('data-lang') === lang;
+                        b.classList.toggle('active', isActive);
+                        b.style.backgroundColor = isActive ? 'var(--primary)' : 'transparent';
+                        b.style.color = isActive ? 'white' : 'var(--text-secondary)';
+                    });
+                }
+                setActive(stored);
+                btns.forEach(function(btn) {
+                    btn.onclick = function() {
+                        var lang = this.getAttribute('data-lang');
+                        if (!lang) return;
+                        localStorage.setItem('language', lang);
+                        document.documentElement.lang = lang;
+                        setActive(lang);
+                        if (typeof updateContent === 'function') updateContent();
+                    };
+                });
             }
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            var storedLang = localStorage.getItem('language') || (navigator.language && navigator.language.toLowerCase().startsWith('fr') ? 'fr' : 'en');
-            if (!localStorage.getItem('language')) localStorage.setItem('language', storedLang);
-            changeLanguage(storedLang);
-        });
+            function initOtpInput() {
+                var el = document.getElementById('otp');
+                if (el) {
+                    el.addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 6); });
+                    el.focus();
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() { initLoginLang(); initOtpInput(); });
+            } else {
+                initLoginLang();
+                initOtpInput();
+            }
+        })();
     </script>
 </body>
 

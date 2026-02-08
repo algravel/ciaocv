@@ -124,10 +124,18 @@ function activateNavItem(item) {
         var firstPane = document.getElementById('settings-company');
         if (firstPane) firstPane.style.display = 'block';
     }
+
+    // Rafraîchir les traductions (i18n) quand on affiche une section
+    if (typeof updateContent === 'function') updateContent();
 }
 
 document.querySelectorAll('.nav-item[data-section]').forEach(function (item) {
     item.addEventListener('click', function (e) {
+        var sectionId = item.getAttribute('data-section');
+        var sectionEl = sectionId ? document.getElementById(sectionId + '-section') : null;
+        if (!sectionEl) {
+            return;
+        }
         e.preventDefault();
         activateNavItem(item);
         var href = item.getAttribute('href');
@@ -159,6 +167,7 @@ document.querySelectorAll('.nav-subitem[data-section]').forEach(function (subite
 
 // ─── Hash Navigation ───
 function handleHashNavigation() {
+    if (window.location.pathname.indexOf('debug') !== -1) return;
     var hash = window.location.hash || '#dashboard';
     var subitem = document.querySelector('.nav-subitem[href="' + hash + '"]');
     if (subitem) {
@@ -203,11 +212,13 @@ function handleHashNavigation() {
         }
         return;
     }
-    var navItem = document.querySelector('.nav-item[href="' + hash + '"]');
+    var navItem = document.querySelector('.nav-item[href="' + hash + '"]') ||
+        document.querySelector('.nav-item[data-hash="' + hash + '"]') ||
+        document.querySelector('.nav-item[href$="' + hash + '"]');
     if (navItem) {
         activateNavItem(navItem);
     } else {
-        var dashboard = document.querySelector('.nav-item[href="#dashboard"]');
+        var dashboard = document.querySelector('.nav-item[data-hash="#dashboard"]') || document.querySelector('.nav-item[href="#dashboard"]') || document.querySelector('.nav-item[href$="#dashboard"]');
         if (dashboard) activateNavItem(dashboard);
     }
 }
@@ -226,6 +237,19 @@ function openModal(type) {
 
 function closeModal(type) {
     document.getElementById(type + '-modal').classList.remove('active');
+}
+
+function openForfaitEditModal(btn) {
+    var row = btn.closest('tr');
+    if (!row) return;
+    document.getElementById('forfait-edit-id').value = row.dataset.planId || '';
+    document.getElementById('forfait-edit-status').value = row.dataset.active === '1' ? '1' : '0';
+    document.getElementById('forfait-edit-name-fr').value = row.dataset.nameFr || '';
+    document.getElementById('forfait-edit-name-en').value = row.dataset.nameEn || '';
+    document.getElementById('forfait-edit-video-limit').value = row.dataset.videoLimit || '';
+    document.getElementById('forfait-edit-price-monthly').value = row.dataset.priceMonthly || '';
+    document.getElementById('forfait-edit-price-yearly').value = row.dataset.priceYearly || '';
+    openModal('forfait-edit');
 }
 
 document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
@@ -265,6 +289,32 @@ document.addEventListener('click', function () {
     var dd = document.getElementById('userDropdown');
     if (dd) dd.classList.remove('open');
 });
+
+/* ─── Formulaire changement mot de passe ─── */
+var changePasswordForm = document.getElementById('change-password-form');
+if (changePasswordForm) {
+    changePasswordForm.addEventListener('submit', function (e) {
+        var newPwd = document.getElementById('change-pwd-new');
+        var confirmPwd = document.getElementById('change-pwd-confirm');
+        var errorEl = document.getElementById('change-pwd-match-error');
+        if (!newPwd || !confirmPwd) return;
+        if (newPwd.value !== confirmPwd.value) {
+            e.preventDefault();
+            if (errorEl) {
+                errorEl.classList.remove('hidden');
+                confirmPwd.classList.add('border-red');
+            }
+            return false;
+        }
+        if (errorEl) errorEl.classList.add('hidden');
+        if (confirmPwd) confirmPwd.classList.remove('border-red');
+    });
+    document.getElementById('change-pwd-confirm')?.addEventListener('input', function () {
+        var errorEl = document.getElementById('change-pwd-match-error');
+        if (errorEl) errorEl.classList.add('hidden');
+        this.classList.remove('border-red');
+    });
+}
 
 /* ═══════════════════════════════════════════════
    POSTE DETAIL
@@ -1104,3 +1154,90 @@ function renderEmailTemplates() {
 document.addEventListener('DOMContentLoaded', function () {
     renderEmailTemplates();
 });
+
+/* ─── Modal édition administrateur ─── */
+function openConfigEditAdminModal(btn) {
+    var id = btn.getAttribute('data-admin-id') || '';
+    var name = btn.getAttribute('data-admin-name') || '';
+    var email = btn.getAttribute('data-admin-email') || '';
+    var role = btn.getAttribute('data-admin-role') || 'admin';
+
+    var idEl = document.getElementById('config-edit-admin-id');
+    var nameEl = document.getElementById('config-edit-admin-name');
+    var emailEl = document.getElementById('config-edit-admin-email');
+    var roleEl = document.getElementById('config-edit-admin-role');
+    if (idEl) idEl.value = id;
+    if (nameEl) nameEl.value = name;
+    if (emailEl) emailEl.value = email;
+    if (roleEl) roleEl.value = role;
+    if (typeof updateContent === 'function') updateContent();
+    openModal('config-edit-admin');
+}
+
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.config-edit-admin-btn');
+    if (!btn) return;
+    e.preventDefault();
+    openConfigEditAdminModal(btn);
+});
+
+var configResetPasswordBtn = document.getElementById('config-reset-password-btn');
+if (configResetPasswordBtn) {
+    configResetPasswordBtn.addEventListener('click', function () {
+    var id = document.getElementById('config-edit-admin-id').value;
+    var email = document.getElementById('config-edit-admin-email').value;
+    var name = document.getElementById('config-edit-admin-name').value;
+    if (!id) return;
+    var displayName = name ? name + (email ? ' (' + email + ')' : '') : email;
+    var msgKey = 'config_reset_password_message';
+    var t = typeof translations !== 'undefined' && typeof getLanguage === 'function' ? (translations[getLanguage()] || {}) : {};
+    var msg = t[msgKey] ? t[msgKey].replace('{email}', email).replace('{name}', displayName) : 'Un nouveau mot de passe sera généré et envoyé à ' + email + '.';
+    document.getElementById('config-reset-password-id').value = id;
+    document.getElementById('config-reset-password-message').textContent = msg;
+    if (typeof updateContent === 'function') updateContent();
+    closeModal('config-edit-admin');
+    openModal('config-reset-password-confirm');
+    });
+}
+
+/* ─── Modal confirmation suppression administrateur ─── */
+var _configDeleteFormPending = null;
+
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.config-delete-btn');
+    if (!btn) return;
+    e.preventDefault();
+    var form = btn.closest('.config-delete-form');
+    if (!form) return;
+    var email = form.getAttribute('data-admin-email') || '';
+    var name = form.getAttribute('data-admin-name') || '';
+
+    var displayName = name ? name + (email ? ' (' + email + ')' : '') : email;
+    var msgKey = 'config_delete_modal_message';
+    var t = typeof translations !== 'undefined' && typeof getLanguage === 'function' ? (translations[getLanguage()] || {}) : {};
+    var msg = t[msgKey] ? t[msgKey].replace('{name}', displayName) : 'Êtes-vous sûr de vouloir désactiver l\'administrateur « ' + displayName + ' » ?';
+
+    var msgEl = document.getElementById('config-delete-admin-message');
+    if (msgEl) msgEl.textContent = msg;
+    if (typeof updateContent === 'function') updateContent();
+    _configDeleteFormPending = form;
+    openModal('config-delete-admin');
+});
+
+var configDeleteConfirmBtn = document.getElementById('config-delete-admin-confirm');
+if (configDeleteConfirmBtn) {
+    configDeleteConfirmBtn.addEventListener('click', function () {
+    if (_configDeleteFormPending) {
+        _configDeleteFormPending.submit();
+        _configDeleteFormPending = null;
+    }
+    closeModal('config-delete-admin');
+    });
+}
+
+var configDeleteModalEl = document.getElementById('config-delete-admin-modal');
+if (configDeleteModalEl) {
+    configDeleteModalEl.addEventListener('click', function (e) {
+        if (e.target === configDeleteModalEl) _configDeleteFormPending = null;
+    });
+}

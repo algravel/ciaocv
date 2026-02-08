@@ -37,6 +37,105 @@ if ($method === 'POST' && $path === '/connexion') {
     exit;
 }
 
+// ─── POST /forfaits/synchroniser ─────────────────────────────────────────────
+if ($method === 'POST' && $path === '/forfaits/synchroniser') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->syncPlans();
+    exit;
+}
+
+// ─── POST /forfaits/ajouter ──────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/forfaits/ajouter') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->createPlan();
+    exit;
+}
+
+// ─── POST /forfaits/modifier ─────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/forfaits/modifier') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->updatePlan();
+    exit;
+}
+
+// ─── POST /admin/ajouter ────────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/admin/ajouter') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->createAdmin();
+    exit;
+}
+
+// ─── POST /admin/modifier ───────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/admin/modifier') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->updateAdmin();
+    exit;
+}
+
+// ─── POST /changer-mot-de-passe ─────────────────────────────────────────────
+if ($method === 'POST' && $path === '/changer-mot-de-passe') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->changeOwnPassword();
+    exit;
+}
+
+// ─── POST /admin/reinitialiser-mot-de-passe ─────────────────────────────────
+if ($method === 'POST' && $path === '/admin/reinitialiser-mot-de-passe') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->resetAdminPassword();
+    exit;
+}
+
+// ─── POST /admin/supprimer ─────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/admin/supprimer') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->deleteAdmin();
+    exit;
+}
+
+// ─── POST /verifier-otp ───────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/verifier-otp') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        exit;
+    }
+    $controller->verifyOtp();
+    exit;
+}
+
 // ─── Routes GET ───────────────────────────────────────────────────────────
 switch ($path) {
     case '/':
@@ -49,6 +148,9 @@ switch ($path) {
         break;
     case '/tableau-de-bord':
         $controller->index();
+        break;
+    case '/debug':
+        $controller->debug();
         break;
     default:
         http_response_code(404);

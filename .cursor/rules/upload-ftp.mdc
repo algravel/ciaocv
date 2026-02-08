@@ -1,9 +1,11 @@
 ---
-description: Quand l'utilisateur dit "upload", transférer les fichiers modifiés sur le serveur FTP via curl
+description: Toujours uploader après une action ; transférer les fichiers modifiés sur le serveur FTP via curl
 alwaysApply: true
 ---
 
 # Upload FTP
+
+**Toujours uploader après une action** — après toute modification de fichiers, l'agent effectue l'upload sans attendre que l'utilisateur le demande.
 
 Quand l'utilisateur dit **« upload »** (ou demande un upload), l’agent doit :
 

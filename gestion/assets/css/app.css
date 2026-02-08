@@ -815,3 +815,15 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 .company-name { font-weight: 700; font-size: 1.25rem; color: var(--text-primary); }
 .top-bar-center { flex: 1; display: flex; justify-content: center; align-items: center; }
 .caret-icon { font-size: 0.75rem; color: var(--text-secondary); }
+
+.form-error { display: block; font-size: 0.8rem; color: #DC2626; margin-top: 0.35rem; }
+.form-input.border-red { border-color: #DC2626; }
+
+/* Config – flash messages & delete form */
+.config-flash { padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
+.config-flash--success { background: #D1FAE5; color: #065F46; }
+.config-flash--error { background: #FEE2E2; color: #991B1B; }
+.d-inline { display: inline; }
+.config-delete-form { margin-left: 0.5rem; }
+.data-table .btn-icon--danger { color: var(--text-secondary); }
+.data-table .btn-icon--danger:hover { color: var(--danger-color); }

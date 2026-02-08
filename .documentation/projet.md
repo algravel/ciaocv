@@ -42,6 +42,10 @@ CiaoCV révolutionne le marché de l'emploi en remplaçant les descriptions text
   - Dossier local : `.documentation/` (ne pas uploader).
   - Contient : `design.md`, `projet.md`, etc.
 
+## Module Gestion (administration)
+
+- **Journalisation** : Chaque opération **Create**, **Update** ou **Delete** doit être journalisée dans `gestion_events` et affichée dans le dashboard (section « Journalisation des événements »).
+
 ## Prochaines Étapes
 1. Design de la Landing Page (Page d'attente).
 2. Maquettage des flux vidéo.
