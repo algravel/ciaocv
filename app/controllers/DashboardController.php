@@ -36,7 +36,18 @@ class DashboardController extends Controller
             'name'  => $_SESSION['user_name']  ?? 'Utilisateur',
             'email' => $_SESSION['user_email'] ?? 'admin@olymel.com',
         ];
-        $companyName = $_SESSION['company_name'] ?? company_name_from_email($user['email']) ?: 'Mon entreprise';
+
+        $entreprise = null;
+        if ($platformUserId) {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            try {
+                $entrepriseModel = new Entreprise();
+                $entreprise = $entrepriseModel->getByPlatformUserId($platformUserId);
+            } catch (Throwable $e) {
+                // Ignorer si table non encore créée
+            }
+        }
+        $companyName = ($entreprise['name'] ?? null) ?: ($_SESSION['company_name'] ?? company_name_from_email($user['email']) ?: 'Mon entreprise');
 
         $kpiForfaitUsed = 0;
         $kpiForfaitLimit = 50;
@@ -99,6 +110,7 @@ class DashboardController extends Controller
         $this->view('dashboard.index', [
             'pageTitle'           => 'Tableau de bord',
             'companyName'         => $companyName,
+            'entreprise'          => $entreprise,
             'postes'              => $postes,
             'affichages'          => $affichages,
             'candidats'           => $candidats,
@@ -121,13 +133,155 @@ class DashboardController extends Controller
     }
 
     /**
-     * Enregistrer les infos entreprise (nom, etc.) – session pour l'instant.
+     * Enregistrer les infos entreprise en base (app_entreprises).
      */
     public function saveCompany(): void
     {
         $this->requireAuth();
-        $companyName = trim($_POST['company_name'] ?? '');
-        $_SESSION['company_name'] = $companyName !== '' ? $companyName : (company_name_from_email($_SESSION['user_email'] ?? '') ?: 'Mon entreprise');
-        $this->json(['success' => true, 'company_name' => $_SESSION['company_name']]);
+        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        if (!$platformUserId) {
+            $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+            return;
+        }
+        require_once dirname(__DIR__, 2) . '/gestion/config.php';
+        $data = [
+            'name'        => trim($_POST['company_name'] ?? '') ?: (company_name_from_email($_SESSION['user_email'] ?? '') ?: 'Mon entreprise'),
+            'industry'    => trim($_POST['industry'] ?? '') ?: null,
+            'email'       => trim($_POST['email'] ?? '') ?: null,
+            'phone'       => trim($_POST['phone'] ?? '') ?: null,
+            'address'     => trim($_POST['address'] ?? '') ?: null,
+            'description' => trim($_POST['description'] ?? '') ?: null,
+        ];
+        $entrepriseModel = new Entreprise();
+        $ok = $entrepriseModel->upsert($platformUserId, $data);
+        $_SESSION['company_name'] = $data['name'];
+        $this->json(['success' => $ok, 'company_name' => $data['name']]);
+    }
+
+    /**
+     * Créer un poste en base (app_postes).
+     */
+    public function createPoste(): void
+    {
+        try {
+            $this->requireAuth();
+            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+            if (!$platformUserId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            $data = [
+                'title'          => trim($_POST['title'] ?? ''),
+                'department'     => trim($_POST['department'] ?? ''),
+                'location'       => trim($_POST['location'] ?? ''),
+                'status'         => $_POST['status'] ?? 'active',
+                'description'    => trim($_POST['description'] ?? '') ?: null,
+                'record_duration' => (int) ($_POST['record_duration'] ?? 3) ?: 3,
+            ];
+            $poste = Poste::create($platformUserId, $data);
+            if ($poste) {
+                $this->json(['success' => true, 'poste' => $poste]);
+            } else {
+                $this->json(['success' => false, 'error' => 'Titre requis'], 400);
+            }
+        } catch (Throwable $e) {
+            error_log('createPoste: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Mettre à jour un poste (questions, statut, durée d'enregistrement).
+     */
+    public function updatePoste(): void
+    {
+        try {
+            $this->requireAuth();
+            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+            if (!$platformUserId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            $input = json_decode(file_get_contents('php://input') ?: '{}', true) ?: $_POST;
+            $id = isset($input['id']) ? (int) $input['id'] : 0;
+            if ($id <= 0) {
+                $this->json(['success' => false, 'error' => 'ID invalide'], 400);
+                return;
+            }
+            $data = [];
+            if (isset($input['questions'])) {
+                $q = $input['questions'];
+                $data['questions'] = is_array($q) ? $q : (json_decode($q ?? '[]', true) ?: []);
+            }
+            if (isset($input['status'])) {
+                $data['status'] = in_array($input['status'], ['active', 'paused', 'closed'], true) ? $input['status'] : 'active';
+            }
+            if (isset($input['record_duration'])) {
+                $data['record_duration'] = (int) $input['record_duration'] ?: 3;
+            }
+            if (empty($data)) {
+                $this->json(['success' => false, 'error' => 'Aucune donnée à mettre à jour'], 400);
+                return;
+            }
+            $ok = Poste::update($id, $platformUserId, $data);
+            $this->json(['success' => $ok]);
+        } catch (Throwable $e) {
+            error_log('updatePoste: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
+
+    /**
+     * Supprimer un poste en base (app_postes).
+     */
+    public function deletePoste(): void
+    {
+        $this->requireAuth();
+        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        if (!$platformUserId) {
+            $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+            return;
+        }
+        $input = json_decode(file_get_contents('php://input') ?: '{}', true) ?: $_POST;
+        $id = isset($input['id']) ? (int) $input['id'] : 0;
+        if ($id <= 0) {
+            $this->json(['success' => false, 'error' => 'ID invalide'], 400);
+            return;
+        }
+        $ok = Poste::delete($id, $platformUserId);
+        $this->json(['success' => $ok]);
+    }
+
+    /**
+     * Créer un affichage en base (app_affichages).
+     */
+    public function createAffichage(): void
+    {
+        try {
+            $this->requireAuth();
+            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+            if (!$platformUserId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $posteId = (int) ($_POST['poste_id'] ?? 0);
+            if ($posteId <= 0) {
+                $this->json(['success' => false, 'error' => 'Poste requis'], 400);
+                return;
+            }
+            $affichage = Affichage::create($platformUserId, ['poste_id' => $posteId]);
+            if ($affichage) {
+                $this->json(['success' => true, 'affichage' => $affichage]);
+            } else {
+                $this->json(['success' => false, 'error' => 'Impossible de créer l\'affichage'], 400);
+            }
+        } catch (Throwable $e) {
+            error_log('createAffichage: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
     }
 }

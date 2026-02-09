@@ -1,7 +1,7 @@
 const translations = {
     fr: {
         "nav.service": "Nos forfaits",
-        "nav.guide": "Préparez votre entrevue de présélection",
+        "nav.guide": "Guide candidat",
         "nav.gestion": "Gestion",
         "nav.recruiter": "Espace Recruteur",
         "nav.candidate": "Espace Candidat",
@@ -41,7 +41,7 @@ const translations = {
         "card.3.text": "Suivez vos KPIs et optimisez votre processus.",
 
         "footer.service": "Nos forfaits",
-        "footer.guide": "Préparez votre entrevue de présélection",
+        "footer.guide": "Guide candidat",
         "footer.legal": "Légal",
         "footer.privacy": "Politique de confidentialité",
         "footer.terms": "Conditions d’utilisation",
@@ -170,7 +170,7 @@ const translations = {
     },
     en: {
         "nav.service": "Our plans",
-        "nav.guide": "Prepare your pre-selection interview",
+        "nav.guide": "Candidate guide",
         "nav.gestion": "Admin",
         "nav.recruiter": "Recruiter Login",
         "nav.candidate": "Candidate Login",
@@ -210,7 +210,7 @@ const translations = {
         "card.3.text": "Track your KPIs and optimize your process.",
 
         "footer.service": "Our plans",
-        "footer.guide": "Prepare your pre-selection interview",
+        "footer.guide": "Candidate guide",
         "footer.legal": "Legal",
         "footer.privacy": "Privacy Policy",
         "footer.terms": "Terms of Use",

@@ -355,6 +355,22 @@ function applyPosteStatusStyle(select) {
     else if (select.value === 'archive') select.classList.add('status-select--archive');
 }
 
+function savePosteToServer(fields) {
+    if (!currentPosteId || !postesData[currentPosteId]) return;
+    var data = postesData[currentPosteId];
+    var statusMap = { actif: 'active', inactif: 'paused', archive: 'closed' };
+    var formData = new FormData();
+    formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    formData.append('id', currentPosteId);
+    if (fields.questions !== undefined) formData.append('questions', JSON.stringify(data.questions || []));
+    if (fields.status !== undefined) {
+        var sel = document.getElementById('detail-poste-status-select');
+        formData.append('status', statusMap[sel ? sel.value : 'actif'] || 'active');
+    }
+    if (fields.record_duration !== undefined) formData.append('record_duration', String(data.recordDuration || 3));
+    fetch('/postes/update', { method: 'POST', body: formData }).then(function (r) { return r.json(); }).catch(function () {});
+}
+
 function updatePosteStatus(value) {
     if (!currentPosteId || !postesData[currentPosteId]) return;
     var select = document.getElementById('detail-poste-status-select');
@@ -363,7 +379,7 @@ function updatePosteStatus(value) {
     var classes = { actif: 'status-active', inactif: 'status-paused', archive: 'status-closed' };
     postesData[currentPosteId].status = labels[value] || 'Actif';
     postesData[currentPosteId].statusClass = classes[value] || 'status-active';
-    // TODO: envoyer la mise à jour au serveur
+    savePosteToServer({ status: true });
 }
 
 /* ─── Questions CRUD ─── */
@@ -428,6 +444,7 @@ function renderPosteQuestions() {
                 var item = questions.splice(fromIndex, 1)[0];
                 questions.splice(toIndex, 0, item);
                 renderPosteQuestions();
+                savePosteToServer({ questions: true });
             }
         });
 
@@ -443,6 +460,7 @@ function addPosteQuestion() {
     postesData[currentPosteId].questions.push(text);
     input.value = '';
     renderPosteQuestions();
+    savePosteToServer({ questions: true });
 }
 
 function editPosteQuestion(index) {
@@ -479,16 +497,19 @@ function savePosteQuestion(index) {
 
     postesData[currentPosteId].questions[index] = text;
     renderPosteQuestions();
+    savePosteToServer({ questions: true });
 }
 
 function deletePosteQuestion(index) {
     postesData[currentPosteId].questions.splice(index, 1);
     renderPosteQuestions();
+    savePosteToServer({ questions: true });
 }
 
 function updatePosteRecordDuration(value) {
     if (!currentPosteId || !postesData[currentPosteId]) return;
     postesData[currentPosteId].recordDuration = parseInt(value, 10);
+    savePosteToServer({ record_duration: true });
 }
 
 function movePosteQuestion(index, direction) {
@@ -498,6 +519,7 @@ function movePosteQuestion(index, direction) {
     var item = questions.splice(index, 1)[0];
     questions.splice(newIndex, 0, item);
     renderPosteQuestions();
+    savePosteToServer({ questions: true });
 }
 
 /* ─── Modal Candidats du poste ─── */
@@ -675,6 +697,109 @@ function confirmDeleteAffichage() {
     if (rowEl && rowEl.parentNode) rowEl.remove();
 }
 
+function saveAffichageFromModal(e) {
+    e.preventDefault();
+    var form = document.getElementById('form-affichage-create');
+    if (!form) return false;
+    var posteSelect = document.getElementById('affichage-poste_id');
+    if (!posteSelect || !posteSelect.value) {
+        alert('Veuillez sélectionner un poste');
+        return false;
+    }
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enregistrement...'; }
+    var formData = new FormData(form);
+    fetch('/affichages', { method: 'POST', body: formData })
+        .then(function (r) {
+            var ct = r.headers.get('Content-Type') || '';
+            if (!ct.includes('application/json')) {
+                return r.text().then(function (t) {
+                    console.error('createAffichage: reponse non-JSON', r.status, t ? t.substring(0, 500) : '');
+                    throw new Error('Erreur serveur (status ' + r.status + '). Voir console.');
+                });
+            }
+            return r.json();
+        })
+        .then(function (res) {
+            if (res.success && res.affichage) {
+                var a = res.affichage;
+                affichagesData[a.id] = a;
+                var tbody = document.querySelector('#affichages-table tbody');
+                if (tbody) {
+                    var tr = document.createElement('tr');
+                    tr.className = 'row-clickable';
+                    tr.setAttribute('data-affichage-id', a.id);
+                    tr.onclick = function () { showAffichageDetail(a.id); };
+                    tr.innerHTML = '<td><strong>' + escapeHtml(a.title || '') + '</strong></td><td>' + escapeHtml(a.department || '') + '</td><td>' + escapeHtml(a.start || '') + '</td><td><span class="status-badge ' + escapeHtml(a.statusClass || 'status-active') + '">' + escapeHtml(a.status || 'Actif') + '</span></td><td class="cell-actions"><button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showAffichageDetail(\'' + escapeHtml(String(a.id)) + '\')" title="Modifier"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deleteAffichage(\'' + escapeHtml(String(a.id)) + '\', this.closest(\'tr\'))" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>';
+                    tbody.insertBefore(tr, tbody.firstChild);
+                }
+                closeModal('affichage');
+                form.reset();
+            } else {
+                console.error('createAffichage: erreur', res);
+                alert(res.error || 'Erreur lors de l\'enregistrement');
+            }
+        })
+        .catch(function (err) {
+            console.error('createAffichage: exception', err);
+            alert('Erreur : ' + (err.message || 'Veuillez réessayer'));
+        })
+        .finally(function () {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Enregistrer'; }
+        });
+    return false;
+}
+
+function savePosteFromModal(e) {
+    e.preventDefault();
+    var form = document.getElementById('form-poste-create');
+    if (!form) return false;
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enregistrement...'; }
+    var formData = new FormData(form);
+    fetch('/postes', { method: 'POST', body: formData })
+        .then(function (r) {
+            var ct = r.headers.get('Content-Type') || '';
+            if (!ct.includes('application/json')) {
+                return r.text().then(function (t) {
+                    console.error('createPoste: reponse non-JSON', r.status, t ? t.substring(0, 500) : '');
+                    throw new Error('Erreur serveur (status ' + r.status + '). Voir console.');
+                });
+            }
+            return r.json();
+        })
+        .then(function (res) {
+            if (res.success && res.poste) {
+                var p = res.poste;
+                postesData[p.id] = p;
+                var tbody = document.querySelector('#postes-table tbody');
+                if (tbody) {
+                    var tr = document.createElement('tr');
+                    tr.className = 'row-clickable';
+                    tr.setAttribute('data-poste-id', p.id);
+                    tr.setAttribute('role', 'button');
+                    tr.setAttribute('tabindex', '0');
+                    tr.onclick = function () { showPosteDetail(p.id); };
+                    tr.innerHTML = '<td><strong>' + escapeHtml(p.title || '') + '</strong></td><td>' + escapeHtml(p.department || '') + '</td><td>' + escapeHtml(p.location || '') + '</td><td><span class="status-badge ' + escapeHtml(p.statusClass || 'status-active') + '">' + escapeHtml(p.status || 'Actif') + '</span></td><td>' + (p.candidates || 0) + '</td><td class="cell-actions"><button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showPosteDetail(\'' + p.id + '\')" title="Modifier"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deletePoste(\'' + p.id + '\', this.closest(\'tr\'))" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>';
+                    tbody.insertBefore(tr, tbody.firstChild);
+                }
+                closeModal('poste');
+                form.reset();
+            } else {
+                console.error('createPoste: erreur', res);
+                alert(res.error || 'Erreur lors de l\'enregistrement');
+            }
+        })
+        .catch(function (err) {
+            console.error('createPoste: exception', err);
+            alert('Erreur : ' + (err.message || 'Veuillez réessayer'));
+        })
+        .finally(function () {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Enregistrer'; }
+        });
+    return false;
+}
+
 var _pendingDeletePoste = null;
 
 function deletePoste(id, rowEl) {
@@ -695,9 +820,26 @@ function confirmDeletePoste() {
     var rowEl = _pendingDeletePoste.rowEl;
     _pendingDeletePoste = null;
     closeModal('delete-poste');
-    if (postesData[id]) postesData[id].deleted = true;
-    else if (postesData[String(id)]) postesData[String(id)].deleted = true;
-    if (rowEl && rowEl.parentNode) rowEl.remove();
+    var btn = document.querySelector('#delete-poste-modal .btn-danger');
+    if (btn) { btn.disabled = true; btn.textContent = 'Suppression...'; }
+    var formData = new FormData();
+    formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    formData.append('id', String(id));
+    fetch('/postes/delete', { method: 'POST', body: formData })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.success) {
+                delete postesData[id];
+                delete postesData[String(id)];
+                if (!rowEl || !rowEl.parentNode) rowEl = document.querySelector('#postes-table tr[data-poste-id="' + String(id).replace(/"/g, '&quot;') + '"]');
+                if (rowEl && rowEl.parentNode) rowEl.remove();
+                if (currentPosteId === String(id) || currentPosteId === id) goBackToPostes();
+            }
+        })
+        .catch(function () {})
+        .finally(function () {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> <span data-i18n="action_delete">Supprimer</span>'; }
+        });
 }
 
 /* ═══════════════════════════════════════════════

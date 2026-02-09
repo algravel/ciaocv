@@ -160,15 +160,7 @@
 
     <script>
         const APP_DATA = {
-            basePath:       <?= json_encode(GESTION_BASE_PATH) ?>,
-            appUrl:         <?= json_encode(GESTION_APP_URL) ?>,
-            postes:         <?= json_encode($postes ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            affichages:     <?= json_encode($affichages ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            candidats:      <?= json_encode($candidats ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            candidatsByAff: <?= json_encode($candidatsByAff ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            emailTemplates: <?= json_encode($emailTemplates ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            departments:    <?= json_encode($departments ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            teamMembers:    <?= json_encode($teamMembers ?? [], JSON_UNESCAPED_UNICODE) ?>
+            basePath: <?= json_encode(GESTION_BASE_PATH) ?>
         };
     </script>
     <script src="<?= gestion_asset('assets/js/i18n.js', !empty($isDebugPage)) ?>"></script>

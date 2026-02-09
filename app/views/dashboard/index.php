@@ -77,7 +77,6 @@
     <div class="card">
         <h3 class="card-subtitle">Informations</h3>
         <div class="info-row"><div class="info-label">Candidats</div><div class="info-value" id="detail-poste-candidates">0</div></div>
-        <div class="info-row"><div class="info-label" data-i18n="th_created">Créé le</div><div class="info-value" id="detail-poste-date">—</div></div>
         <div class="action-stack">
             <button class="btn btn-primary btn--center" onclick="openPosteCandidatsModal()">
                 <i class="fa-solid fa-users"></i> Voir les candidats
@@ -468,12 +467,13 @@
 
     <?php
     $isNewOrg = $isNewOrg ?? false;
+    $ent = $entreprise ?? null;
     $settingsCompanyName = $companyName ?? '';
-    $companyIndustry = $isNewOrg ? '' : 'Technologie';
-    $companyEmail = $isNewOrg ? '' : ($user['email'] ?? 'rh@acme.com');
-    $companyPhone = $isNewOrg ? '' : '+1 (514) 555-0123';
-    $companyAddress = $isNewOrg ? '' : '1234 Rue Principale, Montréal, QC H2X 1Y6';
-    $companyDescription = $isNewOrg ? '' : 'Acme Corporation est une entreprise leader dans le domaine de la technologie.';
+    $companyIndustry = $ent['industry'] ?? ($isNewOrg ? '' : 'Technologie');
+    $companyEmail = $ent['email'] ?? ($isNewOrg ? '' : ($user['email'] ?? 'rh@acme.com'));
+    $companyPhone = $ent['phone'] ?? ($isNewOrg ? '' : '+1 (514) 555-0123');
+    $companyAddress = $ent['address'] ?? ($isNewOrg ? '' : '1234 Rue Principale, Montréal, QC H2X 1Y6');
+    $companyDescription = $ent['description'] ?? ($isNewOrg ? '' : 'Acme Corporation est une entreprise leader dans le domaine de la technologie.');
     ?>
     <!-- Entreprise -->
     <div class="card settings-pane" id="settings-company">
@@ -484,14 +484,14 @@
             <?= csrf_field() ?>
             <div class="grid-2col">
                 <div class="form-group"><label class="form-label" data-i18n="form_company_name">Nom de l'entreprise</label><input type="text" class="form-input" id="settings-company-name" name="company_name" value="<?= e($settingsCompanyName) ?>" placeholder="<?= $isNewOrg ? 'Ex: Mon entreprise' : '' ?>"></div>
-                <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur d'activité</label><select class="form-select"><option value=""<?= $companyIndustry === '' ? ' selected' : '' ?>>— Sélectionner —</option><option value="Technologie"<?= $companyIndustry === 'Technologie' ? ' selected' : '' ?>>Technologie</option><option value="Finance">Finance</option><option value="Santé">Santé</option><option value="Commerce">Commerce</option></select></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur d'activité</label><select class="form-select" name="industry"><option value=""<?= $companyIndustry === '' ? ' selected' : '' ?>>— Sélectionner —</option><option value="Technologie"<?= $companyIndustry === 'Technologie' ? ' selected' : '' ?>>Technologie</option><option value="Finance"<?= $companyIndustry === 'Finance' ? ' selected' : '' ?>>Finance</option><option value="Santé"<?= $companyIndustry === 'Santé' ? ' selected' : '' ?>>Santé</option><option value="Commerce"<?= $companyIndustry === 'Commerce' ? ' selected' : '' ?>>Commerce</option></select></div>
             </div>
             <div class="grid-2col">
-                <div class="form-group"><label class="form-label" data-i18n="form_email">Email de contact</label><input type="email" class="form-input" value="<?= e($companyEmail) ?>" placeholder="<?= $isNewOrg ? 'contact@entreprise.com' : '' ?>"></div>
-                <div class="form-group"><label class="form-label" data-i18n="form_phone">Téléphone</label><input type="tel" class="form-input" value="<?= e($companyPhone) ?>" placeholder="<?= $isNewOrg ? '+1 (514) 555-0000' : '' ?>"></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_email">Email de contact</label><input type="email" class="form-input" name="email" value="<?= e($companyEmail) ?>" placeholder="<?= $isNewOrg ? 'contact@entreprise.com' : '' ?>"></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_phone">Téléphone</label><input type="tel" class="form-input" name="phone" value="<?= e($companyPhone) ?>" placeholder="<?= $isNewOrg ? '+1 (514) 555-0000' : '' ?>"></div>
             </div>
-            <div class="form-group"><label class="form-label" data-i18n="form_address">Adresse</label><input type="text" class="form-input" value="<?= e($companyAddress) ?>" placeholder="<?= $isNewOrg ? 'Adresse complète' : '' ?>"></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_description">Description de l'entreprise</label><textarea class="form-input" rows="4" style="resize: vertical;" placeholder="<?= $isNewOrg ? 'Décrivez votre entreprise...' : '' ?>"><?= e($companyDescription) ?></textarea></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_address">Adresse</label><input type="text" class="form-input" name="address" value="<?= e($companyAddress) ?>" placeholder="<?= $isNewOrg ? 'Adresse complète' : '' ?>"></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_description">Description de l'entreprise</label><textarea class="form-input" name="description" rows="4" style="resize: vertical;" placeholder="<?= $isNewOrg ? 'Décrivez votre entreprise...' : '' ?>"><?= e($companyDescription) ?></textarea></div>
             <div class="form-actions"><button type="button" class="btn btn-secondary" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button></div>
         </form>
     </div>
@@ -569,14 +569,14 @@
 
 <!-- Modal Poste -->
 <div class="modal-overlay" id="poste-modal">
-    <div class="modal">
+    <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header"><h2 class="modal-title" data-i18n="modal_add_poste">Nouveau poste</h2><button class="btn-icon" onclick="closeModal('poste')"><i class="fa-solid fa-xmark"></i></button></div>
-        <form>
+        <form id="form-poste-create" onsubmit="return savePosteFromModal(event)">
             <?= csrf_field() ?>
-            <div class="form-group"><label class="form-label" data-i18n="form_department">Département</label><select class="form-select"><option value="">— Sélectionner —</option><option value="Technologie">Technologie</option><option value="Gestion">Gestion</option><option value="Design">Design</option><option value="Stratégie">Stratégie</option><option value="Marketing">Marketing</option><option value="Ressources humaines">Ressources humaines</option><option value="Finance">Finance</option><option value="Opérations">Opérations</option></select></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_title">Titre du poste</label><input type="text" class="form-input" placeholder="Ex: Développeur Frontend"></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_location">Lieu</label><input type="text" class="form-input" placeholder="Ex: Montréal, QC"></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_status">Statut</label><select class="form-select"><option value="active" data-i18n="status_active">Actif</option><option value="paused" data-i18n="status_paused">Pausé</option><option value="closed" data-i18n="status_closed">Fermé</option></select></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_department">Département</label><select class="form-select" name="department"><option value="">— Sélectionner —</option><option value="Technologie">Technologie</option><option value="Gestion">Gestion</option><option value="Design">Design</option><option value="Stratégie">Stratégie</option><option value="Marketing">Marketing</option><option value="Ressources humaines">Ressources humaines</option><option value="Finance">Finance</option><option value="Opérations">Opérations</option></select></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_title">Titre du poste</label><input type="text" class="form-input" name="title" required placeholder="Ex: Développeur Frontend"></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_location">Lieu</label><input type="text" class="form-input" name="location" placeholder="Ex: Montréal, QC"></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_status">Statut</label><select class="form-select" name="status"><option value="active" data-i18n="status_active">Actif</option><option value="paused" data-i18n="status_paused">Pausé</option><option value="closed" data-i18n="status_closed">Fermé</option></select></div>
             <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal('poste')" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button></div>
         </form>
     </div>
@@ -586,10 +586,9 @@
 <div class="modal-overlay" id="affichage-modal">
     <div class="modal">
         <div class="modal-header"><h2 class="modal-title" data-i18n="modal_add_affichage">Nouvel affichage</h2><button class="btn-icon" onclick="closeModal('affichage')"><i class="fa-solid fa-xmark"></i></button></div>
-        <form>
+        <form id="form-affichage-create" onsubmit="return saveAffichageFromModal(event)">
             <?= csrf_field() ?>
-            <div class="form-group"><label class="form-label" data-i18n="form_department">Département</label><select class="form-select"><option value="">— Sélectionner —</option><option value="Technologie">Technologie</option><option value="Gestion">Gestion</option><option value="Design">Design</option><option value="Stratégie">Stratégie</option><option value="Marketing">Marketing</option><option value="Ressources humaines">Ressources humaines</option><option value="Finance">Finance</option><option value="Opérations">Opérations</option></select></div>
-            <div class="form-group"><label class="form-label" data-i18n="form_poste">Poste</label><select class="form-select"><option>Développeur Frontend</option><option>Chef de projet</option><option>Designer UX/UI</option></select></div>
+            <div class="form-group"><label class="form-label" data-i18n="form_poste">Poste</label><select class="form-select" name="poste_id" id="affichage-poste_id"><option value="">— Sélectionner —</option><?php foreach ($postes ?? [] as $p): ?><option value="<?= e($p['id']) ?>" data-department="<?= e($p['department'] ?? '') ?>"><?= e($p['title']) ?></option><?php endforeach; ?></select></div>
             <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal('affichage')" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button></div>
         </form>
     </div>
@@ -714,7 +713,7 @@
 
 <!-- Modal Confirmation suppression affichage -->
 <div class="modal-overlay" id="delete-affichage-modal">
-    <div class="modal modal--narrow">
+    <div class="modal modal--narrow" onclick="event.stopPropagation()">
         <div class="modal-header">
             <h2 class="modal-title"><i class="fa-solid fa-trash"></i> Supprimer l'affichage</h2>
             <button class="btn-icon" onclick="closeModal('delete-affichage')"><i class="fa-solid fa-xmark"></i></button>
@@ -731,7 +730,7 @@
 
 <!-- Modal Confirmation suppression poste (soft delete) -->
 <div class="modal-overlay" id="delete-poste-modal">
-    <div class="modal modal--narrow">
+    <div class="modal modal--narrow" onclick="event.stopPropagation()">
         <div class="modal-header">
             <h2 class="modal-title"><i class="fa-solid fa-trash"></i> <span data-i18n="delete_poste_title">Supprimer le poste</span></h2>
             <button class="btn-icon" onclick="closeModal('delete-poste')"><i class="fa-solid fa-xmark"></i></button>

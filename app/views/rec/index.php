@@ -19,7 +19,7 @@ $recordDuration = (int)($poste['recordDuration'] ?? 3);
         <p class="rec-meta"><?= e($poste['department'] ?? '') ?> • <?= e($poste['location'] ?? '') ?></p>
         <p class="rec-desc">Avant de commencer, consultez notre guide pour réussir votre entrevue vidéo.</p>
         <a href="<?= SITE_URL ?>/guide-candidat.html" class="rec-btn rec-btn-secondary" style="margin-bottom:0.75rem;">
-            <i class="fa-solid fa-book-open"></i> Préparez votre entrevue
+            <i class="fa-solid fa-book-open"></i> Guide candidat
         </a>
         <button type="button" id="rec-btn-continuer" class="rec-btn rec-btn-primary">Continuer vers le formulaire</button>
     </div>

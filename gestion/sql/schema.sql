@@ -88,6 +88,36 @@ CREATE TABLE IF NOT EXISTS gestion_sync_logs (
     INDEX idx_started (started_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS app_postes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    platform_user_id INT UNSIGNED NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    department VARCHAR(100) NOT NULL DEFAULT '',
+    location VARCHAR(255) NOT NULL DEFAULT '',
+    status VARCHAR(50) NOT NULL DEFAULT 'active' COMMENT 'active, paused, closed',
+    description TEXT NULL,
+    record_duration INT UNSIGNED NOT NULL DEFAULT 3,
+    questions TEXT NULL COMMENT 'JSON array of question strings',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE,
+    INDEX idx_platform_user (platform_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT 'Postes à pourvoir par entreprise';
+
+CREATE TABLE IF NOT EXISTS app_entreprises (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    platform_user_id INT UNSIGNED NOT NULL,
+    name VARCHAR(255) NOT NULL DEFAULT '',
+    industry VARCHAR(100) NULL,
+    email VARCHAR(255) NULL,
+    phone VARCHAR(50) NULL,
+    address TEXT NULL,
+    description TEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY idx_platform_user (platform_user_id),
+    FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT 'Infos entreprise par utilisateur plateforme';
+
 CREATE TABLE IF NOT EXISTS gestion_feedback (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     type ENUM('problem', 'idea') NOT NULL DEFAULT 'problem',

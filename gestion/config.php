@@ -36,6 +36,7 @@ require_once $gestionBase . '/models/StripeSale.php';
 require_once $gestionBase . '/models/Event.php';
 require_once $gestionBase . '/models/Feedback.php';
 require_once $gestionBase . '/models/Entrevue.php';
+require_once $gestionBase . '/models/Entreprise.php';
 
 // ─── Auto-init schéma DB si tables absentes ────────────────────────────────
 // ─── Auto-seed si tables vides ─────────────────────────────────────────────
@@ -124,96 +125,83 @@ try {
             INDEX idx_platform_created (platform_user_id, created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
-    // Seed si gestion_plans vide
+    $stmt = $pdo->query("SHOW TABLES LIKE 'app_postes'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("CREATE TABLE app_postes (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            platform_user_id INT UNSIGNED NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            department VARCHAR(100) NOT NULL DEFAULT '',
+            location VARCHAR(255) NOT NULL DEFAULT '',
+            status VARCHAR(50) NOT NULL DEFAULT 'active',
+            description TEXT NULL,
+            record_duration INT UNSIGNED NOT NULL DEFAULT 3,
+            questions TEXT NULL COMMENT 'JSON array',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE,
+            INDEX idx_platform_user (platform_user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
+    $stmt = $pdo->query("SHOW TABLES LIKE 'app_affichages'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("CREATE TABLE app_affichages (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            platform_user_id INT UNSIGNED NOT NULL,
+            poste_id INT UNSIGNED NOT NULL,
+            share_long_id CHAR(16) NOT NULL,
+            platform VARCHAR(100) NOT NULL DEFAULT 'LinkedIn',
+            start_date DATE NULL,
+            end_date DATE NULL,
+            status VARCHAR(50) NOT NULL DEFAULT 'active',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY idx_share_long (share_long_id),
+            FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE,
+            FOREIGN KEY (poste_id) REFERENCES app_postes(id) ON DELETE CASCADE,
+            INDEX idx_platform_user (platform_user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
+    $stmt = $pdo->query("SHOW TABLES LIKE 'app_entreprises'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("CREATE TABLE app_entreprises (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            platform_user_id INT UNSIGNED NOT NULL,
+            name VARCHAR(255) NOT NULL DEFAULT '',
+            industry VARCHAR(100) NULL,
+            email VARCHAR(255) NULL,
+            phone VARCHAR(50) NULL,
+            address TEXT NULL,
+            description TEXT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY idx_platform_user (platform_user_id),
+            FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
+    // S'assurer que platform_user id=1 existe (app mock login utilise user_id=1)
+    $stmt = $pdo->query('SELECT id FROM gestion_platform_users WHERE id = 1 LIMIT 1');
+    if (!$stmt->fetch()) {
+        $enc = new Encryption();
+        $planId = null;
+        $planRow = $pdo->query('SELECT id FROM gestion_plans LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+        if ($planRow && !empty($planRow['id'])) {
+            $planId = (int) $planRow['id'];
+        }
+        if ($planId !== null) {
+            $pdo->prepare('INSERT INTO gestion_platform_users (id, prenom_encrypted, name_encrypted, email_encrypted, role, plan_id) VALUES (1, ?, ?, ?, ?, ?)')
+                ->execute([$enc->encrypt('Demo'), $enc->encrypt('Utilisateur'), $enc->encrypt('demo@ciaocv.com'), 'user', $planId]);
+        } else {
+            $pdo->prepare('INSERT INTO gestion_platform_users (id, prenom_encrypted, name_encrypted, email_encrypted, role, plan_id) VALUES (1, ?, ?, ?, ?, NULL)')
+                ->execute([$enc->encrypt('Demo'), $enc->encrypt('Utilisateur'), $enc->encrypt('demo@ciaocv.com'), 'user']);
+        }
+    }
+    // Forfaits par défaut (catalogue produit — nécessaire pour les selects utilisateur)
     $stmt = $pdo->query('SELECT COUNT(*) FROM gestion_plans');
     if ((int) $stmt->fetchColumn() === 0) {
-        $enc = new Encryption();
-        // Forfaits alignés sur https://www.ciaocv.com/tarifs
         $pdo->exec("INSERT INTO gestion_plans (name_fr, name_en, video_limit, price_monthly, price_yearly) VALUES
             ('Découverte', 'Discovery', 5, 0, 0),
             ('À la carte', 'Pay per use', 9999, 79, 79),
             ('Pro', 'Pro', 50, 139, 1188),
             ('Expert', 'Expert', 200, 199, 1788)");
-        $adminEmail = 'admin@ciaocv.com';
-        $hash = hash('sha256', strtolower($adminEmail));
-        $pdo->prepare('INSERT INTO gestion_admins (email_search_hash, email_encrypted, password_hash, name_encrypted, role) VALUES (?, ?, ?, ?, ?)')->execute([
-            $hash, $enc->encrypt($adminEmail), password_hash('AdminDemo2026!', PASSWORD_DEFAULT), $enc->encrypt('Administrateur'), 'admin'
-        ]);
-        $planId = (int) $pdo->query("SELECT id FROM gestion_plans WHERE name_fr = 'Pro' LIMIT 1")->fetchColumn();
-        $stmt = $pdo->prepare('INSERT INTO gestion_platform_users (prenom_encrypted, name_encrypted, email_encrypted, role, plan_id) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$enc->encrypt('Marie'), $enc->encrypt('Tremblay'), $enc->encrypt('marie@example.com'), 'admin', $planId]);
-        $stmt->execute([$enc->encrypt('Pierre'), $enc->encrypt('Roy'), $enc->encrypt('pierre@example.com'), 'user', $planId]);
-        $adminId = (int) $pdo->query('SELECT id FROM gestion_admins LIMIT 1')->fetchColumn();
-        $events = [
-            ["A modifié le forfait Pro — limite vidéos : 50 → 75"],
-            ["A créé le forfait Entreprise — 500 vidéos, 199 \$/mois"],
-            ["A modifié l'utilisateur Sophie Martin — rôle : Évaluateur → Admin"],
-            ["A ajouté l'utilisateur Luc Bergeron (luc@example.com)"],
-            ["A supprimé le forfait Starter"],
-            ["Nouvelle vente Stripe — Forfait Platine, 99,99 \$ (user@example.com)"],
-        ];
-        $stmt = $pdo->prepare('INSERT INTO gestion_events (admin_id, action_type, entity_type, entity_id, details_encrypted) VALUES (?, ?, ?, ?, ?)');
-        foreach ([['modification','plan','1'], ['creation','plan',null], ['modification','user','2'], ['creation','user',null], ['suppression','plan',null], ['sale','sale',null]] as $i => $e) {
-            $stmt->execute([$adminId, $e[0], $e[1], $e[2], $enc->encrypt($events[$i][0])]);
-        }
-    }
-    // Seed données app dashboard (événements + candidatures par mois) pour platform_user 1
-    try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'app_entrevues'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT COUNT(*) FROM app_entrevues WHERE platform_user_id = 1');
-            if ((int) $stmt->fetchColumn() === 0) {
-                $ins = $pdo->prepare('INSERT INTO app_entrevues (platform_user_id, created_at) VALUES (1, ?)');
-                $counts = [60, 100, 80, 140, 180, 120];
-                foreach ([[2025, 9], [2025, 10], [2025, 11], [2025, 12], [2026, 1], [2026, 2]] as $idx => $ym) {
-                    $cnt = $counts[$idx] ?? 50;
-                    for ($i = 0; $i < $cnt; $i++) {
-                        $ins->execute([sprintf('%d-%02d-%02d %02d:%02d:00', $ym[0], $ym[1], rand(1, 28), rand(9, 17), rand(0, 59))]);
-                    }
-                }
-            }
-        }
-        $stmt = $pdo->query("SHOW COLUMNS FROM gestion_events LIKE 'platform_user_id'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->prepare('SELECT COUNT(*) FROM gestion_events WHERE platform_user_id = 1');
-            if ((int) $stmt->fetchColumn() === 0) {
-                $enc = $enc ?? new Encryption();
-                $hasActing = $pdo->query("SHOW COLUMNS FROM gestion_events LIKE 'acting_user_name'")->rowCount() > 0;
-                $events = [
-                    ['Marie Tremblay', 'evaluation', 'A noté le candidat Jean Dupont — 4/5 étoiles', '2026-02-06 14:32:00'],
-                    ['Pierre Roy', 'creation', 'A créé un nouvel affichage pour Développeur Frontend', '2026-02-06 11:15:00'],
-                    ['Marie Tremblay', 'modification', 'A modifié les questions du poste Chef de projet', '2026-02-05 16:48:00'],
-                    ['Pierre Roy', 'invitation', 'A invité Sophie Martin à une entrevue vidéo', '2026-02-05 09:22:00'],
-                    ['Marie Tremblay', 'suppression', "A archivé le poste Analyste d'affaires", '2026-02-04 15:05:00'],
-                    ['Pierre Roy', 'evaluation', 'A visionné la vidéo de Luc Bergeron', '2026-02-04 10:30:00'],
-                ];
-                $cols = 'platform_user_id, action_type, entity_type, entity_id, details_encrypted, created_at';
-                if ($hasActing) {
-                    $cols = 'platform_user_id, acting_user_name, action_type, entity_type, entity_id, details_encrypted, created_at';
-                }
-                foreach ($events as $ev) {
-                    $det = $enc->encrypt($ev[2]);
-                    if ($hasActing) {
-                        $pdo->prepare('INSERT INTO gestion_events (platform_user_id, acting_user_name, action_type, entity_type, entity_id, details_encrypted, created_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?)')->execute([$ev[0], $ev[1], 'event', null, $det, $ev[3]]);
-                    } else {
-                        $pdo->prepare('INSERT INTO gestion_events (platform_user_id, action_type, entity_type, entity_id, details_encrypted, created_at) VALUES (1, ?, ?, ?, ?, ?)')->execute([$ev[1], 'event', null, $det, $ev[3]]);
-                    }
-                }
-            }
-        }
-    } catch (Throwable $e) {
-        // Ignorer erreurs de seed app
-    }
-    // Admin supplémentaire : algravel@gmail.com (créé si absent)
-    $extraEmail = 'algravel@gmail.com';
-    $extraHash = hash('sha256', strtolower($extraEmail));
-    $stmt = $pdo->prepare("SELECT id FROM gestion_admins WHERE email_search_hash = ?");
-    $stmt->execute([$extraHash]);
-    if (!$stmt->fetch()) {
-        $enc = new Encryption();
-        $pdo->prepare('INSERT INTO gestion_admins (email_search_hash, email_encrypted, password_hash, name_encrypted, role) VALUES (?, ?, ?, ?, ?)')->execute([
-            $extraHash, $enc->encrypt($extraEmail), password_hash('!Pomme123!', PASSWORD_DEFAULT), $enc->encrypt('Algravel'), 'admin'
-        ]);
     }
 } catch (Throwable $e) {
     // Connexion ou init échouée — les requêtes échoueront plus tard

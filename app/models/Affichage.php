@@ -1,93 +1,108 @@
 <?php
 /**
- * Modèle Affichage
- * Données mock – à remplacer par des requêtes DB.
- * Filtre par platform_user_id (entreprise) quand fourni.
+ * Modèle Affichage – app_affichages
+ * Charge depuis la base de données (gestion). Filtre par platform_user_id.
  */
 class Affichage
 {
+    private static function ensureDb(): void
+    {
+        static $loaded = false;
+        if (!$loaded) {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $loaded = true;
+        }
+    }
+
+    private static function statusMap(): array
+    {
+        return [
+            'active' => ['label' => 'Actif', 'class' => 'status-active'],
+            'paused'  => ['label' => 'Non actif', 'class' => 'status-paused'],
+            'closed'  => ['label' => 'Archivé', 'class' => 'status-closed'],
+            'expired' => ['label' => 'Expiré', 'class' => 'status-expired'],
+        ];
+    }
+
+    /**
+     * Formate une ligne DB en structure attendue par le frontend.
+     */
+    private static function formatRow(array $r): array
+    {
+        $map = self::statusMap();
+        $s = $map[$r['status'] ?? 'active'] ?? $map['active'];
+        $startDate = $r['start_date'] ?? null;
+        $endDate   = $r['end_date'] ?? null;
+        return [
+            'id'           => (string) $r['id'],
+            'shareLongId'  => $r['share_long_id'] ?? '',
+            'posteId'      => (string) ($r['poste_id'] ?? ''),
+            'title'        => $r['title'] ?? '',
+            'department'   => $r['department'] ?? '',
+            'platform'     => $r['platform'] ?? 'LinkedIn',
+            'start'        => $startDate ? (string) $startDate : '',
+            'end'          => $endDate ? (string) $endDate : '',
+            'status'       => $s['label'],
+            'statusClass'  => $s['class'],
+            'views'        => '0',
+            'apps'         => '0',
+            'completed'    => 0,
+            'sent'         => 0,
+            'evaluateurs'  => [],
+        ];
+    }
+
     /**
      * @param int|null $platformUserId Filtrer par entreprise (utilisateur plateforme)
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array<string, mixed>> Indexé par id
      */
     public static function getAll(?int $platformUserId = null): array
     {
-        $all = [
-            'frontend-linkedin' => [
-                'id'          => 'frontend-linkedin',
-                'shareLongId' => '0cb075d860fa55c4',
-                'posteId'     => 'frontend',
-                'title'       => 'Développeur Frontend',
-                'department'  => 'Technologie',
-                'platform'    => 'LinkedIn',
-                'start'       => '2026-01-15',
-                'end'         => '2026-02-15',
-                'status'      => 'Actif',
-                'statusClass' => 'status-active',
-                'views'       => '1,245',
-                'apps'        => '12',
-                'completed'   => 5,
-                'sent'        => 12,
-                'evaluateurs' => [
-                    ['name' => 'Marie Tremblay', 'email' => 'marie.t@acme.com'],
-                    ['name' => 'Pierre Roy', 'email' => 'pierre.r@acme.com'],
-                ],
-            ],
-            'frontend-site' => [
-                'id'          => 'frontend-site',
-                'shareLongId' => 'a6f354c813a3c23e',
-                'posteId'     => 'frontend',
-                'title'       => 'Développeur Frontend',
-                'department'  => 'Technologie',
-                'platform'    => 'Site carrière',
-                'start'       => '2026-01-15',
-                'end'         => '2026-03-15',
-                'status'      => 'Actif',
-                'statusClass' => 'status-active',
-                'views'       => '458',
-                'apps'        => '6',
-                'completed'   => 2,
-                'sent'        => 6,
-                'evaluateurs' => [
-                    ['name' => 'Marie Tremblay', 'email' => 'marie.t@acme.com'],
-                ],
-            ],
-            'manager-linkedin' => [
-                'id'          => 'manager-linkedin',
-                'shareLongId' => 'b7c465e924b4d35f',
-                'posteId'     => 'manager',
-                'title'       => 'Chef de projet',
-                'department'  => 'Gestion',
-                'platform'    => 'LinkedIn',
-                'start'       => '2026-01-20',
-                'end'         => '2026-02-20',
-                'status'      => 'Actif',
-                'statusClass' => 'status-active',
-                'views'       => '892',
-                'apps'        => '8',
-                'completed'   => 4,
-                'sent'        => 8,
-                'evaluateurs' => [
-                    ['name' => 'Jean Dupont', 'email' => 'jean.d@acme.com'],
-                    ['name' => 'Sophie Martin', 'email' => 'sophie.m@acme.com'],
-                ],
-            ],
-        ];
-
-        if ($platformUserId !== null) {
-            $posteIds = array_column(Poste::getAll($platformUserId), 'id');
-            $all = array_filter($all, fn ($a) => in_array($a['posteId'] ?? '', $posteIds, true));
+        if ($platformUserId === null || $platformUserId <= 0) {
+            return [];
         }
-        return $all;
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare("
+            SELECT a.id, a.platform_user_id, a.poste_id, a.share_long_id, a.platform,
+                   a.start_date, a.end_date, a.status, a.created_at,
+                   p.title, p.department
+            FROM app_affichages a
+            INNER JOIN app_postes p ON p.id = a.poste_id AND p.platform_user_id = a.platform_user_id
+            WHERE a.platform_user_id = ?
+            ORDER BY a.created_at DESC
+        ");
+        $stmt->execute([$platformUserId]);
+        $result = [];
+        while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $id = (string) $r['id'];
+            $result[$id] = self::formatRow($r);
+        }
+        return $result;
     }
 
     /**
      * Retrouver un affichage par son identifiant.
      */
-    public static function find(string $id): ?array
+    public static function find(string $id, ?int $platformUserId = null): ?array
     {
-        $all = self::getAll();
-        return $all[$id] ?? null;
+        if ($platformUserId === null || $platformUserId <= 0) {
+            return null;
+        }
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare("
+            SELECT a.id, a.platform_user_id, a.poste_id, a.share_long_id, a.platform,
+                   a.start_date, a.end_date, a.status, a.created_at,
+                   p.title, p.department
+            FROM app_affichages a
+            INNER JOIN app_postes p ON p.id = a.poste_id AND p.platform_user_id = a.platform_user_id
+            WHERE a.id = ? AND a.platform_user_id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$id, $platformUserId]);
+        $r = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $r ? self::formatRow($r) : null;
     }
 
     /**
@@ -96,12 +111,20 @@ class Affichage
      */
     public static function findByShareLongId(string $longId): ?array
     {
-        foreach (self::getAll() as $aff) {
-            if (($aff['shareLongId'] ?? '') === $longId) {
-                return $aff;
-            }
-        }
-        return null;
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare("
+            SELECT a.id, a.platform_user_id, a.poste_id, a.share_long_id, a.platform,
+                   a.start_date, a.end_date, a.status, a.created_at,
+                   p.title, p.department
+            FROM app_affichages a
+            INNER JOIN app_postes p ON p.id = a.poste_id AND p.platform_user_id = a.platform_user_id
+            WHERE a.share_long_id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$longId]);
+        $r = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $r ? self::formatRow($r) : null;
     }
 
     /**
@@ -116,7 +139,21 @@ class Affichage
             return null;
         }
         $posteId = $affichage['posteId'] ?? null;
-        $poste   = $posteId ? Poste::find($posteId) : null;
+        if (!$posteId) {
+            return [
+                'title'          => $affichage['title'] ?? '',
+                'department'     => $affichage['department'] ?? '',
+                'location'       => '',
+                'description'    => '',
+                'questions'      => [],
+                'recordDuration' => 3,
+            ];
+        }
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT * FROM app_postes WHERE id = ? LIMIT 1');
+        $stmt->execute([$posteId]);
+        $poste = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$poste) {
             return [
                 'title'          => $affichage['title'] ?? '',
@@ -127,13 +164,47 @@ class Affichage
                 'recordDuration' => 3,
             ];
         }
+        $questions = $poste['questions'] ?? null;
+        if (is_string($questions)) {
+            $questions = json_decode($questions, true) ?: [];
+        }
         return [
-            'title'          => $poste['title'],
-            'department'     => $poste['department'],
-            'location'       => $poste['location'],
+            'title'          => $poste['title'] ?? '',
+            'department'     => $poste['department'] ?? '',
+            'location'       => $poste['location'] ?? '',
             'description'    => $poste['description'] ?? '',
-            'questions'      => $poste['questions'] ?? [],
-            'recordDuration' => (int) ($poste['recordDuration'] ?? 3),
+            'questions'      => is_array($questions) ? $questions : [],
+            'recordDuration' => (int) ($poste['record_duration'] ?? 3) ?: 3,
         ];
+    }
+
+    /**
+     * Créer un nouvel affichage.
+     * @return array|null Affichage formaté ou null si erreur
+     */
+    public static function create(int $platformUserId, array $data): ?array
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        $posteId = (int) ($data['poste_id'] ?? 0);
+        if ($posteId <= 0) {
+            return null;
+        }
+        // Vérifier que le poste appartient au platform_user
+        $stmt = $pdo->prepare('SELECT id FROM app_postes WHERE id = ? AND platform_user_id = ? LIMIT 1');
+        $stmt->execute([$posteId, $platformUserId]);
+        if (!$stmt->fetch()) {
+            return null;
+        }
+        $shareLongId = bin2hex(random_bytes(8));
+        $platform = trim($data['platform'] ?? '') ?: 'LinkedIn';
+        $status = in_array($data['status'] ?? '', ['active', 'paused', 'closed'], true) ? $data['status'] : 'active';
+        $stmt = $pdo->prepare('
+            INSERT INTO app_affichages (platform_user_id, poste_id, share_long_id, platform, status)
+            VALUES (?, ?, ?, ?, ?)
+        ');
+        $stmt->execute([$platformUserId, $posteId, $shareLongId, $platform, $status]);
+        $id = (int) $pdo->lastInsertId();
+        return $id ? self::find((string) $id, $platformUserId) : null;
     }
 }

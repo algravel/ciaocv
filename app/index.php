@@ -41,6 +41,10 @@ $router->get('/affichages',   'DashboardController', 'index');
 $router->get('/candidats',    'DashboardController', 'index');
 $router->get('/parametres',   'DashboardController', 'index');
 $router->post('/parametres/entreprise', 'DashboardController', 'saveCompany');
+$router->post('/postes', 'DashboardController', 'createPoste');
+$router->post('/postes/update', 'DashboardController', 'updatePoste');
+$router->post('/postes/delete', 'DashboardController', 'deletePoste');
+$router->post('/affichages', 'DashboardController', 'createAffichage');
 
 // Feedback (FAB bugs et idées)
 $router->post('/feedback', 'FeedbackController', 'submit');
@@ -58,4 +62,16 @@ $router->get('/dashboard',  'RedirectController', 'toTableauDeBord');
 $router->getPattern('#^/rec/([a-f0-9]{16})$#', 'RedirectController', 'toEntrevue');
 
 // ─── Dispatch ──────────────────────────────────────────────────────────
-$router->dispatch();
+try {
+    $router->dispatch();
+} catch (Throwable $e) {
+    error_log('CiaoCV dispatch: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    $isApi = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && in_array(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), ['/postes', '/postes/update', '/postes/delete', '/parametres/entreprise', '/feedback', '/affichages']);
+    if ($isApi) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'error' => 'Erreur serveur: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    } else {
+        throw $e;
+    }
+}

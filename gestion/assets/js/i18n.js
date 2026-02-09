@@ -7,7 +7,7 @@ const translations = {
     fr: {
         // ─── Page de connexion ───
         "nav.service": "Notre service",
-        "nav.guide": "Préparez votre entrevue de présélection",
+        "nav.guide": "Guide candidat",
         "nav.recruiter": "Espace Recruteur",
         "nav.candidate": "Espace Candidat",
         "nav.login": "Se connecter",
@@ -59,7 +59,7 @@ const translations = {
 
         // ─── Footer ───
         "footer.service": "Notre service",
-        "footer.guide": "Préparez votre entrevue de présélection",
+        "footer.guide": "Guide candidat",
         "footer.legal": "Légal",
         "footer.privacy": "Politique de confidentialité",
         "footer.terms": "Conditions d'utilisation",
@@ -293,7 +293,7 @@ const translations = {
     en: {
         // ─── Login page ───
         "nav.service": "Our Service",
-        "nav.guide": "Prepare your pre-selection interview",
+        "nav.guide": "Candidate guide",
         "nav.recruiter": "Recruiter Login",
         "nav.candidate": "Candidate Login",
         "nav.login": "Log In",
@@ -345,7 +345,7 @@ const translations = {
 
         // ─── Footer ───
         "footer.service": "Our Service",
-        "footer.guide": "Prepare your pre-selection interview",
+        "footer.guide": "Candidate guide",
         "footer.legal": "Legal",
         "footer.privacy": "Privacy Policy",
         "footer.terms": "Terms of Use",

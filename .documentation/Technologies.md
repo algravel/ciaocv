@@ -13,7 +13,7 @@ Le plan **World** est un hébergement mutualisé optimisé sur l'infrastructure 
 | **Espace disque** | Illimité (SSD) | Pas de contrainte sur la croissance de la base de données et des fichiers statiques. |
 | **Bande passante** | Illimitée | Aucun frais supplémentaire en cas de pic de trafic. |
 | **Sites web** | Illimités | Possibilité de créer des sous-domaines ou environnements de staging. |
-| **PHP / MySQL** | Versions récentes (PHP 8.x, MySQL 8.x) | Compatibilité avec les frameworks modernes. |
+| **PHP / MySQL** | Versions récentes (PHP 8.x) | Compatibilité avec les frameworks modernes. |
 | **SSL gratuit** | Let's Encrypt automatisé | HTTPS sans configuration manuelle. |
 | **Localisation** | Montréal (Canada) | Souveraineté des données, conformité Loi 25 facilitée. |
 
@@ -40,11 +40,25 @@ Sur le plan World, l'application fonctionne en mode **LAMP classique** (Linux, A
 
 ---
 
-## 1.2 Moteur de recherche : SQL natif
+## 1.2 Base de données : MySQL / MariaDB
+
+### Version utilisée (production)
+
+| Élément | Valeur |
+|---------|--------|
+| **Version** | MySQL 10.6.21-MariaDB |
+| **Type JSON natif** | OUI (5.7.8+) |
+| **Compatibilité** | Le projet utilise TEXT pour les colonnes JSON (compatibilité MySQL 5.5+). |
+
+> Vérifier la version : exécuter `php gestion/check-mysql-version.php` sur le serveur.
+
+---
+
+## 1.3 Moteur de recherche : SQL natif
 
 Pour la phase de lancement, la recherche d'offres d'emploi repose sur les capacités natives de **MySQL/MariaDB**, sans moteur de recherche externe comme Meilisearch ou Elasticsearch.
 
-### 1.2.1 Recherche FULLTEXT
+### 1.3.1 Recherche FULLTEXT
 
 MySQL offre un système d'indexation **FULLTEXT** performant pour les recherches textuelles :
 
@@ -61,7 +75,7 @@ ORDER BY score DESC
 LIMIT 20;
 ```
 
-### 1.2.2 Limitations et contournements
+### 1.3.2 Limitations et contournements
 
 | Limitation | Solution de contournement |
 |------------|---------------------------|
@@ -73,11 +87,11 @@ LIMIT 20;
 
 ---
 
-## 1.3 Pipeline vidéo : Enregistrement navigateur et Backblaze B2
+## 1.4 Pipeline vidéo : Enregistrement navigateur et Backblaze B2
 
 La fonctionnalité distinctive de la plateforme est le **recrutement vidéo**. L'architecture choisie privilégie la simplicité et l'économie en utilisant l'enregistrement directement depuis le navigateur avec upload vers Backblaze B2.
 
-### 1.3.1 Enregistrement vidéo côté client (MediaRecorder API)
+### 1.4.1 Enregistrement vidéo côté client (MediaRecorder API)
 
 Les navigateurs modernes intègrent l'API **MediaRecorder** qui permet de capturer la webcam et le microphone sans plugin ni logiciel tiers.
 
@@ -109,7 +123,7 @@ mediaRecorder.start();
 setTimeout(() => mediaRecorder.stop(), 90000);
 ```
 
-### 1.3.2 Stockage sur Backblaze B2
+### 1.4.2 Stockage sur Backblaze B2
 
 **Backblaze B2** est utilisé comme stockage objet principal pour toutes les vidéos de la plateforme.
 
@@ -135,7 +149,7 @@ $presignedUrl = $b2->getUploadUrl($bucketId, $fileName, $expireInSeconds);
 // Retourner l'URL au JavaScript client
 ```
 
-### 1.3.3 Diffusion des vidéos
+### 1.4.3 Diffusion des vidéos
 
 Pour la lecture, les vidéos sont servies directement depuis B2 via **Cloudflare CDN** (gratuit) grâce à la **Bandwidth Alliance** :
 
@@ -145,11 +159,11 @@ Pour la lecture, les vidéos sont servies directement depuis B2 via **Cloudflare
 
 ---
 
-## 1.4 Communications : Zepto (applicatif) et Proton Mail (bureautique)
+## 1.5 Communications : Zepto (applicatif) et Proton Mail (bureautique)
 
 L'architecture de messagerie distingue deux usages distincts avec des solutions adaptées à chacun.
 
-### 1.4.1 Zepto — Emails transactionnels de l'application
+### 1.5.1 Zepto — Emails transactionnels de l'application
 
 **Zepto** (anciennement ZeptoMail, par Zoho) est le service SMTP utilisé pour tous les emails automatisés de la plateforme :
 
@@ -179,7 +193,7 @@ $zepto->sendEmail([
 ]);
 ```
 
-### 1.4.2 Proton Mail — Bureautique interne
+### 1.5.2 Proton Mail — Bureautique interne
 
 **Proton Mail** est réservé aux communications internes de l'équipe et aux échanges sensibles nécessitant un chiffrement de bout en bout :
 

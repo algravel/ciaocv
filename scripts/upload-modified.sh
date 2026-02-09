@@ -35,10 +35,12 @@ bash scripts/update-asset-version.sh 2>/dev/null || true
 
 # Fichiers modifiés (hors scripts, .cursor, .env)
 files=(
+  "app/assets/css/app.css:app/assets/css/app.css"
   "app/assets/js/app.js:app/assets/js/app.js"
   "app/assets/js/i18n.js:app/assets/js/i18n.js"
   "app/config/app.php:app/config/app.php"
   "app/controllers/AuthController.php:app/controllers/AuthController.php"
+  "app/debug-postes.php:app/debug-postes.php"
   "app/controllers/DashboardController.php:app/controllers/DashboardController.php"
   "app/controllers/FeedbackController.php:app/controllers/FeedbackController.php"
   "app/includes/functions.php:app/includes/functions.php"
@@ -55,10 +57,13 @@ files=(
   "gestion/assets/img/favicon.png:gestion/assets/img/favicon.png"
   "gestion/assets/js/app.js:gestion/assets/js/app.js"
   "gestion/assets/js/i18n.js:gestion/assets/js/i18n.js"
+  "gestion/check-mysql-version.php:gestion/check-mysql-version.php"
+  "gestion/clear-seed.php:gestion/clear-seed.php"
   "gestion/config.php:gestion/config.php"
   "gestion/index.php:gestion/index.php"
   "gestion/layouts/app.php:gestion/layouts/app.php"
   "gestion/layouts/auth.php:gestion/layouts/auth.php"
+  "gestion/models/Entreprise.php:gestion/models/Entreprise.php"
   "gestion/models/Entrevue.php:gestion/models/Entrevue.php"
   "gestion/models/Event.php:gestion/models/Event.php"
   "gestion/models/Feedback.php:gestion/models/Feedback.php"

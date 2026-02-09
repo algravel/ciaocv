@@ -680,14 +680,6 @@ class GestionController
             return;
         }
 
-        $postes = MockData::getPostes();
-        $affichages = MockData::getAffichages();
-        $candidats = MockData::getCandidats();
-        $candidatsByAff = MockData::getCandidatsByAffichage();
-        $emailTemplates = MockData::getEmailTemplates();
-        $departments = ['Technologie', 'Gestion', 'Design', 'Stratégie', 'Marketing', 'Ressources humaines', 'Finance', 'Opérations'];
-        $teamMembers = MockData::getTeamMembers();
-
         $user = [
             'name'  => $_SESSION[self::SESSION_USER_NAME] ?? 'Administrateur',
             'email' => $_SESSION[self::SESSION_USER_EMAIL] ?? '',
@@ -746,13 +738,6 @@ class GestionController
 
         $this->view('dashboard/index', [
             'pageTitle'      => 'Tableau de bord',
-            'postes'         => $postes,
-            'affichages'     => $affichages,
-            'candidats'      => $candidats,
-            'candidatsByAff' => $candidatsByAff,
-            'emailTemplates' => $emailTemplates,
-            'departments'    => $departments,
-            'teamMembers'    => $teamMembers,
             'user'           => $user,
             'kpiUsers'       => $kpiUsers,
             'kpiVideos'      => $kpiVideos,

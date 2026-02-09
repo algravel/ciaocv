@@ -1,11 +1,6 @@
-{"location":"app\/index.php:dispatch","message":"Before dispatch","data":{"uri":"\/tableau-de-bord","has_session":true,"user_id":1},"timestamp":1770575389000,"hypothesisId":"H3,H4"}
-{"location":"DashboardController::index","message":"Entry","data":{"platformUserId":1},"timestamp":1770575389000,"hypothesisId":"H4"}
-{"location":"DashboardController::after_models","message":"Models loaded","data":{"postes":4,"affichages":3},"timestamp":1770575389000,"hypothesisId":"H2"}
-{"location":"DashboardController::before_config","message":"Loading gestion config","data":{"platformUserId":1},"timestamp":1770575389000,"hypothesisId":"H1"}
-{"location":"app\/index.php:dispatch","message":"Before dispatch","data":{"uri":"\/tableau-de-bord","has_session":true,"user_id":1},"timestamp":1770575416000,"hypothesisId":"H3,H4"}
-{"location":"DashboardController::index","message":"Entry","data":{"platformUserId":1},"timestamp":1770575416000,"hypothesisId":"H4"}
-{"location":"DashboardController::after_models","message":"Models loaded","data":{"postes":4,"affichages":3},"timestamp":1770575416000,"hypothesisId":"H2"}
-{"location":"DashboardController::before_config","message":"Loading gestion config","data":{"platformUserId":1},"timestamp":1770575416000,"hypothesisId":"H1"}
-{"location":"DashboardController::after_config","message":"Config loaded","data":[],"timestamp":1770575416000,"hypothesisId":"H1"}
-{"location":"DashboardController::catch","message":"Exception in gestion block","data":{"error":"SQLSTATE[HY000] [2002] No such file or directory","file":"\/Users\/algravel\/GitHub\/ciaocv\/gestion\/includes\/Database.php","line":21},"timestamp":1770575416000,"hypothesisId":"H2"}
-{"location":"DashboardController::before_view","message":"About to render view","data":{"postesCount":4,"chartMonthsCount":6},"timestamp":1770575416000,"hypothesisId":"H5"}
+{"location":"app.js:deletePoste","message":"deletePoste called","data":{"id":"designer","idType":"string","rowElExists":true,"rowElParent":true,"postesDataKeys":["frontend","manager","designer","analyst"],"hasId":true},"timestamp":1770597908091,"hypothesisId":"A,B,E"}
+{"location":"app.js:confirmDeletePoste","message":"confirmDeletePoste called","data":{"hasPending":true,"pendingId":"designer","rowElExists":true},"timestamp":1770597909342,"hypothesisId":"C,D"}
+{"location":"app.js:confirmDeletePoste","message":"confirmDeletePoste after remove","data":{"id":"designer","didRemove":true},"timestamp":1770597909343,"hypothesisId":"B","runId":"post-fix"}
+{"location":"app.js:deletePoste","message":"deletePoste called","data":{"id":"designer","idType":"string","rowElExists":true,"rowElParent":true,"postesDataKeys":["frontend","manager","designer","analyst"],"hasId":true},"timestamp":1770597913475,"hypothesisId":"A,B,E"}
+{"location":"app.js:confirmDeletePoste","message":"confirmDeletePoste called","data":{"hasPending":true,"pendingId":"designer","rowElExists":true},"timestamp":1770597915158,"hypothesisId":"C,D"}
+{"location":"app.js:confirmDeletePoste","message":"confirmDeletePoste after remove","data":{"id":"designer","didRemove":true},"timestamp":1770597915159,"hypothesisId":"B","runId":"post-fix"}

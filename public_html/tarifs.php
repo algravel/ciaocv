@@ -52,7 +52,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs et forfaits - CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1770580034">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1770603921">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         .pricing-hero { text-align: center; padding: 6rem 5% 3rem; max-width: 900px; margin: 0 auto; }
@@ -115,7 +115,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
         <a href="/" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
         <nav class="nav-links">
             <a href="/tarifs" style="color:var(--primary); font-weight:700;" data-i18n="nav.service">Notre service</a>
-            <a href="/guide-candidat" data-i18n="nav.guide">Préparez votre entrevue</a>
+            <a href="/guide-candidat" data-i18n="nav.guide">Guide candidat</a>
         </nav>
         <div class="nav-actions">
             <a href="#" class="lang-toggle" id="langToggleDesktop" style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
@@ -128,7 +128,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
         <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%; display:flex;" onclick="toggleMenu()"><span></span><span></span><span></span></button>
         <a href="#" class="lang-toggle" id="langToggleMobile" style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
         <a href="/tarifs" onclick="toggleMenu()" data-i18n="nav.service">Notre service</a>
-        <a href="/guide-candidat" onclick="toggleMenu()" data-i18n="nav.guide">Préparez votre entrevue</a>
+        <a href="/guide-candidat" onclick="toggleMenu()" data-i18n="nav.guide">Guide candidat</a>
         <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem; width:80%; text-align:center;">
             <a href="https://app.ciaocv.com/connexion" class="btn-header-primary" style="display:block; text-align:center; padding:1rem;" data-i18n="nav.login">Se connecter</a>
         </div>
@@ -275,7 +275,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
                 <h4>CIAOCV</h4>
                 <ul>
                     <li><a href="/tarifs" data-i18n="footer.service">Notre Service</a></li>
-                    <li><a href="/guide-candidat" data-i18n="footer.guide">Préparez votre entrevue</a></li>
+                    <li><a href="/guide-candidat" data-i18n="footer.guide">Guide candidat</a></li>
                 </ul>
             </div>
             <div class="footer-links">
@@ -337,6 +337,6 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             });
         });
     </script>
-    <script src="assets/js/i18n.js?v=1770580034"></script>
+    <script src="assets/js/i18n.js?v=1770603921"></script>
 </body>
 </html>
