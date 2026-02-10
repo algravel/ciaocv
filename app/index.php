@@ -21,6 +21,9 @@ require_once __DIR__ . '/models/Candidat.php';
 require_once __DIR__ . '/models/EmailTemplate.php';
 require_once __DIR__ . '/models/User.php';
 
+// ─── Helpers ───────────────────────────────────────────────────────────
+require_once __DIR__ . '/helpers/R2Signer.php';
+
 // ─── Fonctions partagées ───────────────────────────────────────────────
 require_once __DIR__ . '/includes/functions.php';
 
@@ -53,6 +56,8 @@ $router->post('/feedback', 'FeedbackController', 'submit');
 
 // Page candidat – entrevue de présélection (slug: /entrevue/{longId})
 $router->getPattern('#^/entrevue/([a-f0-9]{16})$#', 'RecController', 'show');
+$router->post('/entrevue/upload-url', 'EntrevueController', 'getUploadUrl');
+$router->post('/entrevue/submit',     'EntrevueController', 'submit');
 
 // Purge LSCache (après déploiement) – protégé par PURGE_CACHE_SECRET
 $router->get('/purge-cache', 'PurgeController', 'index');

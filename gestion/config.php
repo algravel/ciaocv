@@ -179,6 +179,25 @@ try {
             FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
+    // ─── Table app_candidatures (entrevue candidat) ───────────────────────────
+    $stmt = $pdo->query("SHOW TABLES LIKE 'app_candidatures'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("CREATE TABLE app_candidatures (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            affichage_id INT UNSIGNED NOT NULL,
+            nom VARCHAR(255) NOT NULL,
+            prenom VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            telephone VARCHAR(50) NULL,
+            video_path VARCHAR(500) NULL COMMENT 'Chemin B2: entrevue/{longId}/{filename}',
+            video_file_id VARCHAR(255) NULL COMMENT 'B2 fileId pour suppression',
+            status VARCHAR(50) NOT NULL DEFAULT 'new',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (affichage_id) REFERENCES app_affichages(id) ON DELETE CASCADE,
+            INDEX idx_affichage (affichage_id),
+            INDEX idx_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
     // S'assurer que platform_user id=1 existe (app mock login utilise user_id=1)
     $stmt = $pdo->query('SELECT id FROM gestion_platform_users WHERE id = 1 LIMIT 1');
     if (!$stmt->fetch()) {

@@ -18,6 +18,7 @@ class RecController extends Controller
         $this->view('rec.index', [
             'longId'    => $longId,
             'poste'     => $poste,
+            'csrfToken' => csrf_token(),
             'pageTitle' => 'Entrevue de présélection',
         ], 'rec');
     }

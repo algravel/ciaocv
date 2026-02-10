@@ -107,7 +107,9 @@ function csrf_field(): string
  */
 function csrf_verify(): bool
 {
-    $token = $_POST['_csrf_token'] ?? '';
+    $token = $_POST['_csrf_token']
+        ?? $_SERVER['HTTP_X_CSRF_TOKEN']
+        ?? '';
     $sessionToken = $_SESSION['_csrf_token'] ?? '';
     if ($token === '' || $sessionToken === '') {
         return false;

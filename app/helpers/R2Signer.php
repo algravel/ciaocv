@@ -1,0 +1,104 @@
+<?php
+/**
+ * R2Signer – Génère des presigned URLs S3v4 pour Cloudflare R2.
+ * Réutilisable pour PUT (upload) et GET (lecture vidéo).
+ */
+class R2Signer
+{
+    /**
+     * Génère un presigned URL (S3 Signature V4, compatible R2).
+     *
+     * @param string $objectKey  Chemin de l'objet dans le bucket (ex: entrevue/abc/file.mp4)
+     * @param string $method     HTTP method (PUT ou GET)
+     * @param string $contentType Content-Type (nécessaire pour PUT, vide pour GET)
+     * @param int    $expires    Durée de validité en secondes
+     */
+    public static function presignedUrl(
+        string $objectKey,
+        string $method = 'GET',
+        string $contentType = '',
+        int    $expires = 3600
+    ): ?string {
+        $accessKey = $_ENV['R2_ACCESS_KEY_ID'] ?? '';
+        $secretKey = $_ENV['R2_SECRET_ACCESS_KEY'] ?? '';
+        $endpoint  = rtrim($_ENV['R2_ENDPOINT'] ?? '', '/');
+        $bucket    = $_ENV['R2_BUCKET'] ?? 'ciaocv';
+
+        if ($accessKey === '' || $secretKey === '' || $endpoint === '') {
+            return null;
+        }
+
+        $region  = 'auto';
+        $service = 's3';
+        $now     = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $datestamp = $now->format('Ymd');
+        $amzDate   = $now->format('Ymd\THis\Z');
+        $scope     = $datestamp . '/' . $region . '/' . $service . '/aws4_request';
+
+        $host = parse_url($endpoint, PHP_URL_HOST);
+        $url  = $endpoint . '/' . $bucket . '/' . $objectKey;
+
+        // Signed headers
+        $signedHeaders = $contentType !== '' ? 'content-type;host' : 'host';
+
+        $queryParams = [
+            'X-Amz-Algorithm'     => 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential'    => $accessKey . '/' . $scope,
+            'X-Amz-Date'          => $amzDate,
+            'X-Amz-Expires'       => (string) $expires,
+            'X-Amz-SignedHeaders' => $signedHeaders,
+        ];
+        ksort($queryParams);
+        $canonicalQueryString = http_build_query($queryParams, '', '&', PHP_QUERY_RFC3986);
+
+        // Canonical headers
+        $canonicalHeaders = '';
+        if ($contentType !== '') {
+            $canonicalHeaders .= 'content-type:' . $contentType . "\n";
+        }
+        $canonicalHeaders .= 'host:' . $host . "\n";
+
+        // Canonical URI : encoder chaque segment individuellement (les / ne doivent PAS être encodés)
+        $encodedKey = implode('/', array_map('rawurlencode', explode('/', $objectKey)));
+
+        // Canonical request
+        $canonicalRequest = implode("\n", [
+            $method,
+            '/' . $bucket . '/' . $encodedKey,
+            $canonicalQueryString,
+            $canonicalHeaders,
+            $signedHeaders,
+            'UNSIGNED-PAYLOAD',
+        ]);
+
+        $stringToSign = implode("\n", [
+            'AWS4-HMAC-SHA256',
+            $amzDate,
+            $scope,
+            hash('sha256', $canonicalRequest),
+        ]);
+
+        $signingKey = hash_hmac('sha256', 'aws4_request',
+            hash_hmac('sha256', $service,
+                hash_hmac('sha256', $region,
+                    hash_hmac('sha256', $datestamp, 'AWS4' . $secretKey, true),
+                    true),
+                true),
+            true);
+
+        $signature = hash_hmac('sha256', $stringToSign, $signingKey);
+
+        return $url . '?' . $canonicalQueryString . '&X-Amz-Signature=' . $signature;
+    }
+
+    /**
+     * Presigned GET URL pour la lecture vidéo (1h par défaut).
+     */
+    public static function videoUrl(string $videoPath, int $expires = 3600): ?string
+    {
+        if ($videoPath === '') {
+            return null;
+        }
+        return self::presignedUrl($videoPath, 'GET', '', $expires);
+    }
+}
