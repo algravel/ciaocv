@@ -1,4 +1,8 @@
 ---
+trigger: always_on
+---
+
+---
 description: Toujours uploader après une action ; transférer les fichiers modifiés sur le serveur FTP via curl
 alwaysApply: true
 ---

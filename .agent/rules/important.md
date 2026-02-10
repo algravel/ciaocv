@@ -1,4 +1,8 @@
 ---
+trigger: always_on
+---
+
+---
 description: Architecture du projet, domaines et documentation
 alwaysApply: true
 ---
