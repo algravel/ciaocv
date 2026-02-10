@@ -353,6 +353,14 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
 .kpi-card--alert .kpi-icon i { color: white !important; }
 .kpi-card--alert .kpi-icon { background: rgba(255,255,255,0.2) !important; }
 .kpi-card--alert:hover { box-shadow: 0 6px 24px rgba(239,68,68,0.35); }
+.kpi-card--complete { background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%) !important; color: white !important; }
+.kpi-card--complete .kpi-label,
+.kpi-card--complete .kpi-value,
+.kpi-card--complete .kpi-sub,
+.kpi-card--complete .kpi-icon,
+.kpi-card--complete .kpi-icon i { color: white !important; }
+.kpi-card--complete .kpi-icon { background: rgba(255,255,255,0.2) !important; }
+.kpi-card--complete:hover { box-shadow: 0 6px 24px rgba(37,99,235,0.35); }
 .kpi-label { font-size: 0.8rem; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
 .kpi-value { font-size: 2rem; font-weight: 700; color: #1E293B; margin-top: 0.25rem; }
 .kpi-suffix { font-size: 1rem; font-weight: 500; color: #94A3B8; }

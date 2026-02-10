@@ -18,8 +18,8 @@ class Affichage
     {
         return [
             'active' => ['label' => 'Actif', 'class' => 'status-active'],
-            'paused'  => ['label' => 'Non actif', 'class' => 'status-paused'],
-            'closed'  => ['label' => 'Archivé', 'class' => 'status-closed'],
+            'paused' => ['label' => 'Non actif', 'class' => 'status-paused'],
+            'closed' => ['label' => 'Archivé', 'class' => 'status-closed'],
             'expired' => ['label' => 'Expiré', 'class' => 'status-expired'],
         ];
     }
@@ -32,23 +32,23 @@ class Affichage
         $map = self::statusMap();
         $s = $map[$r['status'] ?? 'active'] ?? $map['active'];
         $startDate = $r['start_date'] ?? null;
-        $endDate   = $r['end_date'] ?? null;
+        $endDate = $r['end_date'] ?? null;
         return [
-            'id'           => (string) $r['id'],
-            'shareLongId'  => $r['share_long_id'] ?? '',
-            'posteId'      => (string) ($r['poste_id'] ?? ''),
-            'title'        => $r['title'] ?? '',
-            'department'   => $r['department'] ?? '',
-            'platform'     => $r['platform'] ?? 'LinkedIn',
-            'start'        => $startDate ? (string) $startDate : '',
-            'end'          => $endDate ? (string) $endDate : '',
-            'status'       => $s['label'],
-            'statusClass'  => $s['class'],
-            'views'        => '0',
-            'apps'         => '0',
-            'completed'    => 0,
-            'sent'         => 0,
-            'evaluateurs'  => [],
+            'id' => (string) $r['id'],
+            'shareLongId' => $r['share_long_id'] ?? '',
+            'posteId' => (string) ($r['poste_id'] ?? ''),
+            'title' => $r['title'] ?? '',
+            'department' => $r['department'] ?? '',
+            'platform' => $r['platform'] ?? 'LinkedIn',
+            'start' => $startDate ? (string) $startDate : '',
+            'end' => $endDate ? (string) $endDate : '',
+            'status' => $s['label'],
+            'statusClass' => $s['class'],
+            'views' => '0',
+            'apps' => '0',
+            'completed' => 0,
+            'sent' => 0,
+            'evaluateurs' => [],
         ];
     }
 
@@ -141,11 +141,11 @@ class Affichage
         $posteId = $affichage['posteId'] ?? null;
         if (!$posteId) {
             return [
-                'title'          => $affichage['title'] ?? '',
-                'department'     => $affichage['department'] ?? '',
-                'location'       => '',
-                'description'    => '',
-                'questions'      => [],
+                'title' => $affichage['title'] ?? '',
+                'department' => $affichage['department'] ?? '',
+                'location' => '',
+                'description' => '',
+                'questions' => [],
                 'recordDuration' => 3,
             ];
         }
@@ -156,11 +156,11 @@ class Affichage
         $poste = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$poste) {
             return [
-                'title'          => $affichage['title'] ?? '',
-                'department'     => $affichage['department'] ?? '',
-                'location'       => '',
-                'description'    => '',
-                'questions'      => [],
+                'title' => $affichage['title'] ?? '',
+                'department' => $affichage['department'] ?? '',
+                'location' => '',
+                'description' => '',
+                'questions' => [],
                 'recordDuration' => 3,
             ];
         }
@@ -169,11 +169,11 @@ class Affichage
             $questions = json_decode($questions, true) ?: [];
         }
         return [
-            'title'          => $poste['title'] ?? '',
-            'department'     => $poste['department'] ?? '',
-            'location'       => $poste['location'] ?? '',
-            'description'    => $poste['description'] ?? '',
-            'questions'      => is_array($questions) ? $questions : [],
+            'title' => $poste['title'] ?? '',
+            'department' => $poste['department'] ?? '',
+            'location' => $poste['location'] ?? '',
+            'description' => $poste['description'] ?? '',
+            'questions' => is_array($questions) ? $questions : [],
             'recordDuration' => (int) ($poste['record_duration'] ?? 3) ?: 3,
         ];
     }
@@ -206,5 +206,17 @@ class Affichage
         $stmt->execute([$platformUserId, $posteId, $shareLongId, $platform, $status]);
         $id = (int) $pdo->lastInsertId();
         return $id ? self::find((string) $id, $platformUserId) : null;
+    }
+
+    /**
+     * Supprimer un affichage.
+     */
+    public static function delete(string $id, int $platformUserId): bool
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare("DELETE FROM app_affichages WHERE id = ? AND platform_user_id = ?");
+        $stmt->execute([$id, $platformUserId]);
+        return $stmt->rowCount() > 0;
     }
 }

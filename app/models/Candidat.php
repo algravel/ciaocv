@@ -13,81 +13,11 @@ class Candidat
      */
     public static function getAll(?int $platformUserId = null): array
     {
-        $all = [
-            'sophie' => [
-                'id'         => 'sophie',
-                'name'       => 'Sophie Martin',
-                'email'      => 'sophie.martin@email.com',
-                'phone'      => '+1 514 555-0101',
-                'role'       => 'Développeur Frontend',
-                'status'     => 'new',
-                'isFavorite' => false,
-                'rating'     => 4,
-                'video'      => '',
-                'color'      => '3B82F6',
-                'comments'   => [
-                    ['user' => 'Jean R.',  'date' => 'Il y a 2h', 'text' => 'Très bon portfolio, à rencontrer rapidement.'],
-                    ['user' => 'Marie L.', 'date' => 'Hier',      'text' => "CV intéressant, mais manque d'expérience en React."],
-                ],
-            ],
-            'jean' => [
-                'id'         => 'jean',
-                'name'       => 'Jean Dupont',
-                'email'      => 'jean.dupont@email.com',
-                'phone'      => '+1 514 555-0202',
-                'role'       => 'Chef de projet',
-                'status'     => 'reviewed',
-                'isFavorite' => true,
-                'rating'     => 5,
-                'video'      => '',
-                'color'      => '10B981',
-                'comments'   => [
-                    ['user' => 'Paul D.', 'date' => 'Il y a 1j', 'text' => 'Excellent fit culturel.'],
-                ],
-            ],
-            'marie' => [
-                'id'         => 'marie',
-                'name'       => 'Marie Tremblay',
-                'email'      => 'marie.t@email.com',
-                'phone'      => '+1 514 555-0303',
-                'role'       => 'Designer UX/UI',
-                'status'     => 'rejected',
-                'isFavorite' => false,
-                'rating'     => 2,
-                'video'      => '',
-                'color'      => '8B5CF6',
-                'comments'   => [
-                    ['user' => 'Sophie M.', 'date' => 'Il y a 3j', 'text' => 'Portfolio trop junior pour le poste senior.'],
-                ],
-            ],
-            'pierre' => [
-                'id'         => 'pierre',
-                'name'       => 'Pierre Lavoie',
-                'email'      => 'pierre.l@email.com',
-                'phone'      => '+1 514 555-0404',
-                'role'       => 'Développeur Frontend',
-                'status'     => 'shortlisted',
-                'isFavorite' => true,
-                'rating'     => 5,
-                'video'      => '',
-                'color'      => 'EC4899',
-                'comments'   => [
-                    ['user' => 'Jean R.', 'date' => 'Il y a 4h', 'text' => 'Candidat coup de coeur !'],
-                ],
-            ],
-        ];
-
-        if ($platformUserId !== null) {
-            $byAff = self::getByAffichage($platformUserId);
-            $candidatIds = [];
-            foreach ($byAff as $list) {
-                foreach ($list as $c) {
-                    $candidatIds[$c['id'] ?? ''] = true;
-                }
-            }
-            $all = array_filter($all, fn ($c, $id) => isset($candidatIds[$id]), ARRAY_FILTER_USE_BOTH);
+        // Utilisateur réel connecté → pas de données mock
+        if ($platformUserId !== null && $platformUserId > 0) {
+            return [];
         }
-        return $all;
+        return [];
     }
 
     /**
@@ -97,30 +27,11 @@ class Candidat
      */
     public static function getByAffichage(?int $platformUserId = null): array
     {
-        $all = [
-            'frontend-linkedin' => [
-                ['name' => 'Sophie Martin',  'email' => 'sophie.martin@email.com', 'color' => '3B82F6', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true,  'stars' => 4, 'date' => '2026-02-01', 'id' => 'sophie', 'isFavorite' => false],
-                ['name' => 'Pierre Lavoie',  'email' => 'pierre.l@email.com',      'color' => 'EC4899', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true,  'stars' => 4, 'date' => '2026-01-22', 'id' => 'pierre', 'isFavorite' => true],
-                ['name' => 'Luc Bergeron',   'email' => 'luc.b@email.com',         'color' => 'F59E0B', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true,  'stars' => 3, 'date' => '2026-02-03', 'id' => 'luc', 'isFavorite' => false],
-                ['name' => 'Amélie Côté',    'email' => 'amelie.c@email.com',      'color' => '10B981', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true,  'stars' => 5, 'date' => '2026-01-30', 'id' => 'amelie', 'isFavorite' => true],
-                ['name' => 'Marc Gagnon',    'email' => 'marc.g@email.com',        'color' => '8B5CF6', 'status' => 'Refusé',  'statusBg' => '#FEE2E2', 'statusColor' => '#991B1B', 'video' => false, 'stars' => 0, 'date' => '2026-02-05', 'id' => 'marc', 'isFavorite' => false],
-            ],
-            'frontend-site' => [
-                ['name' => 'Julie Fortin', 'email' => 'julie.f@email.com', 'color' => '3B82F6', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true, 'stars' => 3, 'date' => '2026-02-02', 'id' => 'julie', 'isFavorite' => false],
-                ['name' => 'David Chen',   'email' => 'david.c@email.com', 'color' => '10B981', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true, 'stars' => 4, 'date' => '2026-01-28', 'id' => 'david', 'isFavorite' => true],
-            ],
-            'manager-linkedin' => [
-                ['name' => 'Jean Dupont',     'email' => 'jean.dupont@email.com', 'color' => '10B981', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true, 'stars' => 5, 'date' => '2026-01-28', 'id' => 'jean', 'isFavorite' => true],
-                ['name' => 'Nathalie Roy',    'email' => 'nathalie.r@email.com',  'color' => 'EC4899', 'status' => 'Nouveau', 'statusBg' => '#DBEAFE', 'statusColor' => '#1E40AF', 'video' => true, 'stars' => 3, 'date' => '2026-02-04', 'id' => 'nathalie', 'isFavorite' => false],
-                ['name' => 'François Léger',  'email' => 'francois.l@email.com',  'color' => 'F59E0B', 'status' => 'Évalué',    'statusBg' => '#D1FAE5', 'statusColor' => '#065F46', 'video' => true, 'stars' => 4, 'date' => '2026-01-26', 'id' => 'francois', 'isFavorite' => false],
-            ],
-        ];
-
-        if ($platformUserId !== null) {
-            $affichageIds = array_keys(Affichage::getAll($platformUserId));
-            $all = array_intersect_key($all, array_flip($affichageIds));
+        // Utilisateur réel connecté → pas de données mock
+        if ($platformUserId !== null && $platformUserId > 0) {
+            return [];
         }
-        return $all;
+        return [];
     }
 
     /**

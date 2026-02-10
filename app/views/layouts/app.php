@@ -26,12 +26,14 @@
 
             <nav class="nav-links">
                 <?php $def = $defaultSection ?? 'statistiques'; ?>
-                <a href="/tableau-de-bord" class="nav-item<?= $def === 'statistiques' ? ' active' : '' ?>" data-section="statistiques" data-i18n="nav_dashboard">
+                <a href="/tableau-de-bord" class="nav-item<?= $def === 'statistiques' ? ' active' : '' ?>"
+                    data-section="statistiques" data-i18n="nav_dashboard">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Tableau de bord</span>
                 </a>
 
-                <a href="/postes" class="nav-item has-submenu<?= $def === 'postes' ? ' active' : '' ?>" data-section="postes" data-i18n="nav_postes">
+                <a href="/postes" class="nav-item has-submenu<?= $def === 'postes' ? ' active' : '' ?>"
+                    data-section="postes" data-i18n="nav_postes">
                     <i class="fa-solid fa-briefcase"></i>
                     <span>Postes</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
@@ -45,7 +47,8 @@
                     </div>
                 </div>
 
-                <a href="/affichages" class="nav-item has-submenu<?= $def === 'affichages' ? ' active' : '' ?>" data-section="affichages" data-i18n="nav_affichages">
+                <a href="/affichages" class="nav-item has-submenu<?= $def === 'affichages' ? ' active' : '' ?>"
+                    data-section="affichages" data-i18n="nav_affichages">
                     <i class="fa-solid fa-bullhorn"></i>
                     <span>Affichages</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
@@ -54,11 +57,13 @@
                     <div class="nav-submenu-inner">
                         <a href="/affichages#affichages-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
                         <a href="/affichages#affichages-actifs" class="nav-subitem" data-i18n="filter_active">Actifs</a>
-                        <a href="/affichages#affichages-expires" class="nav-subitem" data-i18n="filter_expired">Expirés</a>
+                        <a href="/affichages#affichages-expires" class="nav-subitem"
+                            data-i18n="filter_expired">Expirés</a>
                     </div>
                 </div>
 
-                <a href="/candidats" class="nav-item has-submenu<?= $def === 'candidats' ? ' active' : '' ?>" data-section="candidats" data-i18n="nav_candidats">
+                <a href="/candidats" class="nav-item has-submenu<?= $def === 'candidats' ? ' active' : '' ?>"
+                    data-section="candidats" data-i18n="nav_candidats">
                     <i class="fa-solid fa-user-group"></i>
                     <span>Candidats</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
@@ -67,24 +72,33 @@
                     <div class="nav-submenu-inner">
                         <a href="/candidats#candidats-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
                         <a href="/candidats#candidats-nouveaux" class="nav-subitem" data-i18n="filter_new">Nouveaux</a>
-                        <a href="/candidats#candidats-evalues" class="nav-subitem" data-i18n="filter_reviewed">Évalués</a>
-                        <a href="/candidats#candidats-shortlistes" class="nav-subitem" data-i18n="filter_shortlisted">Shortlistés</a>
+                        <a href="/candidats#candidats-evalues" class="nav-subitem"
+                            data-i18n="filter_reviewed">Évalués</a>
+                        <a href="/candidats#candidats-shortlistes" class="nav-subitem"
+                            data-i18n="filter_shortlisted">Shortlistés</a>
                     </div>
                 </div>
 
-                <a href="/parametres" class="nav-item has-submenu<?= $def === 'parametres' ? ' active' : '' ?>" data-section="parametres" data-i18n="nav_parametres">
+                <a href="/parametres" class="nav-item has-submenu<?= $def === 'parametres' ? ' active' : '' ?>"
+                    data-section="parametres" data-i18n="nav_parametres">
                     <i class="fa-solid fa-gear"></i>
                     <span>Paramètres</span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                 </a>
                 <div class="nav-submenu" data-parent="parametres">
                     <div class="nav-submenu-inner">
-                        <a href="/parametres#parametres-company" class="nav-subitem settings-subitem" data-target="settings-company" data-i18n="settings_company">Entreprise</a>
-                        <a href="/parametres#parametres-branding" class="nav-subitem settings-subitem" data-target="settings-branding" data-i18n="settings_branding">Marque employeur</a>
-                        <a href="/parametres#parametres-departments" class="nav-subitem settings-subitem" data-target="settings-departments" data-i18n="settings_departments">Départements</a>
-                        <a href="/parametres#parametres-team" class="nav-subitem settings-subitem" data-target="settings-team" data-i18n="settings_team">Équipe</a>
-                        <a href="/parametres#parametres-billing" class="nav-subitem settings-subitem" data-target="settings-billing" data-i18n="settings_billing">Facturation</a>
-                        <a href="/parametres#parametres-communications" class="nav-subitem settings-subitem" data-target="settings-communications">Communication</a>
+                        <a href="/parametres#parametres-company" class="nav-subitem settings-subitem"
+                            data-target="settings-company" data-i18n="settings_company">Entreprise</a>
+                        <a href="/parametres#parametres-branding" class="nav-subitem settings-subitem"
+                            data-target="settings-branding" data-i18n="settings_branding">Marque employeur</a>
+                        <a href="/parametres#parametres-departments" class="nav-subitem settings-subitem"
+                            data-target="settings-departments" data-i18n="settings_departments">Départements</a>
+                        <a href="/parametres#parametres-team" class="nav-subitem settings-subitem"
+                            data-target="settings-team" data-i18n="settings_team">Équipe</a>
+                        <a href="/parametres#parametres-billing" class="nav-subitem settings-subitem"
+                            data-target="settings-billing" data-i18n="settings_billing">Facturation</a>
+                        <a href="/parametres#parametres-communications" class="nav-subitem settings-subitem"
+                            data-target="settings-communications">Communication</a>
                     </div>
                 </div>
             </nav>
@@ -99,7 +113,7 @@
                 </button>
 
                 <div class="top-bar-center">
-                    <span class="company-name"><?= e($companyName ?? company_name_from_email($user['email'] ?? '') ?: 'Mon entreprise') ?></span>
+                    <span class="company-name"><?= e($companyName ?? '') ?></span>
                 </div>
 
                 <div class="header-actions">
@@ -148,14 +162,14 @@
     <!-- ─── Données injectées depuis les modèles PHP ─── -->
     <script>
         const APP_DATA = {
-            appUrl:         <?= json_encode(defined('APP_URL') ? APP_URL : 'https://app.ciaocv.com') ?>,
-            postes:         <?= json_encode($postes ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            affichages:     <?= json_encode($affichages ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            candidats:      <?= json_encode($candidats ?? [], JSON_UNESCAPED_UNICODE) ?>,
+            appUrl: <?= json_encode(defined('APP_URL') ? APP_URL : 'https://app.ciaocv.com') ?>,
+            postes: <?= json_encode($postes ?? [], JSON_UNESCAPED_UNICODE) ?>,
+            affichages: <?= json_encode($affichages ?? [], JSON_UNESCAPED_UNICODE) ?>,
+            candidats: <?= json_encode($candidats ?? [], JSON_UNESCAPED_UNICODE) ?>,
             candidatsByAff: <?= json_encode($candidatsByAff ?? [], JSON_UNESCAPED_UNICODE) ?>,
             emailTemplates: <?= json_encode($emailTemplates ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            departments:    <?= json_encode($departments ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            teamMembers:    <?= json_encode($teamMembers ?? [], JSON_UNESCAPED_UNICODE) ?>
+            departments: <?= json_encode($departments ?? [], JSON_UNESCAPED_UNICODE) ?>,
+            teamMembers: <?= json_encode($teamMembers ?? [], JSON_UNESCAPED_UNICODE) ?>
         };
     </script>
     <script src="<?= asset('assets/js/i18n.js') ?>"></script>

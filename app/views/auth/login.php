@@ -28,6 +28,7 @@
 
                 <form action="/connexion" method="POST">
                     <?= csrf_field() ?>
+                    <input type="hidden" id="login-lang" name="lang" value="fr">
                     <div class="form-group mb-5">
                         <label for="email" data-i18n="login.email.label">Courriel</label>
                         <input type="email" id="email" name="email" class="form-control"
@@ -38,6 +39,8 @@
                         <input type="password" id="password" name="password" class="form-control"
                             placeholder="••••••••" data-i18n="login.password.placeholder">
                     </div>
+                    <!-- Cloudflare Turnstile désactivé — remplacé par 2FA par courriel -->
+                    <!--
                     <?php
                     $turnstileKey = $_ENV['TURNSTILE_SITE_KEY'] ?? '';
                     if ($turnstileKey !== ''):
@@ -46,6 +49,7 @@
                         <div class="cf-turnstile" data-sitekey="<?= e($turnstileKey) ?>" data-theme="light" data-size="normal"></div>
                     </div>
                     <?php endif; ?>
+                    -->
                     <button type="submit" class="btn-primary login-submit" data-i18n="login.submit">Se connecter</button>
                 </form>
 
@@ -90,11 +94,65 @@
                 <input type="email" id="forgot-email" name="email" class="form-control"
                     placeholder="votre@courriel.com" data-i18n="forgot.email.placeholder" required>
             </div>
-            <div class="turnstile-placeholder" id="cf-turnstile-container">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span data-i18n="forgot.turnstile">Vérification de sécurité Cloudflare</span>
-            </div>
             <button type="submit" class="btn-primary login-submit" data-i18n="forgot.submit">Envoyer le lien</button>
         </form>
     </div>
 </div>
+
+<!-- Modal OTP (2FA par courriel) -->
+<div class="forgot-overlay<?= !empty($showOtpModal) ? ' active' : '' ?>" id="otpOverlay" onclick="closeOtpModal(event)">
+    <div class="forgot-modal" onclick="event.stopPropagation()">
+        <button class="forgot-modal-close" onclick="closeOtpModal()" aria-label="Fermer">&times;</button>
+        <h3 data-i18n="login.otp.title">Vérification par courriel</h3>
+        <p class="forgot-desc">
+            <span data-i18n="login.otp.desc">Un code de vérification a été envoyé à</span>
+            <strong><?= e($otpEmail ?? '') ?></strong>
+        </p>
+
+        <?php if (!empty($error) && !empty($showOtpModal)): ?>
+            <div class="login-error"<?php if (!empty($errorKey)): ?> data-i18n="<?= e($errorKey) ?>"<?php endif ?>>
+                <?= $errorHtml ? $error : e($error) ?>
+            </div>
+        <?php endif; ?>
+
+        <form action="/connexion/otp" method="POST">
+            <?= csrf_field() ?>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="otp-code" data-i18n="login.otp.label">Code à 6 chiffres</label>
+                <input type="text" id="otp-code" name="otp" class="form-control"
+                    placeholder="000000" maxlength="6" pattern="[0-9]{6}"
+                    autocomplete="one-time-code" inputmode="numeric"
+                    style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5em; font-weight: 700;"
+                    autofocus>
+            </div>
+            <button type="submit" class="btn-primary login-submit" data-i18n="login.otp.submit">Vérifier</button>
+        </form>
+        <p style="text-align: center; margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+            <span data-i18n="login.otp.expires">Le code expire dans 10 minutes.</span>
+        </p>
+    </div>
+</div>
+
+<script>
+function closeOtpModal(e) {
+    if (e && e.target !== document.getElementById('otpOverlay')) return;
+    document.getElementById('otpOverlay').classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+// Sync language field with login form
+document.addEventListener('DOMContentLoaded', function() {
+    const langField = document.getElementById('login-lang');
+    if (langField) {
+        langField.value = localStorage.getItem('language') || 'fr';
+    }
+});
+
+// Override changeLanguage to also update the hidden field
+const _origChangeLanguage = typeof changeLanguage === 'function' ? changeLanguage : null;
+function changeLanguage(lang) {
+    if (_origChangeLanguage) _origChangeLanguage(lang);
+    const langField = document.getElementById('login-lang');
+    if (langField) langField.value = lang;
+}
+</script>

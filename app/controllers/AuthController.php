@@ -1,10 +1,12 @@
 <?php
 /**
  * Contrôleur d'authentification.
- * Gère la connexion, la déconnexion et le mot de passe oublié.
+ * Gère la connexion (email + mot de passe + OTP par courriel), la déconnexion.
  */
 class AuthController extends Controller
 {
+    private const OTP_VALIDITY_SECONDS = 600; // 10 minutes
+
     /**
      * Afficher la page de connexion.
      */
@@ -16,7 +18,7 @@ class AuthController extends Controller
         }
 
         // Sous-titre dynamique selon le type de visiteur
-        $loginType   = $_GET['type'] ?? '';
+        $loginType = $_GET['type'] ?? '';
         $subtitleKey = 'login.hero.subtitle';
 
         if ($loginType === 'candidat') {
@@ -25,61 +27,212 @@ class AuthController extends Controller
             $subtitleKey = 'login.hero.subtitle.entreprise';
         }
 
+        // Gestion étape OTP
+        $step = $_GET['step'] ?? '';
+        $showOtpModal = ($step === 'otp' && isset($_SESSION['app_otp_code']));
+        $error = '';
+        $errorKey = '';
+
+        if (($_GET['error'] ?? '') === 'otp_expired') {
+            $this->clearOtpSession();
+            $error = 'Le code a expiré. Veuillez vous reconnecter.';
+            $errorKey = 'login.error.otp_expired';
+        }
+
         $this->view('auth.login', [
             'subtitleKey' => $subtitleKey,
-            'error'       => '',
-            'errorKey'    => '',
-            'errorHtml'   => false,
+            'error' => $error,
+            'errorKey' => $errorKey,
+            'errorHtml' => false,
+            'showOtpModal' => $showOtpModal,
+            'otpEmail' => $showOtpModal ? $this->maskEmail($_SESSION['app_otp_email'] ?? '') : '',
         ], 'auth');
     }
 
     /**
-     * Traiter le formulaire de connexion.
+     * Traiter le formulaire de connexion (étape 1: email + mot de passe).
      */
     public function authenticate(): void
     {
-        $turnstileSecret = $_ENV['TURNSTILE_SECRET_KEY'] ?? '';
-        if ($turnstileSecret !== '') {
-            $token = trim($_POST['cf-turnstile-response'] ?? '');
-            $remoteIp = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? null;
-            if (is_string($remoteIp) && strpos($remoteIp, ',') !== false) {
-                $remoteIp = trim(explode(',', $remoteIp)[0]);
-            }
-            $validation = turnstile_verify($token, $remoteIp);
-            if (empty($validation['success'])) {
-                $loginType = $_GET['type'] ?? '';
-                $subtitleKey = $loginType === 'candidat' ? 'login.hero.subtitle.candidat' : ($loginType === 'entreprise' ? 'login.hero.subtitle.entreprise' : 'login.hero.subtitle');
-                $this->view('auth.login', [
-                    'subtitleKey' => $subtitleKey,
-                    'error'       => 'Vérification de sécurité échouée. Veuillez réessayer.',
-                    'errorKey'    => 'login.error.turnstile',
-                    'errorHtml'   => false,
-                ], 'auth');
-                return;
-            }
-        }
+        // Cloudflare Turnstile — commenté, remplacé par 2FA par courriel
+        // $turnstileSecret = $_ENV['TURNSTILE_SECRET_KEY'] ?? '';
+        // if ($turnstileSecret !== '') {
+        //     $token = trim($_POST['cf-turnstile-response'] ?? '');
+        //     $remoteIp = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? null;
+        //     if (is_string($remoteIp) && strpos($remoteIp, ',') !== false) {
+        //         $remoteIp = trim(explode(',', $remoteIp)[0]);
+        //     }
+        //     $validation = turnstile_verify($token, $remoteIp);
+        //     if (empty($validation['success'])) {
+        //         $loginType = $_GET['type'] ?? '';
+        //         $subtitleKey = $loginType === 'candidat' ? 'login.hero.subtitle.candidat' : ($loginType === 'entreprise' ? 'login.hero.subtitle.entreprise' : 'login.hero.subtitle');
+        //         $this->view('auth.login', [
+        //             'subtitleKey' => $subtitleKey,
+        //             'error'       => 'Vérification de sécurité échouée. Veuillez réessayer.',
+        //             'errorKey'    => 'login.error.turnstile',
+        //             'errorHtml'   => false,
+        //         ], 'auth');
+        //         return;
+        //     }
+        // }
 
-        $email    = trim($_POST['email'] ?? '');
+        $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        // TODO : Validation réelle avec base de données
-        // Pour l'instant on accepte tout et on crée une session mock
+        $loginType = $_GET['type'] ?? '';
+        $subtitleKey = $loginType === 'candidat' ? 'login.hero.subtitle.candidat' : ($loginType === 'entreprise' ? 'login.hero.subtitle.entreprise' : 'login.hero.subtitle');
+
         if ($email === '') {
             $this->view('auth.login', [
-                'subtitleKey' => 'login.hero.subtitle',
-                'error'       => 'Veuillez entrer votre courriel.',
-                'errorKey'    => 'login.error.email_required',
-                'errorHtml'   => false,
+                'subtitleKey' => $subtitleKey,
+                'error' => 'Veuillez entrer votre courriel.',
+                'errorKey' => 'login.error.email_required',
+                'errorHtml' => false,
+                'showOtpModal' => false,
+                'otpEmail' => '',
             ], 'auth');
             return;
         }
 
-        // Créer la session (mock)
-        $_SESSION['user_id']       = 1;
-        $_SESSION['user_email']    = $email;
-        $_SESSION['user_name']     = 'Utilisateur';
-        $_SESSION['company_name']  = company_name_from_email($email) ?: 'Mon entreprise';
+        if ($password === '') {
+            $this->view('auth.login', [
+                'subtitleKey' => $subtitleKey,
+                'error' => 'Veuillez entrer votre mot de passe.',
+                'errorKey' => 'login.error.password_required',
+                'errorHtml' => false,
+                'showOtpModal' => false,
+                'otpEmail' => '',
+            ], 'auth');
+            return;
+        }
 
+        // Charger gestion/config pour accéder à PlatformUser, Database, Encryption
+        require_once dirname(__DIR__, 2) . '/gestion/config.php';
+
+        try {
+            $platformUserModel = new PlatformUser();
+            $user = $platformUserModel->findByEmail($email);
+        } catch (Throwable $e) {
+            $this->view('auth.login', [
+                'subtitleKey' => $subtitleKey,
+                'error' => 'Une erreur est survenue. Veuillez réessayer.',
+                'errorKey' => 'login.error.generic',
+                'errorHtml' => false,
+                'showOtpModal' => false,
+                'otpEmail' => '',
+            ], 'auth');
+            return;
+        }
+
+        // Vérifier identifiants
+        if (!$user || empty($user['password_hash']) || !$platformUserModel->verifyPassword($password, $user['password_hash'])) {
+            $this->view('auth.login', [
+                'subtitleKey' => $subtitleKey,
+                'error' => 'Courriel ou mot de passe incorrect.',
+                'errorKey' => 'login.error.invalid',
+                'errorHtml' => false,
+                'showOtpModal' => false,
+                'otpEmail' => '',
+            ], 'auth');
+            return;
+        }
+
+        // Vérifier que le compte est actif
+        if (empty($user['active'])) {
+            $this->view('auth.login', [
+                'subtitleKey' => $subtitleKey,
+                'error' => 'Votre compte est désactivé. Contactez votre administrateur.',
+                'errorKey' => 'login.error.inactive',
+                'errorHtml' => false,
+                'showOtpModal' => false,
+                'otpEmail' => '',
+            ], 'auth');
+            return;
+        }
+
+        // Générer et envoyer le code OTP par courriel
+        $otpCode = (string) random_int(100000, 999999);
+        $lang = (trim($_POST['lang'] ?? '') === 'en') ? 'en' : 'fr';
+        $sent = zeptomail_send_otp($user['email'], $user['name'] ?? 'Utilisateur', $otpCode, $lang, '#2563EB');
+
+        if (!$sent) {
+            $this->view('auth.login', [
+                'subtitleKey' => $subtitleKey,
+                'error' => "Impossible d'envoyer le code de vérification. Veuillez réessayer.",
+                'errorKey' => 'login.error.otp_send_failed',
+                'errorHtml' => false,
+                'showOtpModal' => false,
+                'otpEmail' => '',
+            ], 'auth');
+            return;
+        }
+
+        // Stocker OTP en session
+        $_SESSION['app_otp_code'] = $otpCode;
+        $_SESSION['app_otp_email'] = $user['email'];
+        $_SESSION['app_otp_expires'] = time() + self::OTP_VALIDITY_SECONDS;
+        $_SESSION['app_otp_user_id'] = $user['id'];
+        $_SESSION['app_otp_user_name'] = $user['name'] ?? 'Utilisateur';
+        $_SESSION['app_otp_company'] = ''; // sera résolu au login final
+
+        $this->redirect('/connexion?step=otp');
+    }
+
+    /**
+     * Vérifier le code OTP (étape 2).
+     */
+    public function verifyOtp(): void
+    {
+        if (!isset($_SESSION['app_otp_code'])) {
+            $this->redirect('/connexion');
+            return;
+        }
+
+        // Vérifier expiration
+        if (time() > ($_SESSION['app_otp_expires'] ?? 0)) {
+            $this->clearOtpSession();
+            $this->redirect('/connexion?error=otp_expired');
+            return;
+        }
+
+        $userOtp = trim($_POST['otp'] ?? '');
+        $storedOtp = $_SESSION['app_otp_code'] ?? '';
+
+        if ($userOtp === '' || !hash_equals($storedOtp, $userOtp)) {
+            $this->view('auth.login', [
+                'subtitleKey' => 'login.hero.subtitle',
+                'error' => 'Code invalide ou expiré. Veuillez réessayer.',
+                'errorKey' => 'login.error.otp_invalid',
+                'errorHtml' => false,
+                'showOtpModal' => true,
+                'otpEmail' => $this->maskEmail($_SESSION['app_otp_email'] ?? ''),
+            ], 'auth');
+            return;
+        }
+
+        // OTP valide — créer la session authentifiée
+        $userId = $_SESSION['app_otp_user_id'];
+        $userEmail = $_SESSION['app_otp_email'];
+        $userName = $_SESSION['app_otp_user_name'];
+
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['user_email'] = $userEmail;
+        $_SESSION['user_name'] = $userName;
+        // Récupérer le nom d'entreprise depuis la DB (pas d'auto-génération)
+        $companyName = '';
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $entrepriseModel = new Entreprise();
+            $ent = $entrepriseModel->getByPlatformUserId($userId);
+            if ($ent && !empty($ent['name'])) {
+                $companyName = $ent['name'];
+            }
+        } catch (Throwable $e) {
+            // table pas encore créée
+        }
+        $_SESSION['company_name'] = $companyName;
+
+        $this->clearOtpSession();
         $this->redirect('/tableau-de-bord');
     }
 
@@ -90,5 +243,38 @@ class AuthController extends Controller
     {
         session_destroy();
         $this->redirect('/connexion');
+    }
+
+    /**
+     * Nettoyer les variables OTP de la session.
+     */
+    private function clearOtpSession(): void
+    {
+        unset(
+            $_SESSION['app_otp_code'],
+            $_SESSION['app_otp_email'],
+            $_SESSION['app_otp_expires'],
+            $_SESSION['app_otp_user_id'],
+            $_SESSION['app_otp_user_name'],
+            $_SESSION['app_otp_company']
+        );
+    }
+
+    /**
+     * Masquer partiellement un courriel : j***n@example.com
+     */
+    private function maskEmail(string $email): string
+    {
+        if (strpos($email, '@') === false) {
+            return $email;
+        }
+        [$local, $domain] = explode('@', $email, 2);
+        $len = strlen($local);
+        if ($len <= 2) {
+            $masked = str_repeat('*', $len);
+        } else {
+            $masked = $local[0] . str_repeat('*', $len - 2) . $local[$len - 1];
+        }
+        return $masked . '@' . $domain;
     }
 }

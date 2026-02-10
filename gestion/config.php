@@ -13,10 +13,12 @@ if (file_exists($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
         $line = trim($line);
-        if ($line === '' || $line[0] === '#') continue;
-        if (strpos($line, '=') === false) continue;
+        if ($line === '' || $line[0] === '#')
+            continue;
+        if (strpos($line, '=') === false)
+            continue;
         list($key, $value) = explode('=', $line, 2);
-        $key   = trim($key);
+        $key = trim($key);
         $value = trim($value);
         if (strlen($value) >= 2 && (($value[0] === '"' && $value[strlen($value) - 1] === '"') || ($value[0] === "'" && $value[strlen($value) - 1] === "'"))) {
             $value = substr($value, 1, -1);
@@ -223,9 +225,9 @@ if (session_status() === PHP_SESSION_NONE) {
         || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
     session_set_cookie_params([
         'lifetime' => 0,
-        'path'     => GESTION_BASE_PATH ?: '/',
-        'domain'   => '',
-        'secure'   => $isHttps,
+        'path' => GESTION_BASE_PATH ?: '/',
+        'domain' => '',
+        'secure' => $isHttps,
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
@@ -267,10 +269,10 @@ if (!function_exists('csrf_verify')) {
     }
 }
 
-function zeptomail_send_otp(string $toEmail, string $toName, string $otpCode, string $lang = 'fr'): bool
+function zeptomail_send_otp(string $toEmail, string $toName, string $otpCode, string $lang = 'fr', string $accentColor = '#800020'): bool
 {
     $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
-    $token  = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
     $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
     $fromName = 'CIAOCV';
     if ($token === '') {
@@ -288,20 +290,20 @@ function zeptomail_send_otp(string $toEmail, string $toName, string $otpCode, st
     $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
-        'to'   => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
+        'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
         'subject' => $subject,
         'htmlbody' => '<div style="font-family:sans-serif;max-width:480px;margin:0 auto;">' .
-            '<h2 style="color:#800020;">' . $titleH2 . '</h2>' .
+            '<h2 style="color:' . $accentColor . ';">' . $titleH2 . '</h2>' .
             '<p>' . $bodyHello . ' ' . htmlspecialchars($toName) . ',</p>' .
             '<p>' . $bodyIntro . '</p>' .
-            '<p style="font-size:28px;font-weight:700;letter-spacing:6px;color:#800020;margin:1.5rem 0;">' . htmlspecialchars($otpCode) . '</p>' .
+            '<p style="font-size:28px;font-weight:700;letter-spacing:6px;color:' . $accentColor . ';margin:1.5rem 0;">' . htmlspecialchars($otpCode) . '</p>' .
             '<p style="color:#666;font-size:14px;">' . $bodyExpire . '</p>' .
             '<p style="color:#666;font-size:12px;">' . $bodyTeam . '</p></div>',
     ];
     $ctx = stream_context_create([
         'http' => [
-            'method'  => 'POST',
-            'header'  => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
+            'method' => 'POST',
+            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
             'content' => json_encode($payload),
             'timeout' => 15,
         ],
@@ -333,7 +335,7 @@ function _zeptomail_email_logo_user(): string
 function zeptomail_send_new_admin_credentials(string $toEmail, string $toName, string $newPassword): bool
 {
     $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
-    $token  = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
     $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
     $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'CIAOCV';
     if ($token === '') {
@@ -345,7 +347,7 @@ function zeptomail_send_new_admin_credentials(string $toEmail, string $toName, s
     $loginUrl = $gestionBase . ($basePath ? '/' . trim($basePath, '/') : '') . '/connexion';
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
-        'to'   => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
+        'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
         'subject' => 'Vos accès',
         'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:2rem 1rem;">' .
             _zeptomail_email_logo() .
@@ -360,8 +362,8 @@ function zeptomail_send_new_admin_credentials(string $toEmail, string $toName, s
     ];
     $ctx = stream_context_create([
         'http' => [
-            'method'  => 'POST',
-            'header'  => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
+            'method' => 'POST',
+            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
             'content' => json_encode($payload),
             'timeout' => 15,
         ],
@@ -377,7 +379,7 @@ function zeptomail_send_new_admin_credentials(string $toEmail, string $toName, s
 function zeptomail_send_new_platform_user_credentials(string $toEmail, string $toName, string $newPassword): bool
 {
     $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
-    $token  = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
     $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
     $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'CIAOCV';
     $logPath = dirname(__DIR__) . '/.cursor/debug.log';
@@ -391,7 +393,7 @@ function zeptomail_send_new_platform_user_credentials(string $toEmail, string $t
     $loginUrl = $appUrl . '/connexion';
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
-        'to'   => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
+        'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
         'subject' => 'Votre compte CIAOCV a été créé',
         'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:2rem 1rem;">' .
             _zeptomail_email_logo_user() .
@@ -406,8 +408,8 @@ function zeptomail_send_new_platform_user_credentials(string $toEmail, string $t
     ];
     $ctx = stream_context_create([
         'http' => [
-            'method'  => 'POST',
-            'header'  => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
+            'method' => 'POST',
+            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
             'content' => json_encode($payload),
             'timeout' => 15,
         ],
@@ -426,7 +428,7 @@ function zeptomail_send_new_platform_user_credentials(string $toEmail, string $t
 function zeptomail_send_platform_user_password_reset(string $toEmail, string $toName, string $newPassword): bool
 {
     $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
-    $token  = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
     $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
     $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'CIAOCV';
     if ($token === '') {
@@ -437,7 +439,7 @@ function zeptomail_send_platform_user_password_reset(string $toEmail, string $to
     $loginUrl = $appUrl . '/connexion';
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
-        'to'   => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
+        'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
         'subject' => 'Mot de passe réinitialisé - CiaoCV',
         'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:2rem 1rem;">' .
             _zeptomail_email_logo_user() .
@@ -452,8 +454,8 @@ function zeptomail_send_platform_user_password_reset(string $toEmail, string $to
     ];
     $ctx = stream_context_create([
         'http' => [
-            'method'  => 'POST',
-            'header'  => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
+            'method' => 'POST',
+            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
             'content' => json_encode($payload),
             'timeout' => 15,
         ],
@@ -469,7 +471,7 @@ function zeptomail_send_platform_user_password_reset(string $toEmail, string $to
 function zeptomail_send_password_reset(string $toEmail, string $toName, string $newPassword): bool
 {
     $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
-    $token  = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
     $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
     $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'CIAOCV';
     if ($token === '') {
@@ -481,7 +483,7 @@ function zeptomail_send_password_reset(string $toEmail, string $toName, string $
     $loginUrl = $gestionBase . ($basePath ? '/' . trim($basePath, '/') : '') . '/connexion';
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
-        'to'   => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
+        'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
         'subject' => 'Nouveau mot de passe',
         'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:2rem 1rem;">' .
             _zeptomail_email_logo() .
@@ -496,8 +498,8 @@ function zeptomail_send_password_reset(string $toEmail, string $toName, string $
     ];
     $ctx = stream_context_create([
         'http' => [
-            'method'  => 'POST',
-            'header'  => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
+            'method' => 'POST',
+            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
             'content' => json_encode($payload),
             'timeout' => 15,
         ],
@@ -511,31 +513,31 @@ function zeptomail_send_password_reset(string $toEmail, string $toName, string $
 }
 
 if (!function_exists('turnstile_verify')) {
-function turnstile_verify(string $token, ?string $remoteIp = null): array
-{
-    $secret = $_ENV['TURNSTILE_SECRET_KEY'] ?? '';
-    if ($secret === '' || $token === '') {
-        return ['success' => false, 'error-codes' => ['missing-input-response']];
+    function turnstile_verify(string $token, ?string $remoteIp = null): array
+    {
+        $secret = $_ENV['TURNSTILE_SECRET_KEY'] ?? '';
+        if ($secret === '' || $token === '') {
+            return ['success' => false, 'error-codes' => ['missing-input-response']];
+        }
+        $data = ['secret' => $secret, 'response' => $token];
+        if ($remoteIp !== null && $remoteIp !== '') {
+            $data['remoteip'] = $remoteIp;
+        }
+        $ctx = stream_context_create([
+            'http' => [
+                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method' => 'POST',
+                'content' => http_build_query($data),
+                'timeout' => 10,
+            ],
+        ]);
+        $response = @file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $ctx);
+        if ($response === false) {
+            return ['success' => false, 'error-codes' => ['internal-error']];
+        }
+        $result = json_decode($response, true);
+        return is_array($result) ? $result : ['success' => false, 'error-codes' => ['internal-error']];
     }
-    $data = ['secret' => $secret, 'response' => $token];
-    if ($remoteIp !== null && $remoteIp !== '') {
-        $data['remoteip'] = $remoteIp;
-    }
-    $ctx = stream_context_create([
-        'http' => [
-            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-            'method'  => 'POST',
-            'content' => http_build_query($data),
-            'timeout' => 10,
-        ],
-    ]);
-    $response = @file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $ctx);
-    if ($response === false) {
-        return ['success' => false, 'error-codes' => ['internal-error']];
-    }
-    $result = json_decode($response, true);
-    return is_array($result) ? $result : ['success' => false, 'error-codes' => ['internal-error']];
-}
 }
 
 function gestion_asset(string $path, bool $noCache = false): string

@@ -14,9 +14,9 @@ class DashboardController extends Controller
         $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         // Charger les données depuis les modèles (filtrées par entreprise si connecté)
-        $postes         = Poste::getAll($platformUserId);
-        $affichages     = Affichage::getAll($platformUserId);
-        $candidats      = Candidat::getAll($platformUserId);
+        $postes = Poste::getAll($platformUserId);
+        $affichages = Affichage::getAll($platformUserId);
+        $candidats = Candidat::getAll($platformUserId);
         $candidatsByAff = Candidat::getByAffichage($platformUserId);
         $emailTemplates = EmailTemplate::getAll();
 
@@ -33,8 +33,8 @@ class DashboardController extends Controller
         $teamMembers = User::getAll();
 
         $user = [
-            'name'  => $_SESSION['user_name']  ?? 'Utilisateur',
-            'email' => $_SESSION['user_email'] ?? 'admin@olymel.com',
+            'name' => $_SESSION['user_name'] ?? 'Utilisateur',
+            'email' => $_SESSION['user_email'] ?? '',
         ];
 
         $entreprise = null;
@@ -47,7 +47,7 @@ class DashboardController extends Controller
                 // Ignorer si table non encore créée
             }
         }
-        $companyName = ($entreprise['name'] ?? null) ?: ($_SESSION['company_name'] ?? company_name_from_email($user['email']) ?: 'Mon entreprise');
+        $companyName = ($entreprise['name'] ?? null) ?: ($_SESSION['company_name'] ?? '');
 
         $kpiForfaitUsed = 0;
         $kpiForfaitLimit = 50;
@@ -86,15 +86,25 @@ class DashboardController extends Controller
                 $kpiAffichagesActifs++;
             }
         }
+        // Calcul des tâches restantes
+        $hasCompanyName = !empty($companyName) && $companyName !== 'Mon entreprise';
         $hasPoste = count($postes) > 0;
         $hasAffichage = count($affichages) > 0;
-        // Nouvelle org = pas de postes ni affichages → 3 tâches à faire
-        $isNewOrg = $forceNewOrg || (!$hasPoste && !$hasAffichage);
-        $kpiTachesRestantes = $isNewOrg ? 3 : max(0, 3 - ($hasPoste ? 1 : 0) - ($hasAffichage ? 1 : 0) - 1);
 
-        if (empty($chartMonths)) {
-            $chartMonths = [['label' => 'Sep', 'count' => 60], ['label' => 'Oct', 'count' => 100], ['label' => 'Nov', 'count' => 80], ['label' => 'Déc', 'count' => 140], ['label' => 'Jan', 'count' => 180], ['label' => 'Fév', 'count' => 120]];
-        }
+        // Nouvelle org logic restored (used for placeholders in view)
+        $isNewOrg = $forceNewOrg || (!$hasPoste && !$hasAffichage);
+
+        $tasksCompleted = 0;
+        if ($hasCompanyName)
+            $tasksCompleted++;
+        if ($hasPoste)
+            $tasksCompleted++;
+        if ($hasAffichage)
+            $tasksCompleted++;
+
+        $kpiTachesRestantes = $forceNewOrg ? 3 : max(0, 3 - $tasksCompleted);
+
+        // chartMonths reste vide si aucune entrevue réelle — la vue affiche un état vide
 
         // Section active selon l'URL (/postes, /affichages, etc.)
         $path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
@@ -108,27 +118,30 @@ class DashboardController extends Controller
         };
 
         $this->view('dashboard.index', [
-            'pageTitle'           => 'Tableau de bord',
-            'companyName'         => $companyName,
-            'entreprise'          => $entreprise,
-            'postes'              => $postes,
-            'affichages'          => $affichages,
-            'candidats'           => $candidats,
-            'candidatsByAff'      => $candidatsByAff,
-            'emailTemplates'      => $emailTemplates,
-            'departments'         => $departments,
-            'teamMembers'         => $teamMembers,
-            'user'                => $user,
-            'kpiForfaitUsed'      => $kpiForfaitUsed,
-            'kpiForfaitLimit'     => $kpiForfaitLimit,
-            'planName'            => $planName,
+            'pageTitle' => 'Tableau de bord',
+            'companyName' => $companyName,
+            'entreprise' => $entreprise,
+            'postes' => $postes,
+            'affichages' => $affichages,
+            'candidats' => $candidats,
+            'candidatsByAff' => $candidatsByAff,
+            'emailTemplates' => $emailTemplates,
+            'departments' => $departments,
+            'teamMembers' => $teamMembers,
+            'user' => $user,
+            'kpiForfaitUsed' => $kpiForfaitUsed,
+            'kpiForfaitLimit' => $kpiForfaitLimit,
+            'planName' => $planName,
             'kpiAffichagesActifs' => $kpiAffichagesActifs,
             'kpiAffichagesActifsPrev' => $kpiAffichagesActifsPrev,
-            'kpiTachesRestantes'  => $kpiTachesRestantes,
-            'isNewOrg'            => $isNewOrg,
-            'events'              => $events,
-            'chartMonths'         => $chartMonths,
-            'defaultSection'      => $defaultSection,
+            'kpiTachesRestantes' => $kpiTachesRestantes,
+            'isNewOrg' => $isNewOrg,
+            'events' => $events,
+            'chartMonths' => $chartMonths,
+            'defaultSection' => $defaultSection,
+            'hasCompanyName' => $hasCompanyName,
+            'hasPoste' => $hasPoste,
+            'hasAffichage' => $hasAffichage,
         ]);
     }
 
@@ -145,11 +158,11 @@ class DashboardController extends Controller
         }
         require_once dirname(__DIR__, 2) . '/gestion/config.php';
         $data = [
-            'name'        => trim($_POST['company_name'] ?? '') ?: (company_name_from_email($_SESSION['user_email'] ?? '') ?: 'Mon entreprise'),
-            'industry'    => trim($_POST['industry'] ?? '') ?: null,
-            'email'       => trim($_POST['email'] ?? '') ?: null,
-            'phone'       => trim($_POST['phone'] ?? '') ?: null,
-            'address'     => trim($_POST['address'] ?? '') ?: null,
+            'name' => trim($_POST['company_name'] ?? ''),
+            'industry' => trim($_POST['industry'] ?? '') ?: null,
+            'email' => trim($_POST['email'] ?? '') ?: null,
+            'phone' => trim($_POST['phone'] ?? '') ?: null,
+            'address' => trim($_POST['address'] ?? '') ?: null,
             'description' => trim($_POST['description'] ?? '') ?: null,
         ];
         $entrepriseModel = new Entreprise();
@@ -171,15 +184,30 @@ class DashboardController extends Controller
                 return;
             }
             $data = [
-                'title'          => trim($_POST['title'] ?? ''),
-                'department'     => trim($_POST['department'] ?? ''),
-                'location'       => trim($_POST['location'] ?? ''),
-                'status'         => $_POST['status'] ?? 'active',
-                'description'    => trim($_POST['description'] ?? '') ?: null,
+                'title' => trim($_POST['title'] ?? ''),
+                'department' => trim($_POST['department'] ?? ''),
+                'location' => trim($_POST['location'] ?? ''),
+                'status' => $_POST['status'] ?? 'active',
+                'description' => trim($_POST['description'] ?? '') ?: null,
                 'record_duration' => (int) ($_POST['record_duration'] ?? 3) ?: 3,
             ];
             $poste = Poste::create($platformUserId, $data);
             if ($poste) {
+                // Journaliser la création
+                try {
+                    require_once dirname(__DIR__, 2) . '/gestion/config.php';
+                    $event = new Event();
+                    $event->logForPlatformUser(
+                        $platformUserId,
+                        'create',
+                        'poste',
+                        (string) ($poste['id'] ?? ''),
+                        'Poste créé: ' . ($data['title'] ?: '(sans titre)'),
+                        $_SESSION['user_name'] ?? null
+                    );
+                } catch (Throwable $logErr) {
+                    error_log('Event log error: ' . $logErr->getMessage());
+                }
                 $this->json(['success' => true, 'poste' => $poste]);
             } else {
                 $this->json(['success' => false, 'error' => 'Titre requis'], 400);
@@ -224,6 +252,24 @@ class DashboardController extends Controller
                 return;
             }
             $ok = Poste::update($id, $platformUserId, $data);
+            if ($ok) {
+                // Journaliser la modification
+                try {
+                    require_once dirname(__DIR__, 2) . '/gestion/config.php';
+                    $event = new Event();
+                    $changedFields = implode(', ', array_keys($data));
+                    $event->logForPlatformUser(
+                        $platformUserId,
+                        'update',
+                        'poste',
+                        (string) $id,
+                        'Poste modifié (champs: ' . $changedFields . ')',
+                        $_SESSION['user_name'] ?? null
+                    );
+                } catch (Throwable $logErr) {
+                    error_log('Event log error: ' . $logErr->getMessage());
+                }
+            }
             $this->json(['success' => $ok]);
         } catch (Throwable $e) {
             error_log('updatePoste: ' . $e->getMessage());
@@ -249,6 +295,23 @@ class DashboardController extends Controller
             return;
         }
         $ok = Poste::delete($id, $platformUserId);
+        if ($ok) {
+            // Journaliser la suppression
+            try {
+                require_once dirname(__DIR__, 2) . '/gestion/config.php';
+                $event = new Event();
+                $event->logForPlatformUser(
+                    $platformUserId,
+                    'delete',
+                    'poste',
+                    (string) $id,
+                    'Poste supprimé #' . $id,
+                    $_SESSION['user_name'] ?? null
+                );
+            } catch (Throwable $logErr) {
+                error_log('Event log error: ' . $logErr->getMessage());
+            }
+        }
         $this->json(['success' => $ok]);
     }
 
@@ -275,6 +338,21 @@ class DashboardController extends Controller
             }
             $affichage = Affichage::create($platformUserId, ['poste_id' => $posteId]);
             if ($affichage) {
+                // Journaliser la création de l'affichage
+                try {
+                    require_once dirname(__DIR__, 2) . '/gestion/config.php';
+                    $event = new Event();
+                    $event->logForPlatformUser(
+                        $platformUserId,
+                        'create',
+                        'affichage',
+                        (string) ($affichage['id'] ?? ''),
+                        'Affichage créé pour le poste #' . $posteId,
+                        $_SESSION['user_name'] ?? null
+                    );
+                } catch (Throwable $logErr) {
+                    error_log('Event log error: ' . $logErr->getMessage());
+                }
                 $this->json(['success' => true, 'affichage' => $affichage]);
             } else {
                 $this->json(['success' => false, 'error' => 'Impossible de créer l\'affichage'], 400);
@@ -282,6 +360,52 @@ class DashboardController extends Controller
         } catch (Throwable $e) {
             error_log('createAffichage: ' . $e->getMessage());
             $this->json(['success' => false, 'error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Supprimer un affichage.
+     */
+    public function deleteAffichage(): void
+    {
+        try {
+            $this->requireAuth();
+            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+            if (!$platformUserId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            // ID envoyé soit en POST raw, soit en FormData
+            $id = (string) ($_POST['id'] ?? '');
+            if (!$id) {
+                $this->json(['success' => false, 'error' => 'ID manquant'], 400);
+                return;
+            }
+
+            $success = Affichage::delete($id, $platformUserId);
+
+            if ($success) {
+                // Journaliser la suppression
+                try {
+                    require_once dirname(__DIR__, 2) . '/gestion/config.php';
+                    $event = new Event();
+                    $event->logForPlatformUser(
+                        $platformUserId,
+                        'delete',
+                        'affichage',
+                        $id,
+                        'Affichage supprimé #' . $id,
+                        $_SESSION['user_name'] ?? null
+                    );
+                } catch (Throwable $logErr) {
+                    // ignore
+                }
+            }
+
+            $this->json(['success' => $success]);
+        } catch (Throwable $e) {
+            error_log('deleteAffichage error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
         }
     }
 }

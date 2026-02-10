@@ -1,7 +1,7 @@
 <?php
 /**
  * Modèle User (équipe / utilisateurs de l'entreprise)
- * Données mock – à remplacer par des requêtes DB.
+ * À connecter à la base de données.
  */
 class User
 {
@@ -11,10 +11,7 @@ class User
      */
     public static function getAll(): array
     {
-        return [
-            ['id' => '1', 'name' => 'Marie Tremblay', 'email' => 'marie.t@acme.com', 'role' => 'administrateur'],
-            ['id' => '2', 'name' => 'Pierre Roy', 'email' => 'pierre.r@acme.com', 'role' => 'evaluateur'],
-            ['id' => '3', 'name' => 'Sophie Martin', 'email' => 'sophie.m@acme.com', 'role' => 'evaluateur'],
-        ];
+        // Pas encore de table app_users — retourner vide
+        return [];
     }
 }

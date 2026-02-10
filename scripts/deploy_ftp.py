@@ -75,6 +75,28 @@ def main():
         # Upload app
         upload_directory(ftp, 'app', 'app')
 
+        # Upload specific gestion files (NOT .htaccess — server has its own)
+        gestion_files = [
+            'gestion/config.php',
+            'gestion/models/Entrevue.php',
+            'gestion/models/Event.php',
+            'gestion/models/Entreprise.php',
+            'gestion/models/PlatformUser.php',
+            'gestion/models/Plan.php',
+        ]
+        for gf in gestion_files:
+            if os.path.exists(gf):
+                print(f"Uploading {gf}...")
+                # Ensure remote directory exists
+                remote_dir = os.path.dirname(gf)
+                for part in remote_dir.split('/'):
+                    try:
+                        ftp.mkd(part if remote_dir.count('/') == 0 else remote_dir)
+                    except ftplib.error_perm:
+                        pass
+                with open(gf, 'rb') as fp:
+                    ftp.storbinary(f'STOR {gf}', fp)
+
         ftp.quit()
         print("Deployment complete!")
         

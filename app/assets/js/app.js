@@ -7,13 +7,13 @@
 /* ═══════════════════════════════════════════════
    DONNÉES (depuis PHP → JSON)
    ═══════════════════════════════════════════════ */
-var postesData      = {};
-var affichagesData  = {};
-var candidatsData   = {};
-var teamMembersData   = [];
-var departmentsData   = [];
+var postesData = {};
+var affichagesData = {};
+var candidatsData = {};
+var teamMembersData = [];
+var departmentsData = [];
 var affichageCandidats = {};
-var emailTemplates  = [];
+var emailTemplates = [];
 
 // Convertir les tableaux PHP en objets indexés pour un accès rapide
 (function initData() {
@@ -62,7 +62,7 @@ function fallbackCopy(text) {
     ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); alert('Lien copié !'); } catch (e) {}
+    try { document.execCommand('copy'); alert('Lien copié !'); } catch (e) { }
     document.body.removeChild(ta);
 }
 function escapeHtml(str) {
@@ -233,16 +233,51 @@ document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
 });
 
 /* ═══════════════════════════════════════════════
-   TABS
+   TABS + POSTES FILTER
    ═══════════════════════════════════════════════ */
 document.querySelectorAll('.view-tabs').forEach(function (tabGroup) {
     tabGroup.querySelectorAll('.view-tab').forEach(function (tab) {
         tab.addEventListener('click', function () {
             tabGroup.querySelectorAll('.view-tab').forEach(function (t) { t.classList.remove('active'); });
             tab.classList.add('active');
+            // Filter postes table rows
+            if (tabGroup.id === 'postes-filter-tabs') {
+                filterPostesTable(tab.getAttribute('data-filter') || 'all');
+            }
         });
     });
 });
+
+function filterPostesTable(status) {
+    var rows = document.querySelectorAll('#postes-table tbody tr.row-clickable');
+    rows.forEach(function (row) {
+        var rowStatus = row.getAttribute('data-status') || '';
+        if (status === 'all' || rowStatus === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Search bar within postes section
+(function () {
+    var searchInput = document.querySelector('#postes-section .search-bar input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            var q = this.value.toLowerCase().trim();
+            var activeTab = document.querySelector('#postes-filter-tabs .view-tab.active');
+            var activeFilter = activeTab ? (activeTab.getAttribute('data-filter') || 'all') : 'all';
+            var rows = document.querySelectorAll('#postes-table tbody tr.row-clickable');
+            rows.forEach(function (row) {
+                var rowStatus = row.getAttribute('data-status') || '';
+                var statusMatch = (activeFilter === 'all' || rowStatus === activeFilter);
+                var textMatch = !q || row.textContent.toLowerCase().indexOf(q) !== -1;
+                row.style.display = (statusMatch && textMatch) ? '' : 'none';
+            });
+        });
+    }
+})();
 
 /* Paramètres : visibilité des panneaux (navigation par le menu latéral) */
 document.addEventListener('DOMContentLoaded', function () {
@@ -263,10 +298,10 @@ function saveCompanySettings(e) {
         .then(function (data) {
             if (data.success && data.company_name !== undefined) {
                 var el = document.querySelector('.company-name');
-                if (el) el.textContent = data.company_name || 'Mon entreprise';
+                if (el) el.textContent = data.company_name || '';
             }
         })
-        .catch(function () {})
+        .catch(function () { })
         .finally(function () {
             if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Enregistrer'; }
         });
@@ -368,7 +403,7 @@ function savePosteToServer(fields) {
         formData.append('status', statusMap[sel ? sel.value : 'actif'] || 'active');
     }
     if (fields.record_duration !== undefined) formData.append('record_duration', String(data.recordDuration || 3));
-    fetch('/postes/update', { method: 'POST', body: formData }).then(function (r) { return r.json(); }).catch(function () {});
+    fetch('/postes/update', { method: 'POST', body: formData }).then(function (r) { return r.json(); }).catch(function () { });
 }
 
 function updatePosteStatus(value) {
@@ -411,10 +446,10 @@ function renderPosteQuestions() {
             '<span class="question-number">' + (i + 1) + '</span>' +
             '<span class="question-text">' + escapeHtml(q) + '</span>' +
             '<div class="question-actions">' +
-                '<button class="btn-icon" title="Monter" onclick="movePosteQuestion(' + i + ',-1)"' + (i === 0 ? ' disabled style="opacity:0.3;pointer-events:none;"' : '') + '><i class="fa-solid fa-chevron-up"></i></button>' +
-                '<button class="btn-icon" title="Descendre" onclick="movePosteQuestion(' + i + ',1)"' + (i === len - 1 ? ' disabled style="opacity:0.3;pointer-events:none;"' : '') + '><i class="fa-solid fa-chevron-down"></i></button>' +
-                '<button class="btn-icon" title="Modifier" onclick="editPosteQuestion(' + i + ')"><i class="fa-solid fa-pen"></i></button>' +
-                '<button class="btn-icon btn-icon--danger" title="Supprimer" onclick="deletePosteQuestion(' + i + ')"><i class="fa-solid fa-trash"></i></button>' +
+            '<button class="btn-icon" title="Monter" onclick="movePosteQuestion(' + i + ',-1)"' + (i === 0 ? ' disabled style="opacity:0.3;pointer-events:none;"' : '') + '><i class="fa-solid fa-chevron-up"></i></button>' +
+            '<button class="btn-icon" title="Descendre" onclick="movePosteQuestion(' + i + ',1)"' + (i === len - 1 ? ' disabled style="opacity:0.3;pointer-events:none;"' : '') + '><i class="fa-solid fa-chevron-down"></i></button>' +
+            '<button class="btn-icon" title="Modifier" onclick="editPosteQuestion(' + i + ')"><i class="fa-solid fa-pen"></i></button>' +
+            '<button class="btn-icon btn-icon--danger" title="Supprimer" onclick="deletePosteQuestion(' + i + ')"><i class="fa-solid fa-trash"></i></button>' +
             '</div>';
 
         // Drag & Drop
@@ -475,10 +510,10 @@ function editPosteQuestion(index) {
     item.innerHTML =
         '<span class="question-number">' + (index + 1) + '</span>' +
         '<input type="text" class="question-edit-input" value="' + escapeHtml(currentText).replace(/"/g, '&quot;') + '" ' +
-            'onkeydown="if(event.key===\'Enter\'){savePosteQuestion(' + index + ')} if(event.key===\'Escape\'){renderPosteQuestions()}">' +
+        'onkeydown="if(event.key===\'Enter\'){savePosteQuestion(' + index + ')} if(event.key===\'Escape\'){renderPosteQuestions()}">' +
         '<div class="question-actions">' +
-            '<button class="btn-icon btn-icon--success" title="Enregistrer" onclick="savePosteQuestion(' + index + ')"><i class="fa-solid fa-check"></i></button>' +
-            '<button class="btn-icon" title="Annuler" onclick="renderPosteQuestions()"><i class="fa-solid fa-xmark"></i></button>' +
+        '<button class="btn-icon btn-icon--success" title="Enregistrer" onclick="savePosteQuestion(' + index + ')"><i class="fa-solid fa-check"></i></button>' +
+        '<button class="btn-icon" title="Annuler" onclick="renderPosteQuestions()"><i class="fa-solid fa-xmark"></i></button>' +
         '</div>';
 
     var editInput = item.querySelector('.question-edit-input');
@@ -592,8 +627,8 @@ function openPosteCandidatsModal() {
             row.innerHTML =
                 '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=' + escapeHtml(color) + '&color=fff" class="avatar" alt="">' +
                 '<div class="poste-candidat-info">' +
-                    '<div class="poste-candidat-name">' + escapeHtml(name) + '</div>' +
-                    '<div class="poste-candidat-email">' + escapeHtml(email) + '</div>' +
+                '<div class="poste-candidat-name">' + escapeHtml(name) + '</div>' +
+                '<div class="poste-candidat-email">' + escapeHtml(email) + '</div>' +
                 '</div>' +
                 '<div class="star-color">' + stars + '</div>' +
                 status;
@@ -613,7 +648,7 @@ function showAffichageDetail(id) {
     window._currentAffichageId = id;
 
     document.getElementById('affichage-candidats-title').textContent = data.title;
-    document.getElementById('affichage-candidats-subtitle').textContent = data.platform + ' · Début : ' + data.start;
+    document.getElementById('affichage-candidats-subtitle').textContent = data.start;
 
     var shareUrlEl = document.getElementById('affichage-share-url');
     if (shareUrlEl && data.shareLongId) {
@@ -647,8 +682,8 @@ function showAffichageDetail(id) {
         row.onclick = function () { if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id); };
         row.innerHTML =
             '<td><div style="display: flex; align-items: center; gap: 0.75rem;">' +
-                '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
-                '<div><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
+            '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
+            '<div><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
             '</div></td>' +
             '<td><span class="status-badge" style="background:' + c.statusBg + '; color:' + c.statusColor + ';">' + escapeHtml(c.status) + '</span></td>' +
             '<td style="text-align: center;">' + (c.isFavorite ? '<i class="fa-solid fa-star" style="color: #F59E0B;"></i>' : '<i class="fa-regular fa-star" style="color: #D1D5DB;"></i>') + '</td>' +
@@ -693,8 +728,27 @@ function confirmDeleteAffichage() {
     var rowEl = _pendingDeleteAffichage.rowEl;
     _pendingDeleteAffichage = null;
     closeModal('delete-affichage');
-    delete affichagesData[id];
-    if (rowEl && rowEl.parentNode) rowEl.remove();
+
+    var btn = document.querySelector('#delete-affichage-modal .btn-danger'); // Not reliable as modal is closed, but maybe for next time?
+    // Actually, better to just call the API
+    var formData = new FormData();
+    formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    formData.append('id', String(id));
+
+    fetch('/affichages/delete', { method: 'POST', body: formData })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.success) {
+                delete affichagesData[id];
+                if (rowEl && rowEl.parentNode) rowEl.remove();
+            } else {
+                alert('Erreur: ' + (res.error || 'Impossible de supprimer'));
+            }
+        })
+        .catch(function () {
+            // On errors, keep UI consistent or alert user
+            alert('Erreur réseau lors de la suppression');
+        });
 }
 
 function saveAffichageFromModal(e) {
@@ -836,7 +890,7 @@ function confirmDeletePoste() {
                 if (currentPosteId === String(id) || currentPosteId === id) goBackToPostes();
             }
         })
-        .catch(function () {})
+        .catch(function () { })
         .finally(function () {
             if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> <span data-i18n="action_delete">Supprimer</span>'; }
         });
@@ -1080,8 +1134,8 @@ function renderEvaluateurs() {
         div.innerHTML =
             '<div class="evaluateur-avatar">' + escapeHtml(initials) + '</div>' +
             '<div class="evaluateur-info">' +
-                '<div class="evaluateur-name">' + escapeHtml(ev.name) + '</div>' +
-                '<div class="evaluateur-email">' + escapeHtml(ev.email) + '</div>' +
+            '<div class="evaluateur-name">' + escapeHtml(ev.name) + '</div>' +
+            '<div class="evaluateur-email">' + escapeHtml(ev.email) + '</div>' +
             '</div>' +
             '<button class="btn-icon btn-icon--danger" title="Retirer" onclick="deleteEvaluateur(' + index + ')"><i class="fa-solid fa-trash"></i></button>';
         container.appendChild(div);
@@ -1184,12 +1238,12 @@ function renderTeamMembers() {
         div.innerHTML =
             '<div class="team-member-avatar">' + escapeHtml(initials) + '</div>' +
             '<div class="team-member-info">' +
-                '<div class="team-member-name">' + escapeHtml(m.name) + '</div>' +
-                '<div class="team-member-email">' + escapeHtml(m.email) + '</div>' +
+            '<div class="team-member-name">' + escapeHtml(m.name) + '</div>' +
+            '<div class="team-member-email">' + escapeHtml(m.email) + '</div>' +
             '</div>' +
             '<select class="form-select form-select--role team-member-role" onchange="updateTeamMemberRole(' + index + ', this.value)" title="Rôle">' +
-                '<option value="evaluateur"' + (m.role === 'evaluateur' ? ' selected' : '') + '>Évaluateur</option>' +
-                '<option value="administrateur"' + (m.role === 'administrateur' ? ' selected' : '') + '>Administrateur</option>' +
+            '<option value="evaluateur"' + (m.role === 'evaluateur' ? ' selected' : '') + '>Évaluateur</option>' +
+            '<option value="administrateur"' + (m.role === 'administrateur' ? ' selected' : '') + '>Administrateur</option>' +
             '</select>' +
             '<button class="btn-icon btn-icon--danger" title="Retirer" onclick="deleteTeamMember(' + index + ')"><i class="fa-solid fa-trash"></i></button>';
         container.appendChild(div);
@@ -1244,25 +1298,25 @@ function sendFeedback(e) {
         method: 'POST',
         body: formData
     })
-    .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
-    .then(function (res) {
-        var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
-        var msg = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang].feedback_success : 'Merci pour votre retour !';
-        alert(res.data.ok ? msg : (res.data.error || msg));
-        if (res.data.ok) {
-            closeModal('feedback');
-            form.reset();
-        }
-    })
-    .catch(function () {
-        alert('Une erreur est survenue. Réessayez plus tard.');
-    })
-    .finally(function () {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = typeof translations !== 'undefined' && translations.fr ? translations.fr.btn_send : 'Envoyer';
-        }
-    });
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+            var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+            var msg = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang].feedback_success : 'Merci pour votre retour !';
+            alert(res.data.ok ? msg : (res.data.error || msg));
+            if (res.data.ok) {
+                closeModal('feedback');
+                form.reset();
+            }
+        })
+        .catch(function () {
+            alert('Une erreur est survenue. Réessayez plus tard.');
+        })
+        .finally(function () {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = typeof translations !== 'undefined' && translations.fr ? translations.fr.btn_send : 'Envoyer';
+            }
+        });
 }
 
 /* ═══════════════════════════════════════════════
@@ -1337,4 +1391,21 @@ function renderEmailTemplates() {
 // Rendu initial des templates
 document.addEventListener('DOMContentLoaded', function () {
     renderEmailTemplates();
+});
+// Modal "Compléter votre profil" : navigation interne
+document.querySelectorAll('.completer-profil-item').forEach(function (item) {
+    item.addEventListener('click', function (e) {
+        e.preventDefault();
+        var href = item.getAttribute('href');
+        if (!href) return;
+        var section = href.replace('#', '').replace('/', '');
+
+        // Trouver l'élément du menu correspondant et simuler le clic
+        var navItem = document.querySelector('.nav-item[data-section="' + section + '"]');
+        if (navItem) {
+            navItem.click();
+        }
+
+        closeModal('completer-profil');
+    });
 });

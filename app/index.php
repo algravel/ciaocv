@@ -28,23 +28,25 @@ require_once __DIR__ . '/includes/functions.php';
 $router = new Router();
 
 // Authentification (slugs SEO-friendly)
-$router->get('/',              'AuthController', 'login');
-$router->get('/connexion',     'AuthController', 'login');
-$router->post('/connexion',    'AuthController', 'authenticate');
-$router->get('/deconnexion',   'AuthController', 'logout');
-$router->get('/logout',       'AuthController', 'logout'); // alias, redirige vers /connexion après déco
+$router->get('/', 'AuthController', 'login');
+$router->get('/connexion', 'AuthController', 'login');
+$router->post('/connexion', 'AuthController', 'authenticate');
+$router->post('/connexion/otp', 'AuthController', 'verifyOtp');
+$router->get('/deconnexion', 'AuthController', 'logout');
+$router->get('/logout', 'AuthController', 'logout'); // alias, redirige vers /connexion après déco
 
 // Dashboard employeur (sections accessibles par URL)
 $router->get('/tableau-de-bord', 'DashboardController', 'index');
-$router->get('/postes',       'DashboardController', 'index');
-$router->get('/affichages',   'DashboardController', 'index');
-$router->get('/candidats',    'DashboardController', 'index');
-$router->get('/parametres',   'DashboardController', 'index');
+$router->get('/postes', 'DashboardController', 'index');
+$router->get('/affichages', 'DashboardController', 'index');
+$router->get('/candidats', 'DashboardController', 'index');
+$router->get('/parametres', 'DashboardController', 'index');
 $router->post('/parametres/entreprise', 'DashboardController', 'saveCompany');
 $router->post('/postes', 'DashboardController', 'createPoste');
 $router->post('/postes/update', 'DashboardController', 'updatePoste');
 $router->post('/postes/delete', 'DashboardController', 'deletePoste');
 $router->post('/affichages', 'DashboardController', 'createAffichage');
+$router->post('/affichages/delete', 'DashboardController', 'deleteAffichage');
 
 // Feedback (FAB bugs et idées)
 $router->post('/feedback', 'FeedbackController', 'submit');
@@ -56,9 +58,9 @@ $router->getPattern('#^/entrevue/([a-f0-9]{16})$#', 'RecController', 'show');
 $router->get('/purge-cache', 'PurgeController', 'index');
 
 // Redirections 301 : anciennes URLs → slugs
-$router->get('/login',      'RedirectController', 'toConnexion');
-$router->post('/login',     'RedirectController', 'toConnexion');
-$router->get('/dashboard',  'RedirectController', 'toTableauDeBord');
+$router->get('/login', 'RedirectController', 'toConnexion');
+$router->post('/login', 'RedirectController', 'toConnexion');
+$router->get('/dashboard', 'RedirectController', 'toTableauDeBord');
 $router->getPattern('#^/rec/([a-f0-9]{16})$#', 'RedirectController', 'toEntrevue');
 
 // ─── Dispatch ──────────────────────────────────────────────────────────
@@ -66,7 +68,7 @@ try {
     $router->dispatch();
 } catch (Throwable $e) {
     error_log('CiaoCV dispatch: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-    $isApi = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && in_array(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), ['/postes', '/postes/update', '/postes/delete', '/parametres/entreprise', '/feedback', '/affichages']);
+    $isApi = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && in_array(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), ['/postes', '/postes/update', '/postes/delete', '/parametres/entreprise', '/feedback', '/affichages', '/affichages/delete']);
     if ($isApi) {
         http_response_code(500);
         header('Content-Type: application/json; charset=utf-8');
