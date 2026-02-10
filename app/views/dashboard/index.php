@@ -271,10 +271,10 @@
         <h1 class="page-title" data-i18n="affichages_title">Affichages en cours</h1>
     </div>
     <div class="filters-bar">
-        <div class="view-tabs">
-            <button class="view-tab active" data-i18n="filter_all">Tous</button>
-            <button class="view-tab" data-i18n="filter_active">Actifs</button>
-            <button class="view-tab" data-i18n="filter_expired">Expirés</button>
+        <div class="view-tabs" id="affichages-filter-tabs">
+            <button class="view-tab active" data-filter="all" data-i18n="filter_all">Tous</button>
+            <button class="view-tab" data-filter="active" data-i18n="filter_active">Actifs</button>
+            <button class="view-tab" data-filter="expired" data-i18n="filter_expired">Expirés</button>
         </div>
         <button class="btn btn-primary" onclick="openModal('affichage')"><i class="fa-solid fa-plus"></i><span
                 data-i18n="add_affichage">Nouvel affichage</span></button>
@@ -294,9 +294,17 @@
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($affichages as $aId => $a): ?>
-                <tr data-affichage-id="<?= e($aId) ?>" onclick="showAffichageDetail('<?= e($aId) ?>')"
-                    class="row-clickable">
+            <?php foreach ($affichages as $aId => $a):
+                $affRawStatus = 'active';
+                if (($a['statusClass'] ?? '') === 'status-expired')
+                    $affRawStatus = 'expired';
+                elseif (($a['statusClass'] ?? '') === 'status-paused')
+                    $affRawStatus = 'paused';
+                elseif (($a['statusClass'] ?? '') === 'status-closed')
+                    $affRawStatus = 'closed';
+                ?>
+                <tr data-affichage-id="<?= e($aId) ?>" data-status="<?= $affRawStatus ?>"
+                    onclick="showAffichageDetail('<?= e($aId) ?>')" class="row-clickable">
                     <td><strong><?= e($a['title']) ?></strong></td>
                     <td><?= e($a['department'] ?? '') ?></td>
                     <td><?= e($a['start']) ?></td>
@@ -325,11 +333,11 @@
         <h1 class="page-title" data-i18n="candidats_title">Candidats</h1>
     </div>
     <div class="filters-bar">
-        <div class="view-tabs">
-            <button class="view-tab active" data-i18n="filter_all">Tous</button>
-            <button class="view-tab" data-i18n="filter_new">Nouveaux</button>
-            <button class="view-tab" data-i18n="filter_reviewed">Évalués</button>
-            <button class="view-tab" data-i18n="filter_rejected">Refusés</button>
+        <div class="view-tabs" id="candidats-filter-tabs">
+            <button class="view-tab active" data-filter="all" data-i18n="filter_all">Tous</button>
+            <button class="view-tab" data-filter="new" data-i18n="filter_new">Nouveaux</button>
+            <button class="view-tab" data-filter="reviewed" data-i18n="filter_reviewed">Évalués</button>
+            <button class="view-tab" data-filter="rejected" data-i18n="filter_rejected">Refusés</button>
         </div>
         <div><select class="form-select form-select--auto">
                 <option data-i18n="filter_all_jobs">Tous les postes</option>
@@ -354,7 +362,8 @@
         </thead>
         <tbody>
             <?php foreach ($candidats as $cId => $c): ?>
-                <tr onclick="showCandidateDetail('<?= e($cId) ?>')" class="row-clickable">
+                <tr onclick="showCandidateDetail('<?= e($cId) ?>')" class="row-clickable"
+                    data-status="<?= e($c['status']) ?>">
                     <td>
                         <div class="flex-center gap-3">
                             <img src="https://ui-avatars.com/api/?name=<?= urlencode($c['name']) ?>&background=<?= e($c['color']) ?>&color=fff"
@@ -408,7 +417,8 @@
         </div>
     </div>
     <div class="card contact-card mt-6">
-        <h3 class="contact-heading"><i class="fa-regular fa-envelope"></i> Email</h3>
+        <h3 class="contact-heading"><i class="fa-regular fa-envelope"></i> <span data-i18n="contact_email">Email</span>
+        </h3>
         <p id="detail-candidate-email" class="text-body mb-4">—</p>
         <h3 class="contact-heading"><i class="fa-solid fa-phone"></i> <span data-i18n="form_phone">Téléphone</span></h3>
         <p id="detail-candidate-phone" class="text-body">—</p>
@@ -447,7 +457,7 @@
                 <div class="plan-name"><?= e($planName ?? 'Découverte') ?></div>
             </div>
         </div>
-        <a href="/parametres#parametres-billing" class="forfait-cta">Gérer mon forfait</a>
+        <a href="/parametres#parametres-billing" class="forfait-cta" data-i18n="forfait_manage">Gérer mon forfait</a>
     </div>
 
     <!-- KPI Cards -->
@@ -455,10 +465,10 @@
         <div class="kpi-card">
             <div class="flex-between-start">
                 <div>
-                    <div class="kpi-label">Mon forfait</div>
+                    <div class="kpi-label" data-i18n="kpi_my_plan">Mon forfait</div>
                     <div class="kpi-value"><?= (int) ($kpiForfaitUsed ?? 0) ?> <span class="kpi-suffix">/
                             <?= (int) ($kpiForfaitLimit ?? 50) ?></span></div>
-                    <div class="kpi-sub">entrevues disponibles</div>
+                    <div class="kpi-sub" data-i18n="kpi_interviews_available">entrevues disponibles</div>
                 </div>
                 <div class="kpi-icon kpi-icon--blue"><i class="fa-solid fa-users"></i></div>
             </div>
@@ -481,7 +491,8 @@
             <div class="kpi-trend"><?php if ($affDiff > 0): ?><span class="kpi-trend--up"><i
                             class="fa-solid fa-arrow-up"></i> <?= $affDiff ?></span><?php elseif ($affDiff < 0): ?><span
                         class="kpi-trend--down"><i class="fa-solid fa-arrow-down"></i>
-                        <?= abs($affDiff) ?></span><?php endif; ?> depuis le mois dernier</div>
+                        <?= abs($affDiff) ?></span><?php endif; ?> <span data-i18n="kpi_since_last_month">depuis le mois
+                    dernier</span></div>
         </a>
         <?php $tachesRestantes = (int) ($kpiTachesRestantes ?? 0);
         $hasTaches = $tachesRestantes > 0; ?>
@@ -489,7 +500,9 @@
             onclick="openModal('completer-profil')" role="button" tabindex="0">
             <div class="flex-between-start">
                 <div>
-                    <div class="kpi-label"><?= $hasTaches ? 'Compléter votre profil' : 'Profil complété' ?></div>
+                    <div class="kpi-label"
+                        data-i18n="<?= $hasTaches ? 'kpi_complete_profile' : 'kpi_profile_completed' ?>">
+                        <?= $hasTaches ? 'Compléter votre profil' : 'Profil complété' ?></div>
                     <div class="kpi-value"><?= $tachesRestantes ?></div>
                 </div>
                 <?php if ($hasTaches): ?>
@@ -498,7 +511,8 @@
                     <div class="kpi-icon kpi-icon--blue"><i class="fa-solid fa-circle-check"></i></div>
                 <?php endif; ?>
             </div>
-            <div class="kpi-sub">
+            <div class="kpi-sub"
+                data-i18n="<?= $hasTaches ? ($tachesRestantes === 1 ? 'kpi_task_remaining' : 'kpi_tasks_remaining') : 'kpi_all_done' ?>">
                 <?= $hasTaches ? ($tachesRestantes === 1 ? 'tâche restante' : 'tâches restantes') : 'Tout est en ordre ✓' ?>
             </div>
         </div>
@@ -515,7 +529,7 @@
             <div class="text-center" style="padding: 2rem 0; color: var(--text-secondary);">
                 <i class="fa-solid fa-chart-bar"
                     style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem; display: block;"></i>
-                <p>Aucune candidature pour le moment</p>
+                <p data-i18n="chart_no_data">Aucune candidature pour le moment</p>
             </div>
         <?php else: ?>
             <div class="chart-bars">
@@ -542,15 +556,15 @@
     <!-- Journalisation -->
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">Journalisation des événements</h2>
+            <h2 class="card-title" data-i18n="events_title">Journalisation des événements</h2>
         </div>
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Utilisateur</th>
-                    <th>Action</th>
-                    <th>Détails</th>
+                    <th data-i18n="th_date">Date</th>
+                    <th data-i18n="th_user">Utilisateur</th>
+                    <th data-i18n="th_action">Action</th>
+                    <th data-i18n="th_details">Détails</th>
                 </tr>
             </thead>
             <tbody>
@@ -560,7 +574,7 @@
                 $moisFr = ['Jan' => 'janv', 'Feb' => 'fév', 'Mar' => 'mars', 'Apr' => 'avr', 'May' => 'mai', 'Jun' => 'juin', 'Jul' => 'juil', 'Aug' => 'août', 'Sep' => 'sept', 'Oct' => 'oct', 'Nov' => 'nov', 'Dec' => 'déc'];
                 if (empty($evts)): ?>
                     <tr>
-                        <td colspan="4" class="cell-muted">Aucun événement enregistré.</td>
+                        <td colspan="4" class="cell-muted" data-i18n="events_empty">Aucun événement enregistré.</td>
                     </tr>
                 <?php else:
                     foreach ($evts as $ev):
@@ -883,7 +897,8 @@
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('add-candidat')">Annuler</button>
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ajouter</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> <span
+                        data-i18n="btn_add">Ajouter</span></button>
             </div>
         </form>
     </div>
@@ -893,7 +908,8 @@
 <div class="modal-overlay" id="completer-profil-modal">
     <div class="modal modal--narrow">
         <div class="modal-header">
-            <h2 class="modal-title"><i class="fa-solid fa-clipboard-check"></i> Compléter votre profil</h2>
+            <h2 class="modal-title"><i class="fa-solid fa-clipboard-check"></i> <span
+                    data-i18n="modal_complete_profile">Compléter votre profil</span></h2>
             <button class="btn-icon" onclick="closeModal('completer-profil')"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="completer-profil-list">
@@ -903,11 +919,12 @@
                     <?php if ($hasCompanyName): ?><i class="fa-solid fa-check"></i><?php else: ?>1<?php endif; ?>
                 </span>
                 <div>
-                    <strong>Détail de votre organisation</strong>
-                    <span class="subtitle-muted">Paramètres de l'entreprise</span>
+                    <strong data-i18n="profile_step1_title">Détail de votre organisation</strong>
+                    <span class="subtitle-muted" data-i18n="profile_step1_sub">Paramètres de l'entreprise</span>
                 </div>
                 <?php if ($hasCompanyName): ?>
-                    <span class="status-badge status-active ml-auto"><i class="fa-solid fa-check"></i> Fait</span>
+                    <span class="status-badge status-active ml-auto"><i class="fa-solid fa-check"></i> <span
+                            data-i18n="badge_done">Fait</span></span>
                 <?php else: ?>
                     <i class="fa-solid fa-chevron-right ml-auto"></i>
                 <?php endif; ?>
@@ -918,11 +935,12 @@
                     <?php if ($hasPoste): ?><i class="fa-solid fa-check"></i><?php else: ?>2<?php endif; ?>
                 </span>
                 <div>
-                    <strong>Créer un poste</strong>
-                    <span class="subtitle-muted">Définir vos postes à pourvoir</span>
+                    <strong data-i18n="profile_step2_title">Créer un poste</strong>
+                    <span class="subtitle-muted" data-i18n="profile_step2_sub">Définir vos postes à pourvoir</span>
                 </div>
                 <?php if ($hasPoste): ?>
-                    <span class="status-badge status-active ml-auto"><i class="fa-solid fa-check"></i> Fait</span>
+                    <span class="status-badge status-active ml-auto"><i class="fa-solid fa-check"></i> <span
+                            data-i18n="badge_done">Fait</span></span>
                 <?php else: ?>
                     <i class="fa-solid fa-chevron-right ml-auto"></i>
                 <?php endif; ?>
@@ -933,11 +951,12 @@
                     <?php if ($hasAffichage): ?><i class="fa-solid fa-check"></i><?php else: ?>3<?php endif; ?>
                 </span>
                 <div>
-                    <strong>Créer un affichage</strong>
-                    <span class="subtitle-muted">Publier votre poste</span>
+                    <strong data-i18n="profile_step3_title">Créer un affichage</strong>
+                    <span class="subtitle-muted" data-i18n="profile_step3_sub">Publier votre poste</span>
                 </div>
                 <?php if ($hasAffichage): ?>
-                    <span class="status-badge status-active ml-auto"><i class="fa-solid fa-check"></i> Fait</span>
+                    <span class="status-badge status-active ml-auto"><i class="fa-solid fa-check"></i> <span
+                            data-i18n="badge_done">Fait</span></span>
                 <?php else: ?>
                     <i class="fa-solid fa-chevron-right ml-auto"></i>
                 <?php endif; ?>
@@ -950,15 +969,18 @@
 <div class="modal-overlay" id="delete-affichage-modal">
     <div class="modal modal--narrow" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <h2 class="modal-title"><i class="fa-solid fa-trash"></i> Supprimer l'affichage</h2>
+            <h2 class="modal-title"><i class="fa-solid fa-trash"></i> <span data-i18n="modal_delete_affichage">Supprimer
+                    l'affichage</span></h2>
             <button class="btn-icon" onclick="closeModal('delete-affichage')"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <p class="modal-body" id="delete-affichage-message">Êtes-vous sûr de vouloir supprimer cet affichage ?</p>
+        <p class="modal-body" id="delete-affichage-message" data-i18n="modal_delete_affichage_msg">Êtes-vous sûr de
+            vouloir supprimer cet affichage ?</p>
         <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('delete-affichage')">Annuler</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal('delete-affichage')"
+                data-i18n="btn_cancel">Annuler</button>
             <button type="button" class="btn btn-danger" id="delete-affichage-confirm-btn"
                 onclick="confirmDeleteAffichage()">
-                <i class="fa-solid fa-trash"></i> Supprimer
+                <i class="fa-solid fa-trash"></i> <span data-i18n="action_delete">Supprimer</span>
             </button>
         </div>
     </div>
@@ -972,7 +994,8 @@
                     poste</span></h2>
             <button class="btn-icon" onclick="closeModal('delete-poste')"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <p class="modal-body" id="delete-poste-message">Êtes-vous sûr de vouloir supprimer ce poste ?</p>
+        <p class="modal-body" id="delete-poste-message" data-i18n="modal_delete_poste_msg">Êtes-vous sûr de vouloir
+            supprimer ce poste ?</p>
         <div class="modal-actions">
             <button type="button" class="btn btn-secondary" onclick="closeModal('delete-poste')"
                 data-i18n="btn_cancel">Annuler</button>

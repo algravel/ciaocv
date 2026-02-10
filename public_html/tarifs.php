@@ -52,7 +52,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs et forfaits - CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1770603921">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1770728760">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         .pricing-hero { text-align: center; padding: 6rem 5% 3rem; max-width: 900px; margin: 0 auto; }
@@ -337,6 +337,6 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             });
         });
     </script>
-    <script src="assets/js/i18n.js?v=1770603921"></script>
+    <script src="assets/js/i18n.js?v=1770728760"></script>
 </body>
 </html>

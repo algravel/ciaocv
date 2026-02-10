@@ -233,51 +233,99 @@ document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
 });
 
 /* ═══════════════════════════════════════════════
-   TABS + POSTES FILTER
+   TABS + GENERIC TABLE FILTER (Postes, Affichages, Candidats)
    ═══════════════════════════════════════════════ */
+
+/**
+ * Generic filter: show/hide table rows based on data-status attribute.
+ * @param {string} tableSelector  CSS selector for the table
+ * @param {string} status         Filter value ('all' shows everything)
+ */
+function filterTable(tableSelector, status) {
+    var rows = document.querySelectorAll(tableSelector + ' tbody tr.row-clickable');
+    rows.forEach(function (row) {
+        var rowStatus = row.getAttribute('data-status') || '';
+        row.style.display = (status === 'all' || rowStatus === status) ? '' : 'none';
+    });
+}
+
+/* Map each tab-group ID → its table selector */
+var filterTabMap = {
+    'postes-filter-tabs': '#postes-table',
+    'affichages-filter-tabs': '#affichages-table',
+    'candidats-filter-tabs': '#candidats-table'
+};
+
+/* Attach click listeners on all filter tab groups */
 document.querySelectorAll('.view-tabs').forEach(function (tabGroup) {
     tabGroup.querySelectorAll('.view-tab').forEach(function (tab) {
         tab.addEventListener('click', function () {
             tabGroup.querySelectorAll('.view-tab').forEach(function (t) { t.classList.remove('active'); });
             tab.classList.add('active');
-            // Filter postes table rows
-            if (tabGroup.id === 'postes-filter-tabs') {
-                filterPostesTable(tab.getAttribute('data-filter') || 'all');
+            var tableSelector = filterTabMap[tabGroup.id];
+            if (tableSelector) {
+                filterTable(tableSelector, tab.getAttribute('data-filter') || 'all');
             }
         });
     });
 });
 
-function filterPostesTable(status) {
-    var rows = document.querySelectorAll('#postes-table tbody tr.row-clickable');
-    rows.forEach(function (row) {
-        var rowStatus = row.getAttribute('data-status') || '';
-        if (status === 'all' || rowStatus === status) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
+/* === Backward compat wrapper === */
+function filterPostesTable(status) { filterTable('#postes-table', status); }
+
+/* === Search bars (postes, affichages, candidats) === */
+['postes', 'affichages', 'candidats'].forEach(function (section) {
+    var searchInput = document.querySelector('#' + section + '-section .search-bar input');
+    if (!searchInput) return;
+    searchInput.addEventListener('input', function () {
+        var q = this.value.toLowerCase().trim();
+        var activeTab = document.querySelector('#' + section + '-filter-tabs .view-tab.active');
+        var activeFilter = activeTab ? (activeTab.getAttribute('data-filter') || 'all') : 'all';
+        var rows = document.querySelectorAll('#' + section + '-table tbody tr.row-clickable');
+        rows.forEach(function (row) {
+            var rowStatus = row.getAttribute('data-status') || '';
+            var statusMatch = (activeFilter === 'all' || rowStatus === activeFilter);
+            var textMatch = !q || row.textContent.toLowerCase().indexOf(q) !== -1;
+            row.style.display = (statusMatch && textMatch) ? '' : 'none';
+        });
     });
+});
+
+/* === Sidebar sub-item hash navigation === */
+var hashFilterMap = {
+    /* Postes */
+    'postes-tous': { section: 'postes', filter: 'all' },
+    'postes-actifs': { section: 'postes', filter: 'active' },
+    'postes-inactifs': { section: 'postes', filter: 'paused' },
+    'postes-archives': { section: 'postes', filter: 'closed' },
+    /* Affichages */
+    'affichages-tous': { section: 'affichages', filter: 'all' },
+    'affichages-actifs': { section: 'affichages', filter: 'active' },
+    'affichages-expires': { section: 'affichages', filter: 'expired' },
+    /* Candidats */
+    'candidats-tous': { section: 'candidats', filter: 'all' },
+    'candidats-nouveaux': { section: 'candidats', filter: 'new' },
+    'candidats-evalues': { section: 'candidats', filter: 'reviewed' },
+    'candidats-shortlistes': { section: 'candidats', filter: 'shortlisted' }
+};
+
+function applyHashFilter() {
+    var hash = (window.location.hash || '').replace('#', '');
+    var mapping = hashFilterMap[hash];
+    if (!mapping) return;
+    /* Activate the correct section */
+    if (typeof showSection === 'function') showSection(mapping.section);
+    /* Click the matching filter tab */
+    var tabGroup = document.getElementById(mapping.section + '-filter-tabs');
+    if (tabGroup) {
+        var btn = tabGroup.querySelector('.view-tab[data-filter="' + mapping.filter + '"]');
+        if (btn) btn.click();
+    }
 }
 
-// Search bar within postes section
-(function () {
-    var searchInput = document.querySelector('#postes-section .search-bar input');
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            var q = this.value.toLowerCase().trim();
-            var activeTab = document.querySelector('#postes-filter-tabs .view-tab.active');
-            var activeFilter = activeTab ? (activeTab.getAttribute('data-filter') || 'all') : 'all';
-            var rows = document.querySelectorAll('#postes-table tbody tr.row-clickable');
-            rows.forEach(function (row) {
-                var rowStatus = row.getAttribute('data-status') || '';
-                var statusMatch = (activeFilter === 'all' || rowStatus === activeFilter);
-                var textMatch = !q || row.textContent.toLowerCase().indexOf(q) !== -1;
-                row.style.display = (statusMatch && textMatch) ? '' : 'none';
-            });
-        });
-    }
-})();
+/* Run on page load + hash change */
+window.addEventListener('hashchange', applyHashFilter);
+document.addEventListener('DOMContentLoaded', function () { setTimeout(applyHashFilter, 100); });
 
 /* Paramètres : visibilité des panneaux (navigation par le menu latéral) */
 document.addEventListener('DOMContentLoaded', function () {

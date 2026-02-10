@@ -76,9 +76,12 @@ const translations = {
         filter_active: "Actifs",
         filter_paused: "Pausés",
         filter_closed: "Fermés",
+        filter_inactive: "Non actifs",
+        filter_archived: "Archivés",
         filter_expired: "Expirés",
         filter_new: "Nouveaux",
         filter_reviewed: "Évalués",
+        filter_rejected: "Refusés",
         filter_shortlisted: "Favoris",
         filter_all_jobs: "Tous les postes",
 
@@ -168,6 +171,7 @@ const translations = {
         settings_branding: "Marque employeur",
         settings_branding_title: "Personnalisation de la marque",
         settings_team: "Équipe",
+        settings_departments: "Départements",
         settings_notifications: "Notifications",
         settings_billing: "Facturation",
         "billing.plan.interviews_50": "Gérez jusqu'à 50 entrevues à la fois (libérez des places en supprimant les anciennes)",
@@ -188,7 +192,42 @@ const translations = {
         // ─── Dashboard – Candidat ───
         video_preview: "Aperçu vidéo",
         comments_title: "Commentaires",
-        add_note_placeholder: "Ajouter une note..."
+        add_note_placeholder: "Ajouter une note...",
+
+        // ─── Dashboard – KPI & Stats ───
+        kpi_my_plan: "Mon forfait",
+        kpi_interviews_available: "entrevues disponibles",
+        kpi_complete_profile: "Compléter votre profil",
+        kpi_profile_completed: "Profil complété",
+        kpi_task_remaining: "tâche restante",
+        kpi_tasks_remaining: "tâches restantes",
+        kpi_all_done: "Tout est en ordre \u2713",
+        kpi_since_last_month: "depuis le mois dernier",
+        chart_no_data: "Aucune candidature pour le moment",
+        forfait_manage: "Gérer mon forfait",
+
+        // ─── Dashboard – Event Log ───
+        events_title: "Journalisation des événements",
+        events_empty: "Aucun événement enregistré.",
+        th_date: "Date",
+        th_user: "Utilisateur",
+        th_action: "Action",
+        th_details: "Détails",
+
+        // ─── Dashboard – Modals ───
+        modal_complete_profile: "Compléter votre profil",
+        profile_step1_title: "Détail de votre organisation",
+        profile_step1_sub: "Paramètres de l'entreprise",
+        profile_step2_title: "Créer un poste",
+        profile_step2_sub: "Définir vos postes à pourvoir",
+        profile_step3_title: "Créer un affichage",
+        profile_step3_sub: "Publier votre poste",
+        badge_done: "Fait",
+        modal_delete_affichage: "Supprimer l'affichage",
+        modal_delete_affichage_msg: "Êtes-vous sûr de vouloir supprimer cet affichage ?",
+        modal_delete_poste_msg: "Êtes-vous sûr de vouloir supprimer ce poste ?",
+        btn_add: "Ajouter",
+        contact_email: "Email"
     },
 
     en: {
@@ -258,7 +297,8 @@ const translations = {
         dropdown_logout: "Log Out",
         search: "Search...",
         filter_all: "All", filter_active: "Active", filter_paused: "Paused", filter_closed: "Closed",
-        filter_expired: "Expired", filter_new: "New", filter_reviewed: "Reviewed", filter_shortlisted: "Favorites",
+        filter_inactive: "Inactive", filter_archived: "Archived",
+        filter_expired: "Expired", filter_new: "New", filter_reviewed: "Reviewed", filter_rejected: "Rejected", filter_shortlisted: "Favorites",
         filter_all_jobs: "All positions",
         postes_title: "Active Positions", affichages_title: "Current Drives", candidats_title: "Candidates",
         statistiques_title: "Dashboard", parametres_title: "Settings",
@@ -286,7 +326,7 @@ const translations = {
         btn_cancel: "Cancel", btn_save: "Save", btn_upload: "Upload", btn_send: "Send",
         settings_company: "Company", settings_branding: "Employer Branding",
         settings_branding_title: "Brand Customization",
-        settings_team: "Team", settings_notifications: "Notifications",
+        settings_team: "Team", settings_departments: "Departments", settings_notifications: "Notifications",
         settings_billing: "Billing", settings_integrations: "Integrations",
         "billing.plan.interviews_50": "Manage up to 50 interviews at a time (free up slots by removing older ones)",
         "billing.plan.interviews_200": "Manage up to 200 interviews at a time (free up slots by removing older ones)",
@@ -297,7 +337,42 @@ const translations = {
         label_message: "Your Message", feedback_placeholder: "Tell us more...",
         feedback_success: "Thank you for your feedback!",
         video_preview: "Video Preview", comments_title: "Comments",
-        add_note_placeholder: "Add a note..."
+        add_note_placeholder: "Add a note...",
+
+        // ─── Dashboard – KPI & Stats ───
+        kpi_my_plan: "My Plan",
+        kpi_interviews_available: "interviews available",
+        kpi_complete_profile: "Complete your profile",
+        kpi_profile_completed: "Profile completed",
+        kpi_task_remaining: "task remaining",
+        kpi_tasks_remaining: "tasks remaining",
+        kpi_all_done: "All done \u2713",
+        kpi_since_last_month: "since last month",
+        chart_no_data: "No applications yet",
+        forfait_manage: "Manage my plan",
+
+        // ─── Dashboard – Event Log ───
+        events_title: "Event Log",
+        events_empty: "No events recorded.",
+        th_date: "Date",
+        th_user: "User",
+        th_action: "Action",
+        th_details: "Details",
+
+        // ─── Dashboard – Modals ───
+        modal_complete_profile: "Complete your profile",
+        profile_step1_title: "Organization details",
+        profile_step1_sub: "Company settings",
+        profile_step2_title: "Create a position",
+        profile_step2_sub: "Define your open positions",
+        profile_step3_title: "Create a posting",
+        profile_step3_sub: "Publish your position",
+        badge_done: "Done",
+        modal_delete_affichage: "Delete posting",
+        modal_delete_affichage_msg: "Are you sure you want to delete this posting?",
+        modal_delete_poste_msg: "Are you sure you want to delete this position?",
+        btn_add: "Add",
+        contact_email: "Email"
     }
 };
 
