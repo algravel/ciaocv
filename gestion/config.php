@@ -173,12 +173,19 @@ try {
             phone VARCHAR(50) NULL,
             address TEXT NULL,
             description TEXT NULL,
+            timezone VARCHAR(64) NOT NULL DEFAULT 'America/Montreal',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY idx_platform_user (platform_user_id),
             FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM app_entreprises LIKE 'timezone'");
+        if ($stmt->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE app_entreprises ADD COLUMN timezone VARCHAR(64) NOT NULL DEFAULT 'America/Montreal' AFTER description");
+        }
+    } catch (Throwable $e) { /* ignorer */ }
     // ─── Table app_candidatures (entrevue candidat) ───────────────────────────
     $stmt = $pdo->query("SHOW TABLES LIKE 'app_candidatures'");
     if ($stmt->rowCount() === 0) {

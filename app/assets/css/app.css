@@ -244,6 +244,8 @@ a { text-decoration: none; color: inherit; }
 .data-table .cell-actions .btn-icon-delete { color: var(--text-secondary); }
 .data-table .cell-actions .btn-icon-delete:hover { color: var(--danger-color); }
 .data-table .th-actions { width: 1%; text-align: center; }
+.data-table .th-candidates,
+.data-table .cell-candidates { text-align: center; }
 
 /* ═══════════════════════════════════════════════
    COMPOSANTS – Badges & Status

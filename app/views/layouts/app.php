@@ -89,8 +89,6 @@
                     <div class="nav-submenu-inner">
                         <a href="/parametres#parametres-company" class="nav-subitem settings-subitem"
                             data-target="settings-company" data-i18n="settings_company">Entreprise</a>
-                        <a href="/parametres#parametres-branding" class="nav-subitem settings-subitem"
-                            data-target="settings-branding" data-i18n="settings_branding">Marque employeur</a>
                         <a href="/parametres#parametres-departments" class="nav-subitem settings-subitem"
                             data-target="settings-departments" data-i18n="settings_departments">Départements</a>
                         <a href="/parametres#parametres-team" class="nav-subitem settings-subitem"
@@ -164,13 +162,15 @@
         const APP_DATA = {
             appUrl: <?= json_encode(defined('APP_URL') ? APP_URL : 'https://app.ciaocv.com') ?>,
             currentUser: <?= json_encode(($user ?? [])['name'] ?? 'Utilisateur', JSON_UNESCAPED_UNICODE) ?>,
+            userTimezone: <?= json_encode($userTimezone ?? 'America/Montreal', JSON_UNESCAPED_UNICODE) ?>,
             postes: <?= json_encode($postes ?? [], JSON_UNESCAPED_UNICODE) ?>,
             affichages: <?= json_encode($affichages ?? [], JSON_UNESCAPED_UNICODE) ?>,
             candidats: <?= json_encode($candidats ?? [], JSON_UNESCAPED_UNICODE) ?>,
             candidatsByAff: <?= json_encode($candidatsByAff ?? [], JSON_UNESCAPED_UNICODE) ?>,
             emailTemplates: <?= json_encode($emailTemplates ?? [], JSON_UNESCAPED_UNICODE) ?>,
             departments: <?= json_encode($departments ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            teamMembers: <?= json_encode($teamMembers ?? [], JSON_UNESCAPED_UNICODE) ?>
+            teamMembers: <?= json_encode($teamMembers ?? [], JSON_UNESCAPED_UNICODE) ?>,
+            events: <?= json_encode($events ?? [], JSON_UNESCAPED_UNICODE) ?>
         };
     </script>
     <script src="<?= asset('assets/js/i18n.js') ?>"></script>

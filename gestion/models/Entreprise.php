@@ -28,13 +28,17 @@ class Entreprise
         $phone = trim($data['phone'] ?? '') ?: null;
         $address = trim($data['address'] ?? '') ?: null;
         $description = trim($data['description'] ?? '') ?: null;
+        $timezone = trim($data['timezone'] ?? '') ?: 'America/Montreal';
+        if (!in_array($timezone, timezone_identifiers_list(), true)) {
+            $timezone = 'America/Montreal';
+        }
 
         $existing = $this->getByPlatformUserId($platformUserId);
         if ($existing) {
-            $stmt = $this->pdo->prepare('UPDATE app_entreprises SET name = ?, industry = ?, email = ?, phone = ?, address = ?, description = ? WHERE platform_user_id = ?');
-            return $stmt->execute([$name, $industry, $email, $phone, $address, $description, $platformUserId]);
+            $stmt = $this->pdo->prepare('UPDATE app_entreprises SET name = ?, industry = ?, email = ?, phone = ?, address = ?, description = ?, timezone = ? WHERE platform_user_id = ?');
+            return $stmt->execute([$name, $industry, $email, $phone, $address, $description, $timezone, $platformUserId]);
         }
-        $stmt = $this->pdo->prepare('INSERT INTO app_entreprises (platform_user_id, name, industry, email, phone, address, description) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        return $stmt->execute([$platformUserId, $name, $industry, $email, $phone, $address, $description]);
+        $stmt = $this->pdo->prepare('INSERT INTO app_entreprises (platform_user_id, name, industry, email, phone, address, description, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        return $stmt->execute([$platformUserId, $name, $industry, $email, $phone, $address, $description, $timezone]);
     }
 }

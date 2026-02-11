@@ -75,8 +75,7 @@ class DashboardController extends Controller
                 $kpiForfaitUsed = $entrevueModel->countUsed($platformUserId);
                 $chartMonths = $entrevueModel->countByMonth($platformUserId, 6);
                 $eventModel = new Event();
-                // 11 pour savoir s'il y en a plus que 10
-                $events = $eventModel->recentByPlatformUser($platformUserId, 11);
+                $events = $eventModel->recentByPlatformUser($platformUserId, 100);
             } catch (Throwable $e) {
                 // $chartMonths remains []
                 $chartMonths = [];
@@ -119,15 +118,19 @@ class DashboardController extends Controller
             default => 'statistiques',
         };
 
-        // Forfaits facturation (depuis gestion_plans) pour la section paramètres > facturation
+        // Forfaits facturation (depuis gestion_plans en base) — même source que gestion/tarifs
         $billingPlans = [];
         if ($platformUserId) {
             try {
-                $planModel = new Plan();
-                $dbPlans = $planModel->all(null, true);
+                require_once dirname(__DIR__, 2) . '/gestion/config.php';
+                $pdo = Database::get();
+                $stmt = $pdo->query('SELECT id, name_fr, name_en, video_limit, price_monthly, price_yearly FROM gestion_plans WHERE COALESCE(active, 1) = 1 ORDER BY price_monthly ASC');
+                $dbPlans = $stmt ? $stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
                 $lang = ($_COOKIE['language'] ?? 'fr') === 'en' ? 'en' : 'fr';
                 foreach ($dbPlans as $p) {
-                    $name = $p['name'] ?? ($lang === 'en' ? ($p['name_en'] ?? $p['name_fr']) : ($p['name_fr'] ?? $p['name_en']));
+                    $nameFr = $p['name_fr'] ?? '';
+                    $nameEn = $p['name_en'] ?? $nameFr;
+                    $name = $lang === 'en' ? $nameEn : $nameFr;
                     $priceMonthly = (float) ($p['price_monthly'] ?? 0);
                     $priceYearly = (float) ($p['price_yearly'] ?? 0);
                     $videoLimit = (int) ($p['video_limit'] ?? 0);
@@ -159,6 +162,7 @@ class DashboardController extends Controller
         $this->view('dashboard.index', [
             'pageTitle' => 'Tableau de bord',
             'companyName' => $companyName,
+            'userTimezone' => ($entreprise['timezone'] ?? null) ?: 'America/Montreal',
             'entreprise' => $entreprise,
             'postes' => $postes,
             'affichages' => $affichages,
@@ -271,11 +275,13 @@ class DashboardController extends Controller
             'phone' => trim($_POST['phone'] ?? '') ?: null,
             'address' => trim($_POST['address'] ?? '') ?: null,
             'description' => trim($_POST['description'] ?? '') ?: null,
+            'timezone' => trim($_POST['timezone'] ?? '') ?: 'America/Montreal',
         ];
         $entrepriseModel = new Entreprise();
         $ok = $entrepriseModel->upsert($platformUserId, $data);
         $_SESSION['company_name'] = $data['name'];
-        $this->json(['success' => $ok, 'company_name' => $data['name']]);
+        $timezone = $data['timezone'] ?? 'America/Montreal';
+        $this->json(['success' => $ok, 'company_name' => $data['name'], 'timezone' => $timezone]);
     }
 
     /**

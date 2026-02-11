@@ -58,7 +58,15 @@ class Poste
         }
         self::ensureDb();
         $pdo = Database::get();
-        $stmt = $pdo->prepare('SELECT * FROM app_postes WHERE platform_user_id = ? ORDER BY created_at DESC');
+        $stmt = $pdo->prepare('
+            SELECT p.*,
+                (SELECT COUNT(*) FROM app_affichages a
+                 JOIN app_candidatures c ON c.affichage_id = a.id
+                 WHERE a.poste_id = p.id) AS candidates
+            FROM app_postes p
+            WHERE p.platform_user_id = ?
+            ORDER BY p.created_at DESC
+        ');
         $stmt->execute([$platformUserId]);
         $rows = [];
         while ($r = $stmt->fetch()) {

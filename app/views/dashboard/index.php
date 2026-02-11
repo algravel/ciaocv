@@ -38,7 +38,7 @@
                 <th data-i18n="th_department">Département</th>
                 <th data-i18n="th_location">Lieu</th>
                 <th data-i18n="th_status">Statut</th>
-                <th data-i18n="th_candidates">Candidats</th>
+                <th class="th-candidates" data-i18n="th_candidates">Candidats</th>
                 <th class="th-actions" data-i18n="th_actions">Actions</th>
             </tr>
         </thead>
@@ -57,7 +57,7 @@
                     <td><?= e($p['department']) ?></td>
                     <td><?= e($p['location']) ?></td>
                     <td><span class="status-badge <?= e($p['statusClass']) ?>"><?= e($p['status']) ?></span></td>
-                    <td><?= $p['candidates'] ?></td>
+                    <td class="cell-candidates"><?= (int) ($p['candidates'] ?? 0) ?></td>
                     <td class="cell-actions">
                         <button type="button" class="btn-icon btn-icon-edit"
                             onclick="event.stopPropagation(); showPosteDetail('<?= e($p['id']) ?>')" title="Modifier"
@@ -218,11 +218,11 @@
     </div>
 
     <div class="filters-bar">
-        <div class="view-tabs">
-            <button class="view-tab active">Tous</button>
-            <button class="view-tab">Nouveaux</button>
-            <button class="view-tab">Évalués</button>
-            <button class="view-tab">Refusés</button>
+        <div class="view-tabs" id="affichage-candidats-filter-tabs">
+            <button class="view-tab active" data-filter="all">Tous</button>
+            <button class="view-tab" data-filter="new">Nouveaux</button>
+            <button class="view-tab" data-filter="reviewed">Évalués</button>
+            <button class="view-tab" data-filter="rejected">Refusés</button>
         </div>
     </div>
     <div class="search-row search-row--with-label">
@@ -292,7 +292,7 @@
                 <th data-i18n="th_poste">Poste</th>
                 <th data-i18n="th_department">Département</th>
                 <th data-i18n="th_status">Statut</th>
-                <th data-i18n="th_new_candidates">Nouvelles</th>
+                <th data-i18n="th_new_candidates">Non évalué</th>
                 <th class="th-actions" data-i18n="th_actions">Actions</th>
             </tr>
         </thead>
@@ -619,7 +619,7 @@
         <div class="card-header">
             <h2 class="card-title" data-i18n="events_title">Journalisation des événements</h2>
         </div>
-        <table class="data-table">
+        <table class="data-table" id="events-table">
             <thead>
                 <tr>
                     <th data-i18n="th_date">Date</th>
@@ -628,57 +628,19 @@
                     <th data-i18n="th_details">Détails</th>
                 </tr>
             </thead>
-            <tbody>
-            <tbody>
-                <?php
-                $evts = $events ?? [];
-                // Badge map including new types from Event logging (create, update, delete)
-                $badgeMap = [
-                    'creation' => 'event-badge--creation',
-                    'create' => 'event-badge--creation',
-                    'modification' => 'event-badge--modification',
-                    'update' => 'event-badge--modification',
-                    'suppression' => 'event-badge--suppression',
-                    'delete' => 'event-badge--suppression',
-                    'evaluation' => 'event-badge--evaluation',
-                    'invitation' => 'event-badge--invitation'
-                ];
-                $moisFr = ['Jan' => 'janv', 'Feb' => 'fév', 'Mar' => 'mars', 'Apr' => 'avr', 'May' => 'mai', 'Jun' => 'juin', 'Jul' => 'juil', 'Aug' => 'août', 'Sep' => 'sept', 'Oct' => 'oct', 'Nov' => 'nov', 'Dec' => 'déc'];
-
-                $hasMore = count($evts) > 10;
-                $displayEvts = array_slice($evts, 0, 10);
-
-                if (empty($displayEvts)): ?>
-                    <tr>
-                        <td colspan="4" class="cell-muted" data-i18n="events_empty">Aucun événement enregistré.</td>
-                    </tr>
-                <?php else:
-                    foreach ($displayEvts as $ev):
-                        $ts = strtotime($ev['created_at']);
-                        $d = date('j M Y, H:i', $ts ? $ts : time());
-                        $createdFormatted = preg_replace_callback('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/', fn($m) => $moisFr[$m[1]] ?? $m[1], $d);
-
-                        $type = strtolower($ev['action_type'] ?? 'modification');
-                        $badgeClass = $badgeMap[$type] ?? 'event-badge--modification';
-                        ?>
-                        <tr>
-                            <td class="cell-date"><?= e($createdFormatted) ?></td>
-                            <td><strong><?= e($ev['user_name'] ?? 'Inconnu') ?></strong></td>
-                            <td><span class="event-badge <?= e($badgeClass) ?>"><?= e(ucfirst($type)) ?></span>
-                            </td>
-                            <td class="cell-muted"><?= e($ev['details'] ?? '') ?></td>
-                        </tr>
-                    <?php endforeach; endif; ?>
+            <tbody id="events-tbody">
+                <!-- Rempli par JS (pagination) -->
             </tbody>
         </table>
-        <?php if ($hasMore): ?>
-            <div class="card-footer text-center">
-                <a href="/historique" class="btn-icon" title="Voir tout l'historique"
-                    style="color: var(--primary); font-size: 1.2rem;">
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
-            </div>
-        <?php endif; ?>
+        <div class="card-footer events-pagination" id="events-pagination" style="display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1rem;">
+            <button type="button" class="btn btn-sm btn-secondary" id="events-prev" disabled title="Page précédente">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span class="events-page-info" id="events-page-info">—</span>
+            <button type="button" class="btn btn-sm btn-secondary" id="events-next" disabled title="Page suivante">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -697,6 +659,7 @@
     $companyPhone = $ent['phone'] ?? '';
     $companyAddress = $ent['address'] ?? '';
     $companyDescription = $ent['description'] ?? '';
+    $companyTimezone = $ent['timezone'] ?? 'America/Montreal';
     ?>
     <!-- Entreprise -->
     <div class="card settings-pane" id="settings-company">
@@ -737,36 +700,27 @@
                     style="resize: vertical;"
                     placeholder="<?= $isNewOrg ? 'Décrivez votre entreprise...' : '' ?>"><?= e($companyDescription) ?></textarea>
             </div>
-            <div class="form-actions"><button type="button" class="btn btn-secondary"
-                    data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary"
-                    data-i18n="btn_save">Enregistrer</button></div>
-        </form>
-    </div>
-
-    <!-- Marque employeur -->
-    <div class="card settings-pane hidden" id="settings-branding">
-        <div class="card-header card-header--bordered">
-            <h2 class="card-title" data-i18n="settings_branding_title">Personnalisation de la marque</h2>
-        </div>
-        <form class="form-vertical">
             <div class="form-group">
-                <label class="form-label" data-i18n="form_logo">Logo de l'entreprise</label>
-                <p class="form-help" data-i18n="logo_help">Affiché sur votre profil et vos offres.</p>
-                <div class="flex-center gap-4">
-                    <div class="logo-preview"><img
-                            src="https://ui-avatars.com/api/?name=<?= urlencode($settingsCompanyName ?: 'Co') ?>&background=3B82F6&color=fff&size=80"
-                            alt="Logo" class="w-full" style="height:100%; object-fit:cover;"></div>
-                    <div class="flex-col gap-2"><button type="button" class="btn btn-secondary"
-                            data-i18n="btn_upload">Téléverser un logo</button><span class="form-help">JPG, PNG ou SVG.
-                            Max 2MB.</span></div>
-                </div>
+                <label class="form-label" data-i18n="form_timezone">Fuseau horaire</label>
+                <select class="form-select" name="timezone" id="settings-company-timezone">
+                    <option value="America/Montreal" <?= $companyTimezone === 'America/Montreal' ? ' selected' : '' ?>>Montréal (America/Montreal)</option>
+                    <option value="America/Toronto" <?= $companyTimezone === 'America/Toronto' ? ' selected' : '' ?>>Toronto (America/Toronto)</option>
+                    <option value="America/New_York" <?= $companyTimezone === 'America/New_York' ? ' selected' : '' ?>>New York (America/New_York)</option>
+                    <option value="America/Chicago" <?= $companyTimezone === 'America/Chicago' ? ' selected' : '' ?>>Chicago (America/Chicago)</option>
+                    <option value="America/Los_Angeles" <?= $companyTimezone === 'America/Los_Angeles' ? ' selected' : '' ?>>Los Angeles (America/Los_Angeles)</option>
+                    <option value="America/Vancouver" <?= $companyTimezone === 'America/Vancouver' ? ' selected' : '' ?>>Vancouver (America/Vancouver)</option>
+                    <option value="Europe/Paris" <?= $companyTimezone === 'Europe/Paris' ? ' selected' : '' ?>>Paris (Europe/Paris)</option>
+                    <option value="Europe/London" <?= $companyTimezone === 'Europe/London' ? ' selected' : '' ?>>Londres (Europe/London)</option>
+                    <option value="UTC" <?= $companyTimezone === 'UTC' ? ' selected' : '' ?>>UTC</option>
+                </select>
+                <p class="form-help" data-i18n="timezone_help">Les dates sont enregistrées en UTC et affichées selon ce fuseau.</p>
             </div>
             <div class="form-group">
                 <label class="form-label" data-i18n="form_brand_color">Couleur de la marque</label>
                 <div class="flex-center gap-4">
-                    <input type="color" class="form-input" value="#3B82F6"
+                    <input type="color" class="form-input" name="brand_color" id="settings-brand-color" value="#3B82F6"
                         style="width: 60px; height: 40px; padding: 0.25rem;">
-                    <input type="text" class="form-input" value="#3B82F6" style="width: 120px;">
+                    <input type="text" class="form-input" name="brand_color_hex" id="settings-brand-color-hex" value="#3B82F6" style="width: 120px;">
                 </div>
             </div>
             <div class="form-actions"><button type="button" class="btn btn-secondary"

@@ -81,6 +81,33 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+/**
+ * Convertit une date UTC (ISO string ou timestamp) en date formatée selon le fuseau horaire de l'utilisateur.
+ * Les dates en base sont en UTC (GMT0) ; on les affiche dans le fuseau choisi (ex: America/Montreal).
+ * @param {string|number} utcString - Date ISO (ex: "2025-02-10T14:30:00Z") ou timestamp ms
+ * @param {string} [timezone] - Fuseau (ex: "America/Montreal"). Par défaut: APP_DATA.userTimezone
+ * @param {object} [opts] - Options pour toLocaleString: { dateStyle, timeStyle } ou { day, month, hour, minute }
+ * @returns {string} Date formatée
+ */
+function formatUtcToLocal(utcString, timezone, opts) {
+    if (!utcString) return '—';
+    var s = String(utcString).trim();
+    // Format MySQL "2025-02-10 14:30:00" ou "2025-02-10 14:30" = UTC (bd stocke en GMT0)
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(s)) {
+        s = s.replace(' ', 'T') + (s.length <= 16 ? ':00' : '') + 'Z';
+    }
+    var tz = timezone || (typeof APP_DATA !== 'undefined' && APP_DATA.userTimezone) || 'America/Montreal';
+    var d = typeof utcString === 'number' ? new Date(utcString) : new Date(s);
+    if (isNaN(d.getTime())) return String(utcString);
+    var def = opts || { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    var opt = {}; for (var k in def) opt[k] = def[k]; opt.timeZone = tz;
+    try {
+        return d.toLocaleString('fr-CA', opt);
+    } catch (e) {
+        return d.toLocaleString('fr-CA', def);
+    }
+}
+
 /* ═══════════════════════════════════════════════
    SIDEBAR & NAVIGATION
    ═══════════════════════════════════════════════ */
@@ -347,6 +374,73 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+/* Journalisation : pagination par 10 */
+var EVENTS_PER_PAGE = 10;
+var eventsCurrentPage = 1;
+
+function renderEventsPage(page) {
+    var tbody = document.getElementById('events-tbody');
+    var prevBtn = document.getElementById('events-prev');
+    var nextBtn = document.getElementById('events-next');
+    var pageInfo = document.getElementById('events-page-info');
+    var pagination = document.getElementById('events-pagination');
+    if (!tbody || !pageInfo) return;
+
+    var evts = (typeof APP_DATA !== 'undefined' && APP_DATA.events) ? APP_DATA.events : [];
+    var total = evts.length;
+    var totalPages = Math.max(1, Math.ceil(total / EVENTS_PER_PAGE));
+    page = Math.max(1, Math.min(page, totalPages));
+    eventsCurrentPage = page;
+
+    var start = (page - 1) * EVENTS_PER_PAGE;
+    var slice = evts.slice(start, start + EVENTS_PER_PAGE);
+
+    var badgeMap = { creation: 'event-badge--creation', create: 'event-badge--creation', modification: 'event-badge--modification', update: 'event-badge--modification', suppression: 'event-badge--suppression', delete: 'event-badge--suppression', evaluation: 'event-badge--evaluation', invitation: 'event-badge--invitation' };
+    var moisFr = { Jan: 'janv', Feb: 'fév', Mar: 'mars', Apr: 'avr', May: 'mai', Jun: 'juin', Jul: 'juil', Aug: 'août', Sep: 'sept', Oct: 'oct', Nov: 'nov', Dec: 'déc' };
+
+    tbody.innerHTML = '';
+    if (slice.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="cell-muted">Aucun événement enregistré.</td></tr>';
+    } else {
+        slice.forEach(function (ev) {
+            var createdFormatted = formatUtcToLocal(ev.created_at);
+            var type = (ev.action_type || 'modification').toLowerCase();
+            var badgeClass = badgeMap[type] || 'event-badge--modification';
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td class="cell-date">' + escapeHtml(createdFormatted) + '</td><td><strong>' + escapeHtml(ev.user_name || '—') + '</strong></td><td><span class="event-badge ' + escapeHtml(badgeClass) + '">' + escapeHtml((type.charAt(0).toUpperCase() + type.slice(1))) + '</span></td><td class="cell-muted">' + escapeHtml(ev.details || '') + '</td>';
+            tbody.appendChild(tr);
+        });
+    }
+
+    if (prevBtn) prevBtn.disabled = page <= 1;
+    if (nextBtn) nextBtn.disabled = page >= totalPages;
+    pageInfo.textContent = total === 0 ? '—' : 'Page ' + page + ' / ' + totalPages + ' (' + total + ' événements)';
+    if (pagination) pagination.style.display = total > 0 ? 'flex' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var prevBtn = document.getElementById('events-prev');
+    var nextBtn = document.getElementById('events-next');
+    renderEventsPage(1);
+    if (prevBtn) prevBtn.addEventListener('click', function () { renderEventsPage(eventsCurrentPage - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function () { renderEventsPage(eventsCurrentPage + 1); });
+});
+
+/* Filtre candidats par affichage (Tous / Nouveaux / Évalués / Refusés) */
+document.addEventListener('DOMContentLoaded', function () {
+    var tabs = document.getElementById('affichage-candidats-filter-tabs');
+    if (tabs) {
+        tabs.addEventListener('click', function (e) {
+            var tab = e.target.closest('.view-tab[data-filter]');
+            if (tab && window._currentAffichageId) {
+                var filter = tab.getAttribute('data-filter');
+                _affichageCandidatsFilter = filter;
+                renderAffichageCandidatsTable(window._currentAffichageId, filter);
+            }
+        });
+    }
+});
+
 function saveCompanySettings(e) {
     e.preventDefault();
     var form = document.getElementById('form-settings-company');
@@ -357,9 +451,14 @@ function saveCompanySettings(e) {
     fetch('/parametres/entreprise', { method: 'POST', body: formData })
         .then(function (r) { return r.json(); })
         .then(function (data) {
-            if (data.success && data.company_name !== undefined) {
-                var el = document.querySelector('.company-name');
-                if (el) el.textContent = data.company_name || '';
+            if (data.success) {
+                if (data.company_name !== undefined) {
+                    var el = document.querySelector('.company-name');
+                    if (el) el.textContent = data.company_name || '';
+                }
+                if (data.timezone !== undefined) {
+                    location.reload();
+                }
             }
         })
         .catch(function () { })
@@ -404,7 +503,7 @@ function showPosteDetail(id) {
     applyPosteStatusStyle(statusSelect);
     document.getElementById('detail-poste-candidates').textContent = data.candidates;
     var dateEl = document.getElementById('detail-poste-date');
-    if (dateEl) dateEl.textContent = data.date || '—';
+    if (dateEl) dateEl.textContent = formatUtcToLocal(data.date) || '—';
 
     // Durée d'enregistrement
     var durationSelect = document.getElementById('detail-poste-record-duration');
@@ -703,10 +802,57 @@ function openPosteCandidatsModal() {
 /* ═══════════════════════════════════════════════
    AFFICHAGE DETAIL / CANDIDATS PAR AFFICHAGE
    ═══════════════════════════════════════════════ */
+var _affichageCandidatsFilter = 'all';
+
+function candidateMatchesFilter(c, filter) {
+    if (filter === 'all') return true;
+    var s = (c.status || '').toLowerCase();
+    if (filter === 'new') return s === 'new' || s.includes('nouveau');
+    if (filter === 'reviewed') return s === 'reviewed' || s.includes('accept') || s === 'shortlisted' || s.includes('favori') || s.includes('banque') || s.includes('évalué');
+    if (filter === 'rejected') return s === 'rejected' || s.includes('refus');
+    return true;
+}
+
+function renderAffichageCandidatsTable(id, filter) {
+    filter = filter || _affichageCandidatsFilter;
+    _affichageCandidatsFilter = filter;
+    var candidates = affichageCandidats[id] || [];
+    var filtered = candidates.filter(function (c) { return candidateMatchesFilter(c, filter); });
+    var tbody = document.getElementById('affichage-candidats-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    filtered.forEach(function (c) {
+        var row = document.createElement('tr');
+        row.style.cursor = 'pointer';
+        row.onclick = function () { if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id); };
+        var statusLabel = statusToLabel(c.status);
+        row.innerHTML =
+            '<td><div style="display: flex; align-items: center; gap: 0.75rem;">' +
+            '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
+            '<div><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
+            '</div></td>' +
+            '<td><span class="status-badge" style="background:' + (c.statusBg || '#DBEAFE') + '; color:' + (c.statusColor || '#1D4ED8') + ';">' + escapeHtml(statusLabel) + '</span></td>' +
+            '<td style="text-align: center;">' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color: #EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color: #D1D5DB;"></i>') + '</td>' +
+            '<td>' + escapeHtml(formatUtcToLocal(c.date)) + '</td>';
+        tbody.appendChild(row);
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #94A3B8;">' + (candidates.length === 0 ? 'Aucun candidat pour cet affichage.' : 'Aucun candidat pour ce filtre.') + '</td></tr>';
+    }
+
+    // Mettre à jour l'onglet actif
+    document.querySelectorAll('#affichage-candidats-filter-tabs .view-tab').forEach(function (tab) {
+        tab.classList.toggle('active', tab.getAttribute('data-filter') === filter);
+    });
+}
+
 function showAffichageDetail(id) {
     var data = affichagesData[id];
     if (!data) return;
     window._currentAffichageId = id;
+    _affichageCandidatsFilter = 'all';
 
     document.getElementById('affichage-candidats-title').textContent = data.title;
     document.getElementById('affichage-candidats-subtitle').textContent = data.start;
@@ -733,29 +879,7 @@ function showAffichageDetail(id) {
     if (statusSelect.value === 'termine') alert.classList.remove('hidden');
     else alert.classList.add('hidden');
 
-    var candidates = affichageCandidats[id] || [];
-    var tbody = document.getElementById('affichage-candidats-tbody');
-    tbody.innerHTML = '';
-
-    candidates.forEach(function (c) {
-        var row = document.createElement('tr');
-        row.style.cursor = 'pointer';
-        row.onclick = function () { if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id); };
-        var statusLabel = statusToLabel(c.status);
-        row.innerHTML =
-            '<td><div style="display: flex; align-items: center; gap: 0.75rem;">' +
-            '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
-            '<div><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
-            '</div></td>' +
-            '<td><span class="status-badge" style="background:' + (c.statusBg || '#DBEAFE') + '; color:' + (c.statusColor || '#1D4ED8') + ';">' + escapeHtml(statusLabel) + '</span></td>' +
-            '<td style="text-align: center;">' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color: #EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color: #D1D5DB;"></i>') + '</td>' +
-            '<td>' + escapeHtml(c.date) + '</td>';
-        tbody.appendChild(row);
-    });
-
-    if (candidates.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #94A3B8;">Aucun candidat pour cet affichage.</td></tr>';
-    }
+    renderAffichageCandidatsTable(id, 'all');
 
     // Render evaluateurs
     renderEvaluateurs();
@@ -896,7 +1020,7 @@ function savePosteFromModal(e) {
                     tr.setAttribute('role', 'button');
                     tr.setAttribute('tabindex', '0');
                     tr.onclick = function () { showPosteDetail(p.id); };
-                    tr.innerHTML = '<td><strong>' + escapeHtml(p.title || '') + '</strong></td><td>' + escapeHtml(p.department || '') + '</td><td>' + escapeHtml(p.location || '') + '</td><td><span class="status-badge ' + escapeHtml(p.statusClass || 'status-active') + '">' + escapeHtml(p.status || 'Actif') + '</span></td><td>' + (p.candidates || 0) + '</td><td class="cell-actions"><button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showPosteDetail(\'' + p.id + '\')" title="Modifier"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deletePoste(\'' + p.id + '\', this.closest(\'tr\'))" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>';
+                    tr.innerHTML = '<td><strong>' + escapeHtml(p.title || '') + '</strong></td><td>' + escapeHtml(p.department || '') + '</td><td>' + escapeHtml(p.location || '') + '</td><td><span class="status-badge ' + escapeHtml(p.statusClass || 'status-active') + '">' + escapeHtml(p.status || 'Actif') + '</span></td><td class="cell-candidates">' + (p.candidates || 0) + '</td><td class="cell-actions"><button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showPosteDetail(\'' + p.id + '\')" title="Modifier"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deletePoste(\'' + p.id + '\', this.closest(\'tr\'))" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>';
                     tbody.insertBefore(tr, tbody.firstChild);
                 }
                 closeModal('poste');
@@ -1027,7 +1151,7 @@ function showCandidateDetail(id, source) {
     }
 
     // Populate new recording details
-    document.getElementById('detail-candidate-date').textContent = data.date || '—';
+    document.getElementById('detail-candidate-date').textContent = formatUtcToLocal(data.date) || '—';
     document.getElementById('detail-candidate-retakes').textContent = data.retakes || '0';
 
     // Format duration
@@ -1184,14 +1308,8 @@ function renderTimeline(comments) {
         var initial = userName.charAt(0).toUpperCase();
         var color = commentAvatarColor(userName);
 
-        var d = c.date;
-        if (d && (d.includes('T') || d.includes('-'))) {
-            var dateObj = new Date(d);
-            if (!isNaN(dateObj.getTime())) {
-                d = dateObj.toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-            }
-        }
-        if (!d) d = c.date || '';
+        var d = formatUtcToLocal(c.date, null, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        if (!d || d === '—') d = c.date || '';
 
         var item = document.createElement('div');
         item.className = 'comment-item';
