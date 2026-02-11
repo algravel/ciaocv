@@ -1,4 +1,10 @@
 <!-- Forfait actuel -->
+<?php
+$planName = $planName ?? 'Découverte';
+$kpiForfaitLimit = $kpiForfaitLimit ?? 5;
+$kpiForfaitUsed = $kpiForfaitUsed ?? 0;
+$planSub = ($kpiForfaitLimit >= 9999) ? 'Illimité' : (($kpiForfaitLimit <= 5) ? 'Gratuit' : $kpiForfaitLimit . ' entrevues');
+?>
 <div class="card card--featured mb-6">
     <div class="flex-between mb-6">
         <h2 class="card-title mb-0">Mon forfait</h2>
@@ -9,8 +15,8 @@
             <i class="fa-solid fa-gem"></i>
         </div>
         <div>
-            <div class="plan-name">Découverte <span class="plan-suffix">— Gratuit</span></div>
-            <div class="subtitle-muted">1 affichage actif &middot; 5 entrevues vidéo &middot; Questions standards</div>
+            <div class="plan-name"><?= e($planName) ?> <span class="plan-suffix">— <?= e($planSub) ?></span></div>
+            <div class="subtitle-muted"><?= $kpiForfaitLimit >= 9999 ? 'Entrevues illimitées' : $kpiForfaitUsed . ' / ' . $kpiForfaitLimit . ' entrevues utilisées' ?> &middot; Questions personnalisées</div>
         </div>
     </div>
 </div>
@@ -20,11 +26,7 @@
     <h2 class="card-title mb-5">Changer de forfait</h2>
     <div class="pricing-grid">
         <?php
-        $plans = [
-            ['name' => 'À la carte', 'price' => '79$', 'sub' => 'paiement unique', 'features' => ['1 affichage', 'Accès 30 jours', 'Entrevues vidéo illimitées', 'Outils collaboratifs', 'Marque employeur', 'Questions personnalisées'], 'cta' => 'Acheter', 'popular' => false],
-            ['name' => 'Pro', 'price' => '99$', 'sub' => 'Facturé annuellement', 'priceSuffix' => '/mois', 'features' => ['Affichages illimités', ['i18n' => 'billing.plan.interviews_50', 'text' => 'Gérez jusqu\'à 50 entrevues à la fois (libérez des places en supprimant les anciennes)'], 'Outils collaboratifs', 'Marque employeur', 'Questions personnalisées'], 'cta' => 'Passer au Pro', 'popular' => true],
-            ['name' => 'Expert', 'price' => '149$', 'sub' => 'Facturé annuellement', 'priceSuffix' => '/mois', 'features' => ['Affichages illimités', ['i18n' => 'billing.plan.interviews_200', 'text' => 'Gérez jusqu\'à 200 entrevues à la fois (libérez des places en supprimant les anciennes)'], 'Outils collaboratifs', 'Marque employeur', 'Questions personnalisées', 'Support prioritaire'], 'cta' => 'Passer à Expert', 'popular' => false],
-        ];
+        $plans = $billingPlans ?? [];
         foreach ($plans as $plan): ?>
         <div class="pricing-card <?= $plan['popular'] ? 'pricing-card--popular' : '' ?>">
             <?php if ($plan['popular']): ?><span class="pricing-badge">Populaire</span><?php endif; ?>
@@ -45,6 +47,9 @@
             <button class="btn btn-primary btn--full"><?= e($plan['cta']) ?></button>
         </div>
         <?php endforeach; ?>
+        <?php if (empty($plans)): ?>
+        <p class="text-muted">Aucun forfait disponible. Contactez-nous pour plus d'informations.</p>
+        <?php endif; ?>
     </div>
 </div>
 

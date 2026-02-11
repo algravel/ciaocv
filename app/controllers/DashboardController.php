@@ -75,8 +75,10 @@ class DashboardController extends Controller
                 $kpiForfaitUsed = $entrevueModel->countUsed($platformUserId);
                 $chartMonths = $entrevueModel->countByMonth($platformUserId, 6);
                 $eventModel = new Event();
-                $events = $eventModel->recentByPlatformUser($platformUserId, 20);
+                // 11 pour savoir s'il y en a plus que 10
+                $events = $eventModel->recentByPlatformUser($platformUserId, 11);
             } catch (Throwable $e) {
+                // $chartMonths remains []
                 $chartMonths = [];
             }
         }
@@ -117,6 +119,43 @@ class DashboardController extends Controller
             default => 'statistiques',
         };
 
+        // Forfaits facturation (depuis gestion_plans) pour la section paramètres > facturation
+        $billingPlans = [];
+        if ($platformUserId) {
+            try {
+                $planModel = new Plan();
+                $dbPlans = $planModel->all(null, true);
+                $lang = ($_COOKIE['language'] ?? 'fr') === 'en' ? 'en' : 'fr';
+                foreach ($dbPlans as $p) {
+                    $name = $p['name'] ?? ($lang === 'en' ? ($p['name_en'] ?? $p['name_fr']) : ($p['name_fr'] ?? $p['name_en']));
+                    $priceMonthly = (float) ($p['price_monthly'] ?? 0);
+                    $priceYearly = (float) ($p['price_yearly'] ?? 0);
+                    $videoLimit = (int) ($p['video_limit'] ?? 0);
+
+                    $price = $priceMonthly == 0 && $priceYearly == 0 ? '0' : number_format($priceMonthly, 0, ',', ' ');
+                    $sub = $priceMonthly == 0 && $priceYearly == 0 ? 'Gratuit' : ($priceMonthly == $priceYearly && $priceMonthly > 0 ? 'paiement unique' : 'Facturé annuellement');
+                    $priceSuffix = ($priceMonthly > 0 && $priceMonthly != $priceYearly) ? '/mois' : '';
+
+                    $features = self::billingFeaturesForPlan($name, $videoLimit, $lang);
+                    $cta = $priceMonthly == 0 ? 'Actuel' : ('Passer à ' . $name);
+                    $popular = (stripos($name, 'Pro') !== false);
+
+                    $billingPlans[] = [
+                        'id' => $p['id'] ?? null,
+                        'name' => $name,
+                        'price' => $price . ' $',
+                        'sub' => $sub,
+                        'priceSuffix' => $priceSuffix,
+                        'features' => $features,
+                        'cta' => $cta,
+                        'popular' => $popular,
+                    ];
+                }
+            } catch (Throwable $e) {
+                error_log('DashboardController: billing plans load error: ' . $e->getMessage());
+            }
+        }
+
         $this->view('dashboard.index', [
             'pageTitle' => 'Tableau de bord',
             'companyName' => $companyName,
@@ -142,6 +181,74 @@ class DashboardController extends Controller
             'hasCompanyName' => $hasCompanyName,
             'hasPoste' => $hasPoste,
             'hasAffichage' => $hasAffichage,
+            'billingPlans' => $billingPlans,
+        ]);
+    }
+
+    /**
+     * Features affichées pour un forfait dans la section facturation.
+     */
+    private static function billingFeaturesForPlan(string $name, int $videoLimit, string $lang): array
+    {
+        $nameLower = strtolower($name);
+        if (strpos($nameLower, 'découverte') !== false || strpos($nameLower, 'discovery') !== false) {
+            return ['1 affichage actif', '5 entrevues vidéo', 'Questions standards'];
+        }
+        if (strpos($nameLower, 'à la carte') !== false || strpos($nameLower, 'pay per use') !== false) {
+            return ['1 affichage', 'Accès 30 jours', 'Entrevues vidéo illimitées', 'Outils collaboratifs', 'Marque employeur', 'Questions personnalisées'];
+        }
+        if (strpos($nameLower, 'pro') !== false) {
+            return [
+                'Affichages illimités',
+                ['i18n' => 'billing.plan.interviews_50', 'text' => "Gérez jusqu'à 50 entrevues à la fois (libérez des places en supprimant les anciennes)"],
+                'Outils collaboratifs',
+                'Marque employeur',
+                'Questions personnalisées',
+            ];
+        }
+        if (strpos($nameLower, 'expert') !== false) {
+            return [
+                'Affichages illimités',
+                ['i18n' => 'billing.plan.interviews_200', 'text' => "Gérez jusqu'à 200 entrevues à la fois (libérez des places en supprimant les anciennes)"],
+                'Outils collaboratifs',
+                'Marque employeur',
+                'Questions personnalisées',
+                'Support prioritaire',
+            ];
+        }
+        $limit = $videoLimit >= 9999 ? 'illimitées' : $videoLimit;
+        return ['Entrevues vidéo : ' . $limit, 'Outils collaboratifs', 'Marque employeur', 'Questions personnalisées'];
+    }
+
+    /**
+     * Page d'historique complet des événements.
+     */
+    public function history(): void
+    {
+        $this->requireAuth();
+        $platformUserId = (int) $_SESSION['user_id'];
+
+        $user = [
+            'name' => $_SESSION['user_name'] ?? 'Utilisateur',
+            'email' => $_SESSION['user_email'] ?? '',
+        ];
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        error_reporting(E_ALL);
+
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $eventModel = new Event();
+            $events = $eventModel->recentByPlatformUser($platformUserId, 100);
+        } catch (Throwable $e) {
+            error_log('DashboardController::history error: ' . $e->getMessage());
+            $events = [];
+        }
+
+        $this->view('dashboard.history', [
+            'pageTitle' => 'Historique',
+            'events' => $events,
+            'user' => $user
         ]);
     }
 
@@ -405,6 +512,83 @@ class DashboardController extends Controller
             $this->json(['success' => $success]);
         } catch (Throwable $e) {
             error_log('deleteAffichage error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
+
+
+    /**
+     * Mettre à jour le statut ou le favori d'un candidat.
+     * POST /candidats/update
+     */
+    public function updateCandidate(): void
+    {
+        if (!isset($_SESSION['user_id'])) {
+            $this->json(['success' => false, 'error' => 'Non authentifié'], 401);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'error' => 'Méthode invalide'], 405);
+            return;
+        }
+
+        try {
+            // Verify CSRF
+            // Verify CSRF
+            if (!csrf_verify()) {
+                $sent = $_POST['_csrf_token'] ?? 'null';
+                $sess = $_SESSION['_csrf_token'] ?? 'null';
+                $this->json(['success' => false, 'error' => "CSRF Invalid. Sent: $sent, Session: $sess"], 403);
+                return;
+            }
+            $platformUserId = (int) $_SESSION['user_id'];
+            $id = $_POST['id'] ?? '';
+            $status = $_POST['status'] ?? null;
+            $isFavorite = isset($_POST['is_favorite']) ? (bool) $_POST['is_favorite'] : null;
+            $rating = isset($_POST['rating']) ? (int) $_POST['rating'] : null;
+
+            if (!$id) {
+                $this->json(['success' => false, 'error' => 'ID manquant'], 400);
+                return;
+            }
+
+            $updateData = [];
+            if ($status !== null)
+                $updateData['status'] = $status;
+            if ($isFavorite !== null)
+                $updateData['is_favorite'] = $isFavorite;
+            if ($rating !== null && $rating >= 0 && $rating <= 5)
+                $updateData['rating'] = $rating;
+
+            if (empty($updateData)) {
+                $this->json(['success' => true, 'message' => 'Aucune modification']);
+                return;
+            }
+
+            $success = Candidat::update($id, $platformUserId, $updateData);
+
+            if ($success) {
+                try {
+                    require_once dirname(__DIR__, 2) . '/gestion/config.php';
+                    $event = new Event();
+                    $updateLabel = isset($updateData['status']) ? 'Statut: ' . $updateData['status'] : 'Favori modifié';
+                    $event->logForPlatformUser(
+                        $platformUserId,
+                        'update',
+                        'candidat',
+                        $id,
+                        'Candidat par ' . ($_SESSION['user_name'] ?? 'Utilisateur') . ' - ' . $updateLabel,
+                        $_SESSION['user_name'] ?? null
+                    );
+                } catch (Throwable $logErr) {
+                    // ignore
+                }
+            }
+
+            $this->json(['success' => $success]);
+        } catch (Throwable $e) {
+            error_log('updateCandidate error: ' . $e->getMessage());
             $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
         }
     }

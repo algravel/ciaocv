@@ -163,6 +163,7 @@
     <script>
         const APP_DATA = {
             appUrl: <?= json_encode(defined('APP_URL') ? APP_URL : 'https://app.ciaocv.com') ?>,
+            currentUser: <?= json_encode(($user ?? [])['name'] ?? 'Utilisateur', JSON_UNESCAPED_UNICODE) ?>,
             postes: <?= json_encode($postes ?? [], JSON_UNESCAPED_UNICODE) ?>,
             affichages: <?= json_encode($affichages ?? [], JSON_UNESCAPED_UNICODE) ?>,
             candidats: <?= json_encode($candidats ?? [], JSON_UNESCAPED_UNICODE) ?>,

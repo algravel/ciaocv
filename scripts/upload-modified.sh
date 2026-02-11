@@ -42,6 +42,7 @@ files=(
   "app/controllers/AuthController.php:app/controllers/AuthController.php"
   "app/debug-postes.php:app/debug-postes.php"
   "app/controllers/DashboardController.php:app/controllers/DashboardController.php"
+  "app/controllers/EntrevueController.php:app/controllers/EntrevueController.php"
   "app/controllers/FeedbackController.php:app/controllers/FeedbackController.php"
   "app/includes/functions.php:app/includes/functions.php"
   "app/index.php:app/index.php"

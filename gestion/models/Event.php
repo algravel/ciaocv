@@ -25,9 +25,9 @@ class Event
             FROM gestion_events e
             LEFT JOIN gestion_admins a ON e.admin_id = a.id
             ORDER BY e.created_at DESC
-            LIMIT ?
+            LIMIT ' . (int) $limit . '
         ');
-        $stmt->execute([$limit]);
+        $stmt->execute();
         $rows = [];
         while ($r = $stmt->fetch()) {
             $details = $r['details_encrypted'] ? $this->encryption->decrypt($r['details_encrypted']) : '';
@@ -77,9 +77,9 @@ class Event
             FROM gestion_events e
             WHERE e.platform_user_id = ?
             ORDER BY e.created_at DESC
-            LIMIT ?
+            LIMIT ' . (int) $limit . '
         ');
-        $stmt->execute([$platformUserId, $limit]);
+        $stmt->execute([$platformUserId]);
         $rows = [];
         while ($r = $stmt->fetch()) {
             $details = $r['details_encrypted'] ? $this->encryption->decrypt($r['details_encrypted']) : '';

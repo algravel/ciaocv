@@ -18,9 +18,10 @@ class Entrevue
     public function countByMonth(int $platformUserId, int $months = 6): array
     {
         $stmt = $this->pdo->prepare("
-            SELECT DATE_FORMAT(created_at, '%Y-%m') as ym, COUNT(*) as cnt
-            FROM app_entrevues
-            WHERE platform_user_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+            SELECT DATE_FORMAT(c.created_at, '%Y-%m') as ym, COUNT(*) as cnt
+            FROM app_candidatures c
+            JOIN app_affichages a ON a.id = c.affichage_id
+            WHERE a.platform_user_id = ? AND c.created_at >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
             GROUP BY ym
             ORDER BY ym ASC
         ");
@@ -47,7 +48,12 @@ class Entrevue
 
     public function countUsed(int $platformUserId): int
     {
-        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM app_entrevues WHERE platform_user_id = ?');
+        $stmt = $this->pdo->prepare('
+            SELECT COUNT(*) 
+            FROM app_candidatures c
+            JOIN app_affichages a ON a.id = c.affichage_id
+            WHERE a.platform_user_id = ?
+        ');
         $stmt->execute([$platformUserId]);
         return (int) $stmt->fetchColumn();
     }

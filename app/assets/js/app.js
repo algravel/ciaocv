@@ -46,6 +46,16 @@ var emailTemplates = [];
 /* ═══════════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════════ */
+function statusToLabel(status) {
+    if (!status) return '—';
+    var s = String(status).toLowerCase();
+    if (s === 'shortlisted' || s.includes('favori') || s.includes('banque')) return 'Banque';
+    if (s === 'reviewed' || s.includes('accept')) return 'Accepté';
+    if (s === 'rejected' || s.includes('refus')) return 'Refusé';
+    if (s === 'new' || s.includes('nouveau')) return 'Nouveau';
+    return status;
+}
+
 function copyShareUrl() {
     var el = document.getElementById('affichage-share-url');
     if (!el) return;
@@ -325,7 +335,10 @@ function applyHashFilter() {
 
 /* Run on page load + hash change */
 window.addEventListener('hashchange', applyHashFilter);
-document.addEventListener('DOMContentLoaded', function () { setTimeout(applyHashFilter, 100); });
+document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(applyHashFilter, 100);
+    if (typeof updateCommentFormUser === 'function') updateCommentFormUser();
+});
 
 /* Paramètres : visibilité des panneaux (navigation par le menu latéral) */
 document.addEventListener('DOMContentLoaded', function () {
@@ -654,8 +667,8 @@ function openPosteCandidatsModal() {
             var rating = c.rating || c.stars || 0;
             var status = '';
             if (c.status === 'new' || c.status === 'Nouveau') status = '<span class="status-badge status-new">Nouveau</span>';
-            else if (c.status === 'reviewed' || c.status === 'Évalué') status = '<span class="status-badge status-active">Évalué</span>';
-            else if (c.status === 'shortlisted' || c.status === 'Favori') status = '<span class="status-badge status-shortlisted">Favori</span>';
+            else if (c.status === 'reviewed' || c.status === 'Évalué') status = '<span class="status-badge status-active">Accepté</span>';
+            else if (c.status === 'shortlisted' || c.status === 'Favori' || c.status === 'Banque') status = '<span class="status-badge status-shortlisted">Banque</span>';
             else if (c.status === 'rejected' || c.status === 'Refusé') status = '<span class="status-badge status-rejected">Refusé</span>';
             else status = '<span class="status-badge">' + escapeHtml(c.status || '') + '</span>';
 
@@ -728,13 +741,14 @@ function showAffichageDetail(id) {
         var row = document.createElement('tr');
         row.style.cursor = 'pointer';
         row.onclick = function () { if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id); };
+        var statusLabel = statusToLabel(c.status);
         row.innerHTML =
             '<td><div style="display: flex; align-items: center; gap: 0.75rem;">' +
             '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
             '<div><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
             '</div></td>' +
-            '<td><span class="status-badge" style="background:' + c.statusBg + '; color:' + c.statusColor + ';">' + escapeHtml(c.status) + '</span></td>' +
-            '<td style="text-align: center;">' + (c.isFavorite ? '<i class="fa-solid fa-star" style="color: #F59E0B;"></i>' : '<i class="fa-regular fa-star" style="color: #D1D5DB;"></i>') + '</td>' +
+            '<td><span class="status-badge" style="background:' + (c.statusBg || '#DBEAFE') + '; color:' + (c.statusColor || '#1D4ED8') + ';">' + escapeHtml(statusLabel) + '</span></td>' +
+            '<td style="text-align: center;">' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color: #EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color: #D1D5DB;"></i>') + '</td>' +
             '<td>' + escapeHtml(c.date) + '</td>';
         tbody.appendChild(row);
     });
@@ -832,7 +846,7 @@ function saveAffichageFromModal(e) {
                     tr.className = 'row-clickable';
                     tr.setAttribute('data-affichage-id', a.id);
                     tr.onclick = function () { showAffichageDetail(a.id); };
-                    tr.innerHTML = '<td><strong>' + escapeHtml(a.title || '') + '</strong></td><td>' + escapeHtml(a.department || '') + '</td><td>' + escapeHtml(a.start || '') + '</td><td><span class="status-badge ' + escapeHtml(a.statusClass || 'status-active') + '">' + escapeHtml(a.status || 'Actif') + '</span></td><td class="cell-actions"><button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showAffichageDetail(\'' + escapeHtml(String(a.id)) + '\')" title="Modifier"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deleteAffichage(\'' + escapeHtml(String(a.id)) + '\', this.closest(\'tr\'))" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>';
+                    tr.innerHTML = '<td><strong>' + escapeHtml(a.title || '') + '</strong></td><td>' + escapeHtml(a.department || '') + '</td><td><span class="status-badge ' + escapeHtml(a.statusClass || 'status-active') + '">' + escapeHtml(a.status || 'Actif') + '</span></td><td><span class="badge-count">0/0</span></td><td class="cell-actions"><button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showAffichageDetail(\'' + escapeHtml(String(a.id)) + '\')" title="Modifier"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deleteAffichage(\'' + escapeHtml(String(a.id)) + '\', this.closest(\'tr\'))" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>';
                     tbody.insertBefore(tr, tbody.firstChild);
                 }
                 closeModal('affichage');
@@ -948,30 +962,98 @@ function confirmDeletePoste() {
    CANDIDAT DETAIL
    ═══════════════════════════════════════════════ */
 var currentCandidateId = null;
+var currentCandidateSource = null; // 'all' (default) or 'affichage'
 
-function showCandidateDetail(id) {
+function showCandidateDetail(id, source) {
     currentCandidateId = id;
+
+    // Determine source if not provided, based on active section
+    if (source) {
+        currentCandidateSource = source;
+    } else {
+        // If we are currently in the affichage-candidats-section, source is affichage
+        if (document.getElementById('affichage-candidats-section').classList.contains('active')) {
+            currentCandidateSource = 'affichage';
+        } else {
+            currentCandidateSource = 'all';
+        }
+    }
+
     var data = candidatsData[id];
+    // Fallback: search in affichageCandidats if not in global list
+    if (!data) {
+        for (var affId in affichageCandidats) {
+            var found = affichageCandidats[affId].find(function (c) { return c.id === id; });
+            if (found) {
+                data = found;
+                if (!data.comments) data.comments = [];
+                // Sync into candidatsData so toggleFavorite/addComment/saveRating work
+                candidatsData[id] = data;
+                break;
+            }
+        }
+    }
     if (!data) return;
 
     document.getElementById('detail-candidate-name').textContent = data.name;
-    document.getElementById('detail-candidate-role-source').textContent = data.role + ' • LinkedIn';
-    document.getElementById('detail-candidate-email').textContent = data.email;
-    document.getElementById('detail-candidate-phone').textContent = data.phone;
+    document.getElementById('detail-candidate-role-source').textContent = (data.role || 'Candidat');
+    document.getElementById('detail-candidate-email').textContent = data.email || '—';
+    document.getElementById('detail-candidate-phone').textContent = data.phone || '—';
 
     var ss = document.getElementById('detail-candidate-status-select');
     if (ss) {
-        ss.value = data.status || 'new';
-        ss.className = 'status-select status-select--candidate status-' + (data.status || 'new');
+        // Map status localized to value
+        var rawStatus = (data.status || 'new').toLowerCase();
+        var val = 'shortlisted'; // Banque par défaut pour "new"
+        if (rawStatus.includes('accept') || rawStatus === 'reviewed') val = 'reviewed';
+        else if (rawStatus.includes('refus') || rawStatus === 'rejected') val = 'rejected';
+        else if (rawStatus.includes('banque') || rawStatus.includes('favori') || rawStatus === 'shortlisted') val = 'shortlisted';
+
+        ss.value = val;
+        ss.className = 'status-select status-select--candidate status-' + val;
     }
 
     var favBtn = document.getElementById('detail-candidate-favorite');
-    if (data.isFavorite) {
-        favBtn.innerHTML = '<i class="fa-solid fa-star"></i>';
+    var isFav = data.isFavorite || false;
+    // Check if status implies favorite
+    if (data.status === 'Favori' || data.status === 'shortlisted') isFav = true;
+
+    if (isFav) {
+        favBtn.innerHTML = '<i class="fa-solid fa-heart"></i>';
         favBtn.classList.add('active');
     } else {
-        favBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
+        favBtn.innerHTML = '<i class="fa-regular fa-heart"></i>';
         favBtn.classList.remove('active');
+    }
+
+    // Populate new recording details
+    document.getElementById('detail-candidate-date').textContent = data.date || '—';
+    document.getElementById('detail-candidate-retakes').textContent = data.retakes || '0';
+
+    // Format duration
+    var timeSpent = parseInt(data.timeSpent || 0, 10);
+    var tm = Math.floor(timeSpent / 60);
+    var ts = timeSpent % 60;
+    document.getElementById('detail-candidate-time-spent').textContent = tm + 'm ' + (ts < 10 ? '0' + ts : ts) + 's';
+
+    // Render stars (cliquables)
+    var starsContainer = document.getElementById('detail-candidate-rating-stars');
+    if (starsContainer) {
+        var stars = parseInt(data.stars || 0, 10);
+        if (!data.stars && data.rating) stars = data.rating;
+        starsContainer.innerHTML = '';
+        starsContainer.className = 'star-rating star-rating--header star-rating--clickable';
+        for (var i = 1; i <= 5; i++) {
+            var star = document.createElement('i');
+            star.className = (i <= stars ? 'fa-solid' : 'fa-regular') + ' fa-star ' + (i <= stars ? 'text-warning' : 'text-muted-light');
+            star.setAttribute('data-rating', String(i));
+            star.setAttribute('role', 'button');
+            star.setAttribute('tabindex', '0');
+            star.setAttribute('title', i + ' / 5');
+            star.onclick = function () { saveRating(parseInt(this.getAttribute('data-rating'), 10)); };
+            star.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); saveRating(parseInt(this.getAttribute('data-rating'), 10)); } };
+            starsContainer.appendChild(star);
+        }
     }
 
     var vp = document.getElementById('detail-candidate-video-player');
@@ -979,54 +1061,171 @@ function showCandidateDetail(id) {
     if (data.video) { vp.style.display = 'block'; ph.style.display = 'none'; vp.src = data.video; }
     else { vp.style.display = 'none'; ph.style.display = 'block'; }
 
-    renderTimeline(data.comments);
+    renderTimeline(data.comments || []);
+    updateCommentFormUser();
 
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
     document.getElementById('candidate-detail-section').classList.add('active');
     window.scrollTo(0, 0);
 }
 
+function getCurrentCandidateData() {
+    var data = candidatsData[currentCandidateId];
+    if (data) return data;
+    for (var affId in affichageCandidats) {
+        var found = affichageCandidats[affId].find(function (c) { return c.id === currentCandidateId; });
+        if (found) return found;
+    }
+    return null;
+}
+
+function saveCandidateState(updates) {
+    if (!currentCandidateId) return;
+
+    var params = new URLSearchParams();
+    params.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    params.append('id', currentCandidateId);
+
+    if (updates.status !== undefined) params.append('status', updates.status);
+    if (updates.isFavorite !== undefined) params.append('is_favorite', updates.isFavorite ? '1' : '0');
+    if (updates.rating !== undefined) params.append('rating', String(updates.rating));
+
+    // Optimistic UI update (sync in both candidatsData and affichageCandidats)
+    var data = getCurrentCandidateData();
+    if (data) {
+        if (updates.status !== undefined) data.status = updates.status;
+        if (updates.isFavorite !== undefined) data.isFavorite = updates.isFavorite;
+        if (updates.rating !== undefined) { data.rating = updates.rating; data.stars = updates.rating; }
+    }
+
+    fetch('/candidats/update', { method: 'POST', body: params })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (!res.success) console.error('Error saving candidate:', res.error);
+        })
+        .catch(function (e) { console.error('Network error saving candidate:', e); });
+}
+
 function toggleFavorite() {
     if (!currentCandidateId) return;
-    var data = candidatsData[currentCandidateId];
-    data.isFavorite = !data.isFavorite;
+    var data = candidatsData[currentCandidateId]; // Note: this might need to find deeper if strictly using objects
+    // If not found in global, find in sub-lists, but for now assuming global sync.
+    // Actually we should handle the case where it's only in an Affichage list.
+
+    var isFav = document.getElementById('detail-candidate-favorite').classList.contains('active');
+    var newState = !isFav;
+
     var favBtn = document.getElementById('detail-candidate-favorite');
-    favBtn.innerHTML = data.isFavorite ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
-    favBtn.classList.toggle('active', data.isFavorite);
+    favBtn.innerHTML = newState ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
+    favBtn.classList.toggle('active', newState);
+
+    saveCandidateState({ isFavorite: newState });
+}
+
+function saveRating(rating) {
+    if (!currentCandidateId || rating < 1 || rating > 5) return;
+    var starsContainer = document.getElementById('detail-candidate-rating-stars');
+    if (starsContainer) {
+        var stars = starsContainer.querySelectorAll('i');
+        stars.forEach(function (s, idx) {
+            var val = idx + 1;
+            s.className = (val <= rating ? 'fa-solid' : 'fa-regular') + ' fa-star ' + (val <= rating ? 'text-warning' : 'text-muted-light');
+        });
+    }
+    saveCandidateState({ rating: rating });
 }
 
 function updateCandidateStatus(newStatus) {
     if (!currentCandidateId) return;
-    candidatsData[currentCandidateId].status = newStatus;
+
     var ss = document.getElementById('detail-candidate-status-select');
     if (ss) ss.className = 'status-select status-select--candidate status-' + newStatus;
+
+    // Map value back to label if needed, or just send code
+    saveCandidateState({ status: newStatus });
 }
 
 function goBackToCandidates() {
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
-    document.getElementById('candidats-section').classList.add('active');
+
+    if (currentCandidateSource === 'affichage' && window._currentAffichageId) {
+        document.getElementById('affichage-candidats-section').classList.add('active');
+    } else {
+        document.getElementById('candidats-section').classList.add('active');
+    }
 }
 
+
+var COMMENT_AVATAR_COLORS = ['#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#EF4444'];
+
+function commentAvatarColor(userName) {
+    if (!userName) return COMMENT_AVATAR_COLORS[0];
+    var h = 0;
+    for (var i = 0; i < userName.length; i++) h = ((h << 5) - h) + userName.charCodeAt(i);
+    return COMMENT_AVATAR_COLORS[Math.abs(h) % COMMENT_AVATAR_COLORS.length];
+}
 
 function renderTimeline(comments) {
     var container = document.getElementById('detail-timeline-list');
     container.innerHTML = '';
+
+    if (comments.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'comments-empty';
+        empty.innerHTML = '<i class="fa-regular fa-comments comments-empty-icon"></i>' +
+            '<span class="comments-empty-title" data-i18n="no_comments">Aucun commentaire</span>' +
+            '<span class="comments-empty-desc" data-i18n="comments_empty_desc">Soyez le premier à partager votre avis avec l\'équipe</span>';
+        container.appendChild(empty);
+        return;
+    }
+
     comments.forEach(function (c) {
+        var userName = c.user || 'Utilisateur';
+        var initial = userName.charAt(0).toUpperCase();
+        var color = commentAvatarColor(userName);
+
+        var d = c.date;
+        if (d && (d.includes('T') || d.includes('-'))) {
+            var dateObj = new Date(d);
+            if (!isNaN(dateObj.getTime())) {
+                d = dateObj.toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            }
+        }
+        if (!d) d = c.date || '';
+
         var item = document.createElement('div');
-        item.className = 'timeline-item';
+        item.className = 'comment-item';
         item.innerHTML =
-            '<div style="width:32px;height:32px;background:#E5E7EB;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:#4B5563;">' + escapeHtml(c.user.charAt(0)) + '</div>' +
-            '<div style="flex:1;"><div style="display:flex;justify-content:space-between;align-items:baseline;"><strong style="font-size:0.875rem;">' + escapeHtml(c.user) + '</strong><span class="timeline-date">' + escapeHtml(c.date) + '</span></div><p style="font-size:0.875rem;color:var(--text-primary);margin-top:0.25rem;">' + escapeHtml(c.text) + '</p></div>';
+            '<div class="comment-avatar" style="background:' + color + ';">' + escapeHtml(initial) + '</div>' +
+            '<div class="comment-body">' +
+            '<div class="comment-meta">' +
+            '<span class="comment-author">' + escapeHtml(userName) + '</span>' +
+            '<span class="comment-date">' + escapeHtml(d) + '</span>' +
+            '</div>' +
+            '<div class="comment-text">' + escapeHtml(c.text) + '</div>' +
+            '</div>';
         container.appendChild(item);
     });
+}
+
+function updateCommentFormUser() {
+    var av = document.getElementById('comment-current-user-avatar');
+    if (!av) return;
+    var name = (typeof APP_DATA !== 'undefined' && APP_DATA.currentUser) ? APP_DATA.currentUser : 'Utilisateur';
+    av.textContent = name.charAt(0).toUpperCase();
+    av.style.background = commentAvatarColor(name);
 }
 
 function addComment() {
     var input = document.getElementById('detail-new-comment-input');
     var text = input.value.trim();
     if (!text || !currentCandidateId) return;
-    candidatsData[currentCandidateId].comments.unshift({ user: 'Moi', date: "À l'instant", text: text });
-    renderTimeline(candidatsData[currentCandidateId].comments);
+    var data = getCurrentCandidateData();
+    if (!data) return;
+    if (!data.comments) data.comments = [];
+    var userName = (typeof APP_DATA !== 'undefined' && APP_DATA.currentUser) ? APP_DATA.currentUser : 'Moi';
+    data.comments.unshift({ user: userName, date: new Date().toISOString(), text: text });
+    renderTimeline(data.comments);
     input.value = '';
 }
 
@@ -1084,8 +1283,8 @@ function openNotifyCandidatsModal() {
             '<input type="checkbox" class="notify-candidate-cb" value="' + escapeHtml(c.id) + '" checked style="accent-color:var(--primary-color);flex-shrink:0;">' +
             '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff&size=32" style="width:32px;height:32px;border-radius:50%;flex-shrink:0;" alt="">' +
             '<div style="flex:1;min-width:0;"><strong style="font-size:0.875rem;">' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
-            '<span class="notify-row-favorite" style="display:inline-flex;align-items:center;justify-content:center;width:1.25rem;flex-shrink:0;">' + (c.isFavorite ? '<i class="fa-solid fa-star" style="color:#F59E0B;"></i>' : '<i class="fa-regular fa-star" style="color:#D1D5DB;"></i>') + '</span>' +
-            '<span class="status-badge" style="background:' + c.statusBg + ';color:' + c.statusColor + ';font-size:0.7rem;flex-shrink:0;">' + escapeHtml(c.status) + '</span>';
+            '<span class="notify-row-favorite" style="display:inline-flex;align-items:center;justify-content:center;width:1.25rem;flex-shrink:0;">' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color:#EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color:#D1D5DB;"></i>') + '</span>' +
+            '<span class="status-badge" style="background:' + (c.statusBg || '#DBEAFE') + ';color:' + (c.statusColor || '#1D4ED8') + ';font-size:0.7rem;flex-shrink:0;">' + escapeHtml(statusToLabel(c.status)) + '</span>';
         container.appendChild(div);
     });
 

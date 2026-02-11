@@ -192,11 +192,34 @@ try {
             video_path VARCHAR(500) NULL COMMENT 'Chemin B2: entrevue/{longId}/{filename}',
             video_file_id VARCHAR(255) NULL COMMENT 'B2 fileId pour suppression',
             status VARCHAR(50) NOT NULL DEFAULT 'new',
+            ip_address VARCHAR(45) NULL COMMENT 'IP du candidat au moment de l\'enregistrement',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (affichage_id) REFERENCES app_affichages(id) ON DELETE CASCADE,
             INDEX idx_affichage (affichage_id),
             INDEX idx_status (status)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
+    // Migration : ajouter ip_address si la table existe déjà
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM app_candidatures LIKE 'ip_address'");
+        if ($stmt->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE app_candidatures ADD COLUMN ip_address VARCHAR(45) NULL COMMENT 'IP du candidat au moment de l\\'enregistrement' AFTER status");
+        }
+    } catch (Throwable $e) {
+        // ignorer si la table n'existe pas encore
+    }
+    // Migration : is_favorite et rating pour favoris et appréciation
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM app_candidatures LIKE 'is_favorite'");
+        if ($stmt->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE app_candidatures ADD COLUMN is_favorite TINYINT(1) NOT NULL DEFAULT 0 AFTER status");
+        }
+        $stmt = $pdo->query("SHOW COLUMNS FROM app_candidatures LIKE 'rating'");
+        if ($stmt->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE app_candidatures ADD COLUMN rating TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Appréciation 0-5' AFTER is_favorite");
+        }
+    } catch (Throwable $e) {
+        // ignorer si la table n'existe pas encore
     }
     // S'assurer que platform_user id=1 existe (app mock login utilise user_id=1)
     $stmt = $pdo->query('SELECT id FROM gestion_platform_users WHERE id = 1 LIMIT 1');

@@ -150,7 +150,9 @@ class AuthController extends Controller
             return;
         }
 
-        // Générer et envoyer le code OTP par courriel
+        // 2FA temporairement désactivé — connexion directe après validation du mot de passe
+        // TODO: réactiver l'envoi OTP et la redirection /connexion?step=otp
+        /*
         $otpCode = (string) random_int(100000, 999999);
         $lang = (trim($_POST['lang'] ?? '') === 'en') ? 'en' : 'fr';
         $sent = zeptomail_send_otp($user['email'], $user['name'] ?? 'Utilisateur', $otpCode, $lang, '#2563EB');
@@ -167,15 +169,33 @@ class AuthController extends Controller
             return;
         }
 
-        // Stocker OTP en session
         $_SESSION['app_otp_code'] = $otpCode;
         $_SESSION['app_otp_email'] = $user['email'];
         $_SESSION['app_otp_expires'] = time() + self::OTP_VALIDITY_SECONDS;
         $_SESSION['app_otp_user_id'] = $user['id'];
         $_SESSION['app_otp_user_name'] = $user['name'] ?? 'Utilisateur';
-        $_SESSION['app_otp_company'] = ''; // sera résolu au login final
-
+        $_SESSION['app_otp_company'] = '';
         $this->redirect('/connexion?step=otp');
+        */
+
+        // Connexion directe (sans OTP)
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['user_name'] = $user['name'] ?? 'Utilisateur';
+        $companyName = '';
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $entrepriseModel = new Entreprise();
+            $ent = $entrepriseModel->getByPlatformUserId($user['id']);
+            if ($ent && !empty($ent['name'])) {
+                $companyName = $ent['name'];
+            }
+        } catch (Throwable $e) {
+            // table pas encore créée
+        }
+        $_SESSION['company_name'] = $companyName;
+
+        $this->redirect('/tableau-de-bord');
     }
 
     /**

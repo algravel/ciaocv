@@ -20,7 +20,7 @@ class EntrevueController extends Controller
 
         // Nom de fichier : entrevue/{longId}/{random}.mp4
         $randomName = bin2hex(random_bytes(8));
-        $objectKey  = 'entrevue/' . $longId . '/' . $randomName . '.mp4';
+        $objectKey = 'entrevue/' . $longId . '/' . $randomName . '.mp4';
 
         // Générer un presigned PUT URL via R2Signer
         $presignedUrl = R2Signer::presignedUrl($objectKey, 'PUT', 'video/mp4', 3600);
@@ -31,7 +31,7 @@ class EntrevueController extends Controller
 
         $this->json([
             'uploadUrl' => $presignedUrl,
-            'fileName'  => $objectKey,
+            'fileName' => $objectKey,
         ]);
     }
 
@@ -46,12 +46,14 @@ class EntrevueController extends Controller
             $this->json(['error' => 'Données invalides'], 400);
         }
 
-        $longId     = trim($input['longId'] ?? '');
-        $nom        = trim($input['nom'] ?? '');
-        $prenom     = trim($input['prenom'] ?? '');
-        $email      = trim($input['email'] ?? '');
-        $telephone  = trim($input['telephone'] ?? '');
-        $videoPath  = trim($input['videoPath'] ?? '');
+        $longId = trim($input['longId'] ?? '');
+        $nom = trim($input['nom'] ?? '');
+        $prenom = trim($input['prenom'] ?? '');
+        $email = trim($input['email'] ?? '');
+        $telephone = trim($input['telephone'] ?? '');
+        $videoPath = trim($input['videoPath'] ?? '');
+        $retakes = (int) ($input['retakes'] ?? 0);
+        $timeSpent = (int) ($input['timeSpent'] ?? 0);
 
         // Validations
         if (!preg_match('/^[a-f0-9]{16}$/', $longId)) {
@@ -75,15 +77,22 @@ class EntrevueController extends Controller
 
         $affichageId = (int) $affichage['id'];
 
+        // IP du candidat (derrière proxy/Cloudflare)
+        $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? null;
+        if (is_string($ip) && strpos($ip, ',') !== false) {
+            $ip = trim(explode(',', $ip)[0]);
+        }
+        $ipAddress = ($ip && filter_var($ip, FILTER_VALIDATE_IP)) ? $ip : null;
+
         // Charger la config gestion (Database) si pas déjà fait
         require_once dirname(__DIR__, 2) . '/gestion/config.php';
         $pdo = Database::get();
 
         $stmt = $pdo->prepare("
-            INSERT INTO app_candidatures (affichage_id, nom, prenom, email, telephone, video_path)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO app_candidatures (affichage_id, nom, prenom, email, telephone, video_path, retakes_count, time_spent_seconds, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$affichageId, $nom, $prenom, $email, $telephone ?: null, $videoPath]);
+        $stmt->execute([$affichageId, $nom, $prenom, $email, $telephone ?: null, $videoPath, $retakes, $timeSpent, $ipAddress]);
 
         $this->json(['success' => true, 'id' => (int) $pdo->lastInsertId()]);
     }

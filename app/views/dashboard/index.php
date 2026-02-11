@@ -5,6 +5,9 @@
      ═══════════════════════════════════════════════════════════════════════ -->
 <?php $def = $defaultSection ?? 'statistiques'; ?>
 
+<!-- ─── CSRF Token for AJAX ─── -->
+<?= csrf_field() ?>
+
 <!-- ─── POSTES Section ─── -->
 <div id="postes-section" class="content-section<?= $def === 'postes' ? ' active' : '' ?>">
     <div class="page-header">
@@ -288,8 +291,8 @@
             <tr>
                 <th data-i18n="th_poste">Poste</th>
                 <th data-i18n="th_department">Département</th>
-                <th data-i18n="th_start_date">Date début</th>
                 <th data-i18n="th_status">Statut</th>
+                <th data-i18n="th_new_candidates">Nouvelles</th>
                 <th class="th-actions" data-i18n="th_actions">Actions</th>
             </tr>
         </thead>
@@ -302,13 +305,21 @@
                     $affRawStatus = 'paused';
                 elseif (($a['statusClass'] ?? '') === 'status-closed')
                     $affRawStatus = 'closed';
+
+                $cands = $candidatsByAff[$aId] ?? [];
+                $cnt = count($cands);
+                $newCnt = 0;
+                foreach ($cands as $c) {
+                    $st = strtolower($c['status'] ?? '');
+                    if ($st === 'new') $newCnt++;
+                }
                 ?>
                 <tr data-affichage-id="<?= e($aId) ?>" data-status="<?= $affRawStatus ?>"
                     onclick="showAffichageDetail('<?= e($aId) ?>')" class="row-clickable">
                     <td><strong><?= e($a['title']) ?></strong></td>
                     <td><?= e($a['department'] ?? '') ?></td>
-                    <td><?= e($a['start']) ?></td>
                     <td><span class="status-badge <?= e($a['statusClass']) ?>"><?= e($a['status']) ?></span></td>
+                    <td><span class="badge-count"><?= $newCnt ?>/<?= $cnt ?></span></td>
                     <td class="cell-actions">
                         <button type="button" class="btn-icon btn-icon-edit"
                             onclick="event.stopPropagation(); showAffichageDetail('<?= e($aId) ?>')" title="Modifier"
@@ -379,7 +390,7 @@
                         'new' => ['label' => 'Nouveau', 'class' => 'status-new'],
                         'reviewed' => ['label' => 'Évalué', 'class' => 'status-active'],
                         'rejected' => ['label' => 'Refusé', 'class' => 'status-rejected'],
-                        'shortlisted' => ['label' => 'Favori', 'class' => 'status-shortlisted'],
+                        'shortlisted' => ['label' => 'Banque', 'class' => 'status-shortlisted'],
                     ];
                     $st = $c['status'];
                     $badge = $statusMap[$st] ?? ['label' => $st, 'class' => ''];
@@ -398,48 +409,97 @@
 
 <!-- ─── CANDIDAT DÉTAIL Section ─── -->
 <div id="candidate-detail-section" class="content-section section--detail">
-    <div class="page-header--detail">
+    <div class="page-header--detail page-header--candidate">
         <button class="btn-icon btn-back" onclick="goBackToCandidates()"><i class="fa-solid fa-arrow-left"></i></button>
-        <div>
+        <div class="page-header--candidate-info">
             <h1 class="page-title" id="detail-candidate-name">Nom du Candidat</h1>
-            <div class="subtitle-muted" id="detail-candidate-role-source">Poste • Source</div>
+            <div class="subtitle-muted" id="detail-candidate-role-source">Poste</div>
         </div>
-        <div class="action-group flex-center gap-3">
+        <div class="page-header--candidate-actions">
+            <!-- Appréciation du candidat (sur la personne, pas l'enregistrement) -->
+            <div class="candidate-rating-block">
+                <span class="text-muted text-sm" data-i18n="rating_label">Appréciation</span>
+                <div class="star-rating star-rating--header" id="detail-candidate-rating-stars">
+                    <i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i>
+                </div>
+            </div>
+            <button class="favorite-btn" id="detail-candidate-favorite" onclick="toggleFavorite()"
+                title="Mettre en favori"><i class="fa-regular fa-heart"></i></button>
             <select class="status-select status-select--candidate" id="detail-candidate-status-select"
                 onchange="updateCandidateStatus(this.value)">
-                <option value="new" data-i18n="status_new">Nouveau</option>
+                <option value="shortlisted" data-i18n="status_banque">Banque</option>
                 <option value="reviewed" data-i18n="status_accepted">Accepté</option>
                 <option value="rejected" data-i18n="status_rejected">Refusé</option>
-                <option value="shortlisted" data-i18n="status_shortlisted">Favori</option>
             </select>
-            <button class="favorite-btn" id="detail-candidate-favorite" onclick="toggleFavorite()"
-                title="Mettre en favori"><i class="fa-regular fa-star"></i></button>
         </div>
     </div>
-    <div class="card contact-card mt-6">
-        <h3 class="contact-heading"><i class="fa-regular fa-envelope"></i> <span data-i18n="contact_email">Email</span>
-        </h3>
-        <p id="detail-candidate-email" class="text-body mb-4">—</p>
-        <h3 class="contact-heading"><i class="fa-solid fa-phone"></i> <span data-i18n="form_phone">Téléphone</span></h3>
-        <p id="detail-candidate-phone" class="text-body">—</p>
-    </div>
-    <div class="video-container">
-        <video controls class="hidden" id="detail-candidate-video-player">
-            <source src="" type="video/mp4">
-        </video>
-        <div id="detail-video-placeholder" class="text-center">
-            <i class="fa-solid fa-play-circle icon-xl"></i>
-            <div class="mt-2" data-i18n="video_preview">Aperçu vidéo</div>
+
+    <div class="candidate-detail-grid">
+        <!-- Colonne gauche : Vidéo + Commentaires -->
+        <div class="candidate-detail-main">
+            <div class="candidate-video-wrapper">
+                <video controls class="candidate-video-player hidden" id="detail-candidate-video-player">
+                    <source src="" type="video/mp4">
+                </video>
+                <div id="detail-video-placeholder" class="candidate-video-placeholder">
+                    <i class="fa-solid fa-play-circle icon-xl"></i>
+                    <div class="mt-2" data-i18n="video_preview">Aperçu vidéo</div>
+                </div>
+            </div>
+
+            <div class="card candidate-comments-card">
+                <div class="comments-header">
+                    <h3 class="section-heading-sm mb-0" data-i18n="comments_title">Commentaires</h3>
+                    <span class="comments-subtitle" data-i18n="comments_subtitle">Échangez avec votre équipe sur ce candidat</span>
+                </div>
+                <div class="comments-list" id="detail-timeline-list"></div>
+                <div class="comment-add">
+                    <div class="comment-add-avatar" id="comment-current-user-avatar" title="Vous">?</div>
+                    <div class="comment-add-form">
+                        <textarea class="form-input" id="detail-new-comment-input" rows="2"
+                            placeholder="Écrire un commentaire..." data-i18n-placeholder="add_note_placeholder"></textarea>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addComment()">
+                            <i class="fa-solid fa-paper-plane"></i> <span data-i18n="comment_send">Envoyer</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="card">
-        <h3 class="section-heading-sm" data-i18n="comments_title">Commentaires</h3>
-        <div class="timeline-container" id="detail-timeline-list"></div>
-        <div class="flex-center gap-2">
-            <textarea class="form-input" id="detail-new-comment-input" rows="1" placeholder="Ajouter une note..."
-                style="resize: none;" data-i18n-placeholder="add_note_placeholder"></textarea>
-            <button class="btn btn-primary" onclick="addComment()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
+
+        <!-- Colonne droite : Coordonnées + Détails de l'enregistrement -->
+        <aside class="candidate-detail-sidebar">
+            <div class="card contact-card">
+                <h3 class="contact-heading"><i class="fa-regular fa-envelope"></i> <span data-i18n="contact_email">Email</span></h3>
+                <p id="detail-candidate-email" class="contact-value">—</p>
+                <h3 class="contact-heading"><i class="fa-solid fa-phone"></i> <span data-i18n="form_phone">Téléphone</span></h3>
+                <p id="detail-candidate-phone" class="contact-value">—</p>
+            </div>
+
+            <!-- Détails de l'enregistrement uniquement (date, reprises, temps) -->
+            <div class="card">
+                <h3 class="section-heading-sm" data-i18n="recording_details_title">Détails de l'enregistrement</h3>
+                <div class="recording-detail-row">
+                    <label class="text-muted text-sm" data-i18n="date_label">Date</label>
+                    <div id="detail-candidate-date" class="text-body font-weight-bold">—</div>
+                </div>
+                <div class="recording-metrics">
+                    <div class="recording-metric">
+                        <label class="text-muted text-sm" data-i18n="retakes_label">Reprises</label>
+                        <div class="recording-metric-value">
+                            <i class="fa-solid fa-rotate-right text-muted-light"></i>
+                            <span id="detail-candidate-retakes">0</span>
+                        </div>
+                    </div>
+                    <div class="recording-metric">
+                        <label class="text-muted text-sm" data-i18n="duration_label">Temps passé</label>
+                        <div class="recording-metric-value">
+                            <i class="fa-regular fa-clock text-muted-light"></i>
+                            <span id="detail-candidate-time-spent">0m 00s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
     </div>
 </div>
 
@@ -468,7 +528,7 @@
                     <div class="kpi-label" data-i18n="kpi_my_plan">Mon forfait</div>
                     <div class="kpi-value"><?= (int) ($kpiForfaitUsed ?? 0) ?> <span class="kpi-suffix">/
                             <?= (int) ($kpiForfaitLimit ?? 50) ?></span></div>
-                    <div class="kpi-sub" data-i18n="kpi_interviews_available">entrevues disponibles</div>
+                    <div class="kpi-sub">entrevues reçues</div>
                 </div>
                 <div class="kpi-icon kpi-icon--blue"><i class="fa-solid fa-users"></i></div>
             </div>
@@ -502,7 +562,8 @@
                 <div>
                     <div class="kpi-label"
                         data-i18n="<?= $hasTaches ? 'kpi_complete_profile' : 'kpi_profile_completed' ?>">
-                        <?= $hasTaches ? 'Compléter votre profil' : 'Profil complété' ?></div>
+                        <?= $hasTaches ? 'Compléter votre profil' : 'Profil complété' ?>
+                    </div>
                     <div class="kpi-value"><?= $tachesRestantes ?></div>
                 </div>
                 <?php if ($hasTaches): ?>
@@ -568,30 +629,56 @@
                 </tr>
             </thead>
             <tbody>
+            <tbody>
                 <?php
                 $evts = $events ?? [];
-                $badgeMap = ['creation' => 'event-badge--creation', 'modification' => 'event-badge--modification', 'suppression' => 'event-badge--suppression', 'evaluation' => 'event-badge--evaluation', 'invitation' => 'event-badge--invitation'];
+                // Badge map including new types from Event logging (create, update, delete)
+                $badgeMap = [
+                    'creation' => 'event-badge--creation',
+                    'create' => 'event-badge--creation',
+                    'modification' => 'event-badge--modification',
+                    'update' => 'event-badge--modification',
+                    'suppression' => 'event-badge--suppression',
+                    'delete' => 'event-badge--suppression',
+                    'evaluation' => 'event-badge--evaluation',
+                    'invitation' => 'event-badge--invitation'
+                ];
                 $moisFr = ['Jan' => 'janv', 'Feb' => 'fév', 'Mar' => 'mars', 'Apr' => 'avr', 'May' => 'mai', 'Jun' => 'juin', 'Jul' => 'juil', 'Aug' => 'août', 'Sep' => 'sept', 'Oct' => 'oct', 'Nov' => 'nov', 'Dec' => 'déc'];
-                if (empty($evts)): ?>
+
+                $hasMore = count($evts) > 10;
+                $displayEvts = array_slice($evts, 0, 10);
+
+                if (empty($displayEvts)): ?>
                     <tr>
                         <td colspan="4" class="cell-muted" data-i18n="events_empty">Aucun événement enregistré.</td>
                     </tr>
                 <?php else:
-                    foreach ($evts as $ev):
-                        $d = date('j M Y, H:i', strtotime($ev['created_at']));
+                    foreach ($displayEvts as $ev):
+                        $ts = strtotime($ev['created_at']);
+                        $d = date('j M Y, H:i', $ts ? $ts : time());
                         $createdFormatted = preg_replace_callback('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/', fn($m) => $moisFr[$m[1]] ?? $m[1], $d);
-                        $badgeClass = $badgeMap[$ev['action_type']] ?? 'event-badge--modification';
+
+                        $type = strtolower($ev['action_type'] ?? 'modification');
+                        $badgeClass = $badgeMap[$type] ?? 'event-badge--modification';
                         ?>
                         <tr>
                             <td class="cell-date"><?= e($createdFormatted) ?></td>
-                            <td><strong><?= e($ev['user_name']) ?></strong></td>
-                            <td><span class="event-badge <?= e($badgeClass) ?>"><?= e(ucfirst($ev['action_type'])) ?></span>
+                            <td><strong><?= e($ev['user_name'] ?? 'Inconnu') ?></strong></td>
+                            <td><span class="event-badge <?= e($badgeClass) ?>"><?= e(ucfirst($type)) ?></span>
                             </td>
-                            <td class="cell-muted"><?= e($ev['details']) ?></td>
+                            <td class="cell-muted"><?= e($ev['details'] ?? '') ?></td>
                         </tr>
                     <?php endforeach; endif; ?>
             </tbody>
         </table>
+        <?php if ($hasMore): ?>
+            <div class="card-footer text-center">
+                <a href="/historique" class="btn-icon" title="Voir tout l'historique"
+                    style="color: var(--primary); font-size: 1.2rem;">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 

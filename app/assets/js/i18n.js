@@ -117,6 +117,7 @@ const translations = {
         th_end_date: "Date fin",
         th_views: "Vues",
         th_applications: "Candidatures",
+        th_new_candidates: "Nouvelles",
         th_candidate: "Candidat",
         th_video: "Vidéo",
         th_rating: "Note",
@@ -128,6 +129,7 @@ const translations = {
         status_closed: "Fermé",
         status_new: "Nouveau",
         status_reviewed: "Évalué",
+        status_banque: "Banque",
         status_accepted: "Accepté",
         status_rejected: "Refusé",
         status_shortlisted: "Favori",
@@ -192,7 +194,11 @@ const translations = {
         // ─── Dashboard – Candidat ───
         video_preview: "Aperçu vidéo",
         comments_title: "Commentaires",
-        add_note_placeholder: "Ajouter une note...",
+        comments_subtitle: "Échangez avec votre équipe sur ce candidat",
+        add_note_placeholder: "Écrire un commentaire...",
+        no_comments: "Aucun commentaire",
+        comments_empty_desc: "Soyez le premier à partager votre avis avec l'équipe",
+        comment_send: "Envoyer",
 
         // ─── Dashboard – KPI & Stats ───
         kpi_my_plan: "Mon forfait",
@@ -309,7 +315,7 @@ const translations = {
         th_title: "Title", th_department: "Department", th_location: "Location", th_status: "Status",
         th_candidates: "Candidates", th_created: "Created", th_actions: "Actions",
         th_poste: "Position", th_platform: "Platform", th_start_date: "Start Date", th_end_date: "End Date",
-        th_views: "Views", th_applications: "Applications",
+        th_views: "Views", th_applications: "Applications", th_new_candidates: "New",
         th_candidate: "Candidate", th_video: "Video", th_rating: "Rating", th_applied: "Applied",
         status_active: "Active", status_paused: "Paused", status_closed: "Closed",
         status_new: "New", status_reviewed: "Reviewed", status_accepted: "Accepted", status_rejected: "Rejected", status_shortlisted: "Favorite",
@@ -337,7 +343,11 @@ const translations = {
         label_message: "Your Message", feedback_placeholder: "Tell us more...",
         feedback_success: "Thank you for your feedback!",
         video_preview: "Video Preview", comments_title: "Comments",
-        add_note_placeholder: "Add a note...",
+        comments_subtitle: "Share feedback with your team on this candidate",
+        add_note_placeholder: "Write a comment...",
+        no_comments: "No comments",
+        comments_empty_desc: "Be the first to share your feedback with the team",
+        comment_send: "Send",
 
         // ─── Dashboard – KPI & Stats ───
         kpi_my_plan: "My Plan",

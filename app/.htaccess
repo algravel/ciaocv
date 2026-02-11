@@ -35,7 +35,17 @@ RewriteEngine On
     <FilesMatch "\.(css|js|png|jpe?g|gif|svg|webp|woff2?|ico)$">
         Header set Cache-Control "public, max-age=2592000"
     </FilesMatch>
+    </FilesMatch>
 </IfModule>
+
+# ─── Disable caching for dynamic content ───
+<FilesMatch "\.(php|html)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </IfModule>
+</FilesMatch>
 
 # ─── Restreindre l'accès au domaine app.ciaocv.com ───
 RewriteCond %{HTTP_HOST} !^app\.ciaocv\.com$ [NC]

@@ -99,7 +99,7 @@
     </div>
 </div>
 
-<!-- Modal OTP (2FA par courriel) -->
+<!-- Modal OTP (2FA par courriel) — temporairement désactivé
 <div class="forgot-overlay<?= !empty($showOtpModal) ? ' active' : '' ?>" id="otpOverlay" onclick="closeOtpModal(event)">
     <div class="forgot-modal" onclick="event.stopPropagation()">
         <button class="forgot-modal-close" onclick="closeOtpModal()" aria-label="Fermer">&times;</button>
@@ -132,11 +132,14 @@
         </p>
     </div>
 </div>
+-->
 
 <script>
 function closeOtpModal(e) {
-    if (e && e.target !== document.getElementById('otpOverlay')) return;
-    document.getElementById('otpOverlay').classList.remove('active');
+    const el = document.getElementById('otpOverlay');
+    if (!el) return;
+    if (e && e.target !== el) return;
+    el.classList.remove('active');
     document.body.style.overflow = 'auto';
 }
 
