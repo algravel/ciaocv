@@ -28,27 +28,17 @@ class PlatformUser
      */
     private function fetchAllUsers(): array
     {
-        $hasPrenom = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'prenom_encrypted'")->rowCount() > 0;
-        $hasBillable = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'billable'")->rowCount() > 0;
-        $hasActive = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'active'")->rowCount() > 0;
-
-        $cols = ['id', 'name_encrypted', 'email_encrypted', 'role', 'plan_id', 'created_at'];
-        if ($hasPrenom) {
-            array_splice($cols, 1, 0, ['prenom_encrypted']);
-        }
-        if ($hasBillable) {
-            $cols[] = 'COALESCE(billable, 1) AS billable';
-        }
-        if ($hasActive) {
-            $cols[] = 'COALESCE(active, 1) AS active';
-        }
-        $colsStr = implode(', ', $cols);
-
+        // On suppose le schéma à jour (géré par migrate.php)
+        // Colonnes: id, prenom_encrypted, name_encrypted, email_encrypted, role, plan_id, billable, active, created_at
+        
         try {
-            $stmt = $this->pdo->query("SELECT {$colsStr} FROM gestion_platform_users ORDER BY created_at DESC");
+            $sql = "SELECT id, prenom_encrypted, name_encrypted, email_encrypted, role, plan_id, 
+                           COALESCE(billable, 1) as billable, COALESCE(active, 1) as active, created_at 
+                    FROM gestion_platform_users 
+                    ORDER BY created_at DESC";
+            $stmt = $this->pdo->query($sql);
         } catch (Throwable $e) {
-            $hasPrenom = false;
-            $stmt = $this->pdo->query('SELECT id, name_encrypted, email_encrypted, role, plan_id, created_at FROM gestion_platform_users ORDER BY created_at DESC');
+            return [];
         }
 
         $rows = [];
@@ -58,11 +48,13 @@ class PlatformUser
             if ($nom === false || $email === false) {
                 continue;
             }
+            
             $prenom = '';
-            if ($hasPrenom && !empty($r['prenom_encrypted'])) {
+            if (!empty($r['prenom_encrypted'])) {
                 $dec = $this->encryption->decrypt($r['prenom_encrypted']);
                 $prenom = $dec !== false ? $dec : '';
             }
+            
             $fullName = trim($prenom . ' ' . $nom);
             $rows[] = [
                 'id' => (int) $r['id'],
@@ -103,29 +95,9 @@ class PlatformUser
             $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
         }
 
-        $hasPrenom = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'prenom_encrypted'")->rowCount() > 0;
-        $hasBillable = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'billable'")->rowCount() > 0;
-        $hasActive = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'active'")->rowCount() > 0;
-        $hasPasswordHash = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'password_hash'")->rowCount() > 0;
+        $cols = ['name_encrypted', 'email_encrypted', 'role', 'plan_id', 'prenom_encrypted', 'password_hash', 'billable', 'active'];
+        $vals = [$nomEnc, $emailEnc, $role, $planId, $prenomEnc, $passwordHash, $billable, $active];
 
-        $cols = ['name_encrypted', 'email_encrypted', 'role', 'plan_id'];
-        $vals = [$nomEnc, $emailEnc, $role, $planId];
-        if ($hasPrenom) {
-            array_splice($cols, 0, 0, ['prenom_encrypted']);
-            array_splice($vals, 0, 0, [$prenomEnc]);
-        }
-        if ($hasPasswordHash && $passwordHash !== null) {
-            $cols[] = 'password_hash';
-            $vals[] = $passwordHash;
-        }
-        if ($hasBillable) {
-            $cols[] = 'billable';
-            $vals[] = $billable;
-        }
-        if ($hasActive) {
-            $cols[] = 'active';
-            $vals[] = $active;
-        }
         $placeholders = implode(', ', array_fill(0, count($vals), '?'));
         $stmt = $this->pdo->prepare('INSERT INTO gestion_platform_users (' . implode(', ', $cols) . ') VALUES (' . $placeholders . ')');
         $stmt->execute($vals);
@@ -151,27 +123,17 @@ class PlatformUser
         $billable = !empty($data['billable']) ? 1 : 0;
         $active = !empty($data['active']) ? 1 : 0;
 
-        $hasPrenom = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'prenom_encrypted'")->rowCount() > 0;
-        $hasBillable = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'billable'")->rowCount() > 0;
-        $hasActive = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'active'")->rowCount() > 0;
+        $sets = [
+            'prenom_encrypted = ?',
+            'name_encrypted = ?',
+            'email_encrypted = ?',
+            'role = ?',
+            'plan_id = ?',
+            'billable = ?',
+            'active = ?'
+        ];
+        $vals = [$prenomEnc, $nomEnc, $emailEnc, $role, $planId, $billable, $active, $id];
 
-        $sets = [];
-        $vals = [];
-        if ($hasPrenom) {
-            $sets[] = 'prenom_encrypted = ?';
-            $vals[] = $prenomEnc;
-        }
-        $sets = array_merge($sets, ['name_encrypted = ?', 'email_encrypted = ?', 'role = ?', 'plan_id = ?']);
-        $vals = array_merge($vals, [$nomEnc, $emailEnc, $role, $planId]);
-        if ($hasBillable) {
-            $sets[] = 'billable = ?';
-            $vals[] = $billable;
-        }
-        if ($hasActive) {
-            $sets[] = 'active = ?';
-            $vals[] = $active;
-        }
-        $vals[] = $id;
         $stmt = $this->pdo->prepare('UPDATE gestion_platform_users SET ' . implode(', ', $sets) . ' WHERE id = ?');
         return $stmt->execute($vals);
     }
@@ -179,33 +141,29 @@ class PlatformUser
     public function findByEmail(string $email): ?array
     {
         $emailNorm = strtolower(trim($email));
-        $hasPrenom = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'prenom_encrypted'")->rowCount() > 0;
-        $hasPasswordHash = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'password_hash'")->rowCount() > 0;
-        $cols = ['id', 'name_encrypted', 'email_encrypted', 'role', 'plan_id'];
-        if ($hasPrenom) {
-            $cols[] = 'prenom_encrypted';
-        }
-        if ($hasPasswordHash) {
-            $cols[] = 'password_hash';
-        }
-        $cols[] = 'COALESCE(active, 1) AS active';
+        // On sélectionne tout
+        $cols = ['id', 'name_encrypted', 'email_encrypted', 'role', 'plan_id', 'prenom_encrypted', 'password_hash', 'COALESCE(active, 1) AS active'];
         $colsStr = implode(', ', $cols);
+        
         try {
             $stmt = $this->pdo->query("SELECT {$colsStr} FROM gestion_platform_users");
         } catch (Throwable $e) {
             return null;
         }
+
         while ($r = $stmt->fetch()) {
             $emailDec = $this->encryption->decrypt($r['email_encrypted'] ?? '');
             if ($emailDec === false || strtolower(trim($emailDec)) !== $emailNorm) {
                 continue;
             }
+
             $nom = $this->encryption->decrypt($r['name_encrypted'] ?? '');
             $prenom = '';
-            if ($hasPrenom && !empty($r['prenom_encrypted'])) {
+            if (!empty($r['prenom_encrypted'])) {
                 $dec = $this->encryption->decrypt($r['prenom_encrypted']);
                 $prenom = $dec !== false ? $dec : '';
             }
+
             $fullName = trim($prenom . ' ' . ($nom !== false ? $nom : ''));
             return [
                 'id' => (int) $r['id'],
@@ -216,7 +174,7 @@ class PlatformUser
                 'role' => $r['role'],
                 'plan_id' => $r['plan_id'] ? (int) $r['plan_id'] : null,
                 'active' => (bool) ($r['active'] ?? 1),
-                'password_hash' => $hasPasswordHash ? ($r['password_hash'] ?? null) : null,
+                'password_hash' => $r['password_hash'] ?? null,
             ];
         }
         return null;
@@ -243,10 +201,6 @@ class PlatformUser
 
     public function resetPassword(int $id, string $plainPassword): bool
     {
-        $hasPasswordHash = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'password_hash'")->rowCount() > 0;
-        if (!$hasPasswordHash) {
-            return false;
-        }
         $passHash = password_hash($plainPassword, PASSWORD_DEFAULT);
         $stmt = $this->pdo->prepare('UPDATE gestion_platform_users SET password_hash = ? WHERE id = ?');
         return $stmt->execute([$passHash, $id]);

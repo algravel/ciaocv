@@ -146,4 +146,9 @@ class Poste
         $stmt->execute([$id, $platformUserId]);
         return $stmt->rowCount() > 0;
     }
+
+    public static function getDepartments(): array
+    {
+        return ['Technologie', 'Gestion', 'Design', 'Stratégie', 'Marketing', 'Ressources humaines', 'Finance', 'Opérations'];
+    }
 }

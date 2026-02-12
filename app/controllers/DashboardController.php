@@ -77,7 +77,7 @@ class DashboardController extends Controller
             $candidats = [];
             $candidatsByAff = [];
         }
-        $departments = ['Technologie', 'Gestion', 'Design', 'Stratégie', 'Marketing', 'Ressources humaines', 'Finance', 'Opérations'];
+        $departments = Poste::getDepartments();
 
         $teamMembers = User::getAll();
 
@@ -326,6 +326,10 @@ class DashboardController extends Controller
     {
         $this->requireAuth();
         if (!$this->requireNotEvaluateur()) return;
+        if (!csrf_verify()) {
+            $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+            return;
+        }
         $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
         if (!$platformUserId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -356,6 +360,10 @@ class DashboardController extends Controller
         try {
             $this->requireAuth();
             if (!$this->requireNotEvaluateur()) return;
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
             $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
             if (!$platformUserId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -408,6 +416,10 @@ class DashboardController extends Controller
             if (!$platformUserId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
                 return;
+            }
+            if (!csrf_verify()) {
+                 $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                 return;
             }
             $input = json_decode(file_get_contents('php://input') ?: '{}', true) ?: $_POST;
             $id = isset($input['id']) ? (int) $input['id'] : 0;
@@ -463,6 +475,10 @@ class DashboardController extends Controller
     {
         $this->requireAuth();
         if (!$this->requireNotEvaluateur()) return;
+        if (!csrf_verify()) {
+            $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+            return;
+        }
         $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
         if (!$platformUserId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -552,6 +568,10 @@ class DashboardController extends Controller
         try {
             $this->requireAuth();
             if (!$this->requireNotEvaluateur()) return;
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
             $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
             if (!$platformUserId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
