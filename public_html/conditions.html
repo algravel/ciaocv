@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Conditions d'utilisation | CiaoCV</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1770868074">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <style>
+        .legal-page { max-width: 800px; margin: 0 auto; padding: 6rem 5% 4rem; }
+        .legal-page h1 { font-size: 2rem; font-weight: 800; margin-bottom: 2rem; color: var(--text-white); }
+        .legal-page h2 { font-size: 1.25rem; font-weight: 700; margin: 2rem 0 0.75rem; color: var(--text-white); }
+        .legal-page p, .legal-page li { color: var(--text-gray); line-height: 1.7; margin-bottom: 1rem; }
+        .legal-page ul { margin-left: 1.5rem; padding-left: 0; }
+        .legal-page a { color: var(--primary); }
+        .legal-page a:hover { text-decoration: underline; }
+        .legal-back { display: inline-block; margin-bottom: 2rem; color: var(--text-gray); text-decoration: none; }
+        .legal-back:hover { color: var(--primary); }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="/" class="logo">ciao<span style="color:var(--text-white)">cv</span></a>
+        <nav class="nav-links">
+            <a href="/tarifs" data-i18n="nav.service">Nos forfaits</a>
+            <a href="/guide-candidat" data-i18n="nav.guide">Guide candidat</a>
+        </nav>
+        <div class="nav-actions">
+            <a href="#" class="lang-toggle" id="langToggleDesktop" style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
+            <a href="/connexion" class="btn-header-primary" data-i18n="nav.login">Se connecter</a>
+            <button class="hamburger" aria-label="Menu" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+        </div>
+    </header>
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%;" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+        <a href="#" class="lang-toggle" id="langToggleMobile" style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
+        <a href="/tarifs" onclick="toggleMenu()" data-i18n="nav.service">Nos forfaits</a>
+        <a href="/guide-candidat" onclick="toggleMenu()" data-i18n="nav.guide">Guide candidat</a>
+        <a href="/connexion" class="btn-header-primary" style="display:block; text-align:center; padding:1rem; margin-top:2rem;" onclick="toggleMenu()" data-i18n="nav.login">Se connecter</a>
+    </div>
+
+    <main class="legal-page">
+        <a href="/" class="legal-back">← Retour à l'accueil</a>
+        <h1 data-i18n="legal.terms.title">Conditions d'utilisation</h1>
+        <p><strong>Dernière mise à jour :</strong> février 2026</p>
+
+        <h2 data-i18n="legal.terms.h1">1. Objet</h2>
+        <p>Les présentes conditions régissent l’utilisation de la plateforme CiaoCV, qui permet aux recruteurs de diffuser des offres d’emploi et aux candidats de réaliser des entrevues vidéo de présélection.</p>
+
+        <h2 data-i18n="legal.terms.h2">2. Acceptation</h2>
+        <p>En utilisant CiaoCV, vous acceptez ces conditions. Si vous n’y souscrivez pas, veuillez ne pas utiliser le service.</p>
+
+        <h2 data-i18n="legal.terms.h3">3. Compte et usage</h2>
+        <p>Vous vous engagez à fournir des informations exactes et à maintenir la confidentialité de vos identifiants. Vous êtes responsable de toute activité effectuée sous votre compte.</p>
+
+        <h2 data-i18n="legal.terms.h4">4. Contenu</h2>
+        <p>Vous ne devez pas publier de contenu illégal, offensant ou diffamatoire. Les contenus vidéo restent votre propriété ; vous nous accordez une licence pour les héberger et les afficher dans le cadre du service.</p>
+
+        <h2 data-i18n="legal.terms.h5">5. Tarification</h2>
+        <p>Les tarifs sont indiqués sur la page <a href="/tarifs">Nos forfaits</a>. Les modalités de facturation et d’annulation sont décrites lors de l’inscription.</p>
+
+        <h2 data-i18n="legal.terms.h6">6. Limitation de responsabilité</h2>
+        <p>CiaoCV est fourni « en l’état ». Nous ne garantissons pas une disponibilité ou un résultat particulier. Notre responsabilité est limitée dans la mesure prévue par la loi.</p>
+
+        <h2 data-i18n="legal.terms.h7">7. Résiliation</h2>
+        <p>Nous pouvons suspendre ou résilier votre accès en cas de non-respect des présentes conditions. Vous pouvez fermer votre compte à tout moment.</p>
+
+        <h2 data-i18n="legal.terms.h8">8. Contact</h2>
+        <p>Pour toute question : <a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a>.</p>
+    </main>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-links">
+                <h4>CIAOCV</h4>
+                <ul>
+                    <li><a href="/tarifs" data-i18n="footer.service">Nos forfaits</a></li>
+                    <li><a href="/guide-candidat" data-i18n="footer.guide">Guide candidat</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4 data-i18n="footer.legal">Légal</h4>
+                <ul>
+                    <li><a href="/confidentialite" data-i18n="footer.privacy">Politique de confidentialité</a></li>
+                    <li><a href="/conditions" data-i18n="footer.terms">Conditions d'utilisation</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4 data-i18n="footer.contact">Contact</h4>
+                <ul><li><a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a></li></ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p style="margin-bottom: 0.5rem; opacity: 0.8;" data-i18n="footer.proudly">❤️<br>Fièrement humain</p>
+            <p>© 2026 CiaoCV</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/i18n.js?v=1770868074"></script>
+    <script src="assets/js/cookie-consent.js"></script>
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            document.body.style.overflow = menu.classList.contains('active') ? 'auto' : 'hidden';
+            menu.classList.toggle('active');
+            document.querySelectorAll('.hamburger').forEach(btn => btn.classList.toggle('active'));
+        }
+        document.querySelectorAll('.lang-toggle').forEach(btn => btn.addEventListener('click', function(e) { e.preventDefault(); if(typeof toggleLanguage === 'function') toggleLanguage(); }));
+    </script>
+</body>
+</html>

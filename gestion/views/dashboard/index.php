@@ -148,7 +148,7 @@
                     $priceYearly = number_format($p['price_yearly'], 2, ',', ' ');
                     $isActive = $p['active'] ?? true;
                 ?>
-                <tr data-plan-id="<?= (int) $p['id'] ?>" data-name-fr="<?= e($p['name_fr']) ?>" data-name-en="<?= e($p['name_en']) ?>" data-video-limit="<?= (int) $p['video_limit'] ?>" data-price-monthly="<?= e((string) $p['price_monthly']) ?>" data-price-yearly="<?= e((string) $p['price_yearly']) ?>" data-active="<?= $isActive ? '1' : '0' ?>" <?= !$isActive ? 'style="opacity:0.7;"' : '' ?>>
+                <tr data-plan-id="<?= (int) $p['id'] ?>" data-name-fr="<?= e($p['name_fr']) ?>" data-name-en="<?= e($p['name_en']) ?>" data-video-limit="<?= (int) $p['video_limit'] ?>" data-price-monthly="<?= e((string) $p['price_monthly']) ?>" data-price-yearly="<?= e((string) $p['price_yearly']) ?>" data-active="<?= $isActive ? '1' : '0' ?>" data-features="<?= e(json_encode($p['features'] ?? [])) ?>" data-is-popular="<?= !empty($p['is_popular']) ? '1' : '0' ?>" <?= !$isActive ? 'style="opacity:0.7;"' : '' ?>>
                     <td><?= e($p['name']) ?></td>
                     <td>
                         <?php if ($isActive): ?>
@@ -202,9 +202,20 @@
                 <label class="form-label" for="forfait-edit-price-monthly" data-i18n="th_price_monthly">Prix mensuel ($)</label>
                 <input type="number" id="forfait-edit-price-monthly" name="price_monthly" class="form-input" required min="0" step="0.01">
             </div>
-            <div class="form-group mb-5">
+            <div class="form-group mb-4">
                 <label class="form-label" for="forfait-edit-price-yearly" data-i18n="th_price_yearly">Prix annuel ($)</label>
                 <input type="number" id="forfait-edit-price-yearly" name="price_yearly" class="form-input" required min="0" step="0.01">
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-edit-features" data-i18n="forfait_features">Fonctionnalités (une par ligne)</label>
+                <textarea id="forfait-edit-features" name="features" class="form-input" rows="5" placeholder="Ex: 10 entrevues vidéo"></textarea>
+                <div class="form-help" data-i18n="forfait_features_help">Une fonctionnalité par ligne. Vide = affichage par défaut selon le type de forfait.</div>
+            </div>
+            <div class="form-group mb-4">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="forfait-edit-is-popular" name="is_popular" value="1">
+                    <span data-i18n="forfait_is_popular">Badge POPULAIRE</span>
+                </label>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('forfait-edit')" data-i18n="btn_cancel">Annuler</button>
@@ -238,9 +249,20 @@
                 <label class="form-label" for="forfait-price-monthly" data-i18n="th_price_monthly">Prix mensuel ($)</label>
                 <input type="number" id="forfait-price-monthly" name="price_monthly" class="form-input" required min="0" step="0.01" value="0">
             </div>
-            <div class="form-group mb-5">
+            <div class="form-group mb-4">
                 <label class="form-label" for="forfait-price-yearly" data-i18n="th_price_yearly">Prix annuel ($)</label>
                 <input type="number" id="forfait-price-yearly" name="price_yearly" class="form-input" required min="0" step="0.01" value="0">
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="forfait-features" data-i18n="forfait_features">Fonctionnalités (une par ligne)</label>
+                <textarea id="forfait-features" name="features" class="form-input" rows="5" placeholder="Ex: 10 entrevues vidéo"></textarea>
+                <div class="form-help" data-i18n="forfait_features_help">Une fonctionnalité par ligne. Vide = affichage par défaut.</div>
+            </div>
+            <div class="form-group mb-4">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="forfait-is-popular" name="is_popular" value="1">
+                    <span data-i18n="forfait_is_popular">Badge POPULAIRE</span>
+                </label>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('forfait-add')" data-i18n="btn_cancel">Annuler</button>
@@ -661,7 +683,7 @@
     </div>
     <div class="card settings-pane hidden" id="settings-team">
         <div class="card-header card-header--bordered">
-            <h2 class="card-title" data-i18n="settings_team">Équipe</h2>
+            <h2 class="card-title" data-i18n="settings_team">Évaluateurs</h2>
             <span class="subtitle-muted" id="settings-team-count">0 utilisateurs</span>
         </div>
         <div id="settings-team-list" class="team-members-list"></div>

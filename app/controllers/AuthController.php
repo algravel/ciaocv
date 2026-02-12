@@ -182,6 +182,7 @@ class AuthController extends Controller
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['user_name'] = $user['name'] ?? 'Utilisateur';
+        $_SESSION['user_role'] = $user['role'] ?? 'client';
         $companyName = '';
         try {
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
@@ -195,7 +196,7 @@ class AuthController extends Controller
         }
         $_SESSION['company_name'] = $companyName;
 
-        $this->redirect('/tableau-de-bord');
+        $this->redirect($_SESSION['user_role'] === 'evaluateur' ? '/affichages' : '/tableau-de-bord');
     }
 
     /**
@@ -238,6 +239,19 @@ class AuthController extends Controller
         $_SESSION['user_id'] = $userId;
         $_SESSION['user_email'] = $userEmail;
         $_SESSION['user_name'] = $userName;
+        // Récupérer le rôle utilisateur
+        $userRole = 'client';
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $platformUserModel = new PlatformUser();
+            $pu = $platformUserModel->findById($userId);
+            if ($pu && !empty($pu['role'])) {
+                $userRole = $pu['role'];
+            }
+        } catch (Throwable $e) {
+            // ignorer
+        }
+        $_SESSION['user_role'] = $userRole;
         // Récupérer le nom d'entreprise depuis la DB (pas d'auto-génération)
         $companyName = '';
         try {
@@ -253,7 +267,7 @@ class AuthController extends Controller
         $_SESSION['company_name'] = $companyName;
 
         $this->clearOtpSession();
-        $this->redirect('/tableau-de-bord');
+        $this->redirect($_SESSION['user_role'] === 'evaluateur' ? '/affichages' : '/tableau-de-bord');
     }
 
     /**

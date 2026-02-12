@@ -49,6 +49,10 @@ const translations = {
         "footer.rights": "Tous droits réservés.",
         "footer.proudly": "❤️<br>Fièrement humain",
 
+        "cookie.message": "Nous utilisons des cookies pour améliorer votre expérience et l'analyse du site. Vous pouvez accepter ou refuser les cookies non essentiels.",
+        "cookie.accept": "Accepter",
+        "cookie.refuse": "Refuser",
+
         "pricing.title": "Identifiez le candidat parfait sans perdre une seconde.",
         "pricing.subtitle": "Des tarifs simples et transparents pour moderniser votre processus de recrutement. Commencez gratuitement, évoluez selon vos besoins.",
 
@@ -335,7 +339,11 @@ const translations = {
         "login.signup_prompt": "Don't have an account?",
         "login.signup_link": "Sign up for free",
         "login.oauth.divider": "or",
-        "login.oauth.google": "Continue with Google"
+        "login.oauth.google": "Continue with Google",
+
+        "cookie.message": "We use cookies to improve your experience and analyze the site. You can accept or refuse non-essential cookies.",
+        "cookie.accept": "Accept",
+        "cookie.refuse": "Refuse"
     }
 };
 
@@ -353,6 +361,7 @@ function setLanguage(lang) {
     updateContent();
     updateToggleState();
     document.documentElement.lang = lang;
+    if (typeof updateCookieBannerText === 'function') updateCookieBannerText();
 }
 
 function updateContent() {

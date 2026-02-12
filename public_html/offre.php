@@ -250,6 +250,7 @@ if ($jobId) {
         <p>© 2026 CiaoCV</p>
     </footer>
 
+    <script src="assets/js/cookie-consent.js"></script>
     <script>
         // Check theme
         const savedTheme = localStorage.getItem('theme') || 'dark';

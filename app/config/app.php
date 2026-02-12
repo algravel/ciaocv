@@ -142,7 +142,8 @@ set_exception_handler(function (Throwable $e) {
         echo '<style>body{font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F3F4F6;color:#1E293B;margin:0;}';
         echo '.box{text-align:center;padding:3rem;background:#fff;border-radius:1rem;box-shadow:0 4px 20px rgba(0,0,0,.08);max-width:500px;}</style></head>';
         echo '<body><div class="box"><h1>500</h1><p>Une erreur interne est survenue.</p>';
-        echo '<a href="/" style="color:#2563EB;">Retour à l\'accueil</a></div></body></html>';
+        $homeUrl = defined('SITE_URL') ? SITE_URL : '/';
+        echo '<p><a href="' . e($homeUrl) . '" style="color:#2563EB;">Retour à l\'accueil</a></p></div></body></html>';
     }
     exit;
 });

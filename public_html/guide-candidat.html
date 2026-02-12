@@ -10,7 +10,7 @@
     <title>Guide Candidat - Réussir votre entrevue vidéo de présélection | CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1770814389">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1770868074">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -151,6 +151,55 @@
 
             .guide-hero h1 {
                 font-size: 2.2rem;
+            }
+
+            .cta-section {
+                padding: 0 1rem 4rem;
+                box-sizing: border-box;
+            }
+
+            .cta-box {
+                padding: 1.5rem 1.25rem;
+                margin: 0 auto;
+                max-width: min(100%, calc(100% - 2rem));
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .cta-box h2 {
+                font-size: 1.5rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            .cta-box p {
+                margin-bottom: 1.5rem !important;
+                font-size: 0.95rem;
+            }
+
+            .cta-box .btn-primary {
+                padding: 0.875rem 1.5rem !important;
+                font-size: 1rem !important;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cta-section {
+                padding: 0 1rem 3rem;
+            }
+
+            .cta-box {
+                padding: 1.25rem 1rem;
+            }
+
+            .cta-box h2 {
+                font-size: 1.35rem !important;
+            }
+
+            .cta-box p {
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -320,7 +369,7 @@
             <p style="color:var(--text-gray); margin-bottom:2rem;" data-i18n="guide.cta.text">Vérifiez que tout
                 fonctionne techniquement avant de
                 lancer votre première candidature.</p>
-            <a href="onboarding/test-config.php" class="btn-primary" style="padding:1rem 2.5rem; font-size:1.1rem;"
+            <a href="/onboarding/test-config" class="btn-primary" style="padding:1rem 2.5rem; font-size:1.1rem;"
                 data-i18n="guide.cta.btn">
                 Tester ma configuration</a>
         </div>
@@ -340,8 +389,8 @@
             <div class="footer-links">
                 <h4 data-i18n="footer.legal">Légal</h4>
                 <ul>
-                    <li><a href="#" data-i18n="footer.privacy">Politique de confidentialité</a></li>
-                    <li><a href="#" data-i18n="footer.terms">Conditions d’utilisation</a></li>
+                    <li><a href="/confidentialite" data-i18n="footer.privacy">Politique de confidentialité</a></li>
+                    <li><a href="/conditions" data-i18n="footer.terms">Conditions d’utilisation</a></li>
                     <li><a href="#">EFVP</a></li>
                 </ul>
             </div>
@@ -381,7 +430,8 @@
             });
         }
     </script>
-    <script src="assets/js/i18n.js?v=1770814389"></script>
+    <script src="assets/js/i18n.js?v=1770868074"></script>
+    <script src="assets/js/cookie-consent.js"></script>
 </body>
 
 </html>

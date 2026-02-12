@@ -3,6 +3,26 @@
     RewriteEngine On
     RewriteBase /
 
+    # Redirections 301 : chemins app employeur/candidat → app.ciaocv.com
+    RewriteRule ^connexion/?$ https://app.ciaocv.com/connexion [R=301,L,QSA]
+    RewriteRule ^deconnexion/?$ https://app.ciaocv.com/deconnexion [R=301,L,QSA]
+    RewriteRule ^logout/?$ https://app.ciaocv.com/logout [R=301,L,QSA]
+    RewriteRule ^login/?$ https://app.ciaocv.com/connexion [R=301,L,QSA]
+    RewriteRule ^tableau-de-bord/?$ https://app.ciaocv.com/tableau-de-bord [R=301,L,QSA]
+    RewriteRule ^tableau-de-bord500/?$ https://app.ciaocv.com/tableau-de-bord [R=301,L,QSA]
+    RewriteRule ^dashboard/?$ https://app.ciaocv.com/tableau-de-bord [R=301,L,QSA]
+    RewriteRule ^postes/?$ https://app.ciaocv.com/postes [R=301,L,QSA]
+    RewriteRule ^affichages/?$ https://app.ciaocv.com/affichages [R=301,L,QSA]
+    RewriteRule ^candidats/?$ https://app.ciaocv.com/candidats [R=301,L,QSA]
+    RewriteRule ^parametres/?$ https://app.ciaocv.com/parametres [R=301,L,QSA]
+    RewriteRule ^statistiques/?$ https://app.ciaocv.com/statistiques [R=301,L,QSA]
+    RewriteRule ^historique/?$ https://app.ciaocv.com/historique [R=301,L,QSA]
+    RewriteRule ^entrevue/([a-f0-9]{16})/?$ https://app.ciaocv.com/entrevue/$1 [R=301,L,QSA]
+    RewriteRule ^rec/([a-f0-9]{16})/?$ https://app.ciaocv.com/entrevue/$1 [R=301,L,QSA]
+    RewriteRule ^purge-cache/?$ https://app.ciaocv.com/purge-cache [R=301,L,QSA]
+    RewriteRule ^feedback/?$ https://app.ciaocv.com/feedback [R=301,L,QSA]
+    RewriteRule ^signup/?$ https://app.ciaocv.com/signup [R=301,L,QSA]
+
     # Redirections 301 : anciennes URLs .html vers slugs
     RewriteCond %{REQUEST_URI} \.html$ [NC]
     RewriteRule ^(.*)\.html$ /$1 [R=301,L]
@@ -17,6 +37,12 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^emplois/?$ emplois.html [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^confidentialite/?$ confidentialite.html [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^conditions/?$ conditions.html [L]
     # Racine : index.html est servi par défaut via DirectoryIndex
 </IfModule>
 

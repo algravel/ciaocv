@@ -199,6 +199,7 @@
             <h1 class="page-title" id="affichage-candidats-title">Candidats</h1>
             <div class="subtitle-muted" id="affichage-candidats-subtitle">Plateforme</div>
         </div>
+        <?php if (empty($isEvaluateur)): ?>
         <div class="action-group">
             <select class="status-select" id="affichage-status-select" onchange="updateAffichageStatus(this.value)">
                 <option value="actif">Actif</option>
@@ -208,6 +209,7 @@
             <button class="btn-icon" title="Notifier les candidats" onclick="openNotifyCandidatsModal()"><i
                     class="fa-solid fa-envelope"></i></button>
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Alerte Terminé (15 jours) -->
@@ -225,6 +227,7 @@
             <button class="view-tab" data-filter="rejected">Refusés</button>
         </div>
     </div>
+    <?php if (empty($isEvaluateur)): ?>
     <div class="search-row search-row--with-label">
         <span class="search-row-label">Lien à partager</span>
         <span class="search-row-url-wrap">
@@ -238,6 +241,7 @@
                     class="fa-regular fa-copy"></i></button>
         </span>
     </div>
+    <?php endif; ?>
     <table class="data-table">
         <thead>
             <tr>
@@ -250,21 +254,22 @@
         <tbody id="affichage-candidats-tbody"></tbody>
     </table>
 
-    <!-- Évaluateurs CRUD -->
-    <div class="card mt-6">
+    <!-- Évaluateurs CRUD (caché pour les évaluateurs) -->
+    <div class="card mt-6" id="affichage-evaluateurs-card">
         <div class="flex-between mb-4">
             <h3 class="section-heading mb-0"><i class="fa-solid fa-user-check"></i> Évaluateurs</h3>
             <span class="subtitle-muted" id="affichage-evaluateurs-count">0 évaluateurs</span>
         </div>
         <div id="affichage-evaluateurs-list" class="evaluateurs-list"></div>
-        <div class="evaluateurs-add-row mt-4">
+        <?php if (empty($isEvaluateur)): ?>
+        <div class="evaluateurs-add-row mt-4" id="evaluateurs-add-row">
             <input type="text" id="eval-new-prenom" class="form-input" placeholder="Prénom">
             <input type="text" id="eval-new-nom" class="form-input" placeholder="Nom">
             <input type="email" id="eval-new-email" class="form-input" placeholder="Courriel"
                 onkeydown="if(event.key==='Enter'){addEvaluateur(); event.preventDefault();}">
-            <button class="btn btn-primary" onclick="addEvaluateur()" style="flex-shrink:0;"><i
-                    class="fa-solid fa-plus"></i></button>
+            <button type="button" class="btn btn-primary" onclick="addEvaluateur()" style="flex-shrink:0;min-width:44px;min-height:44px;" title="Ajouter un évaluateur"><i class="fa-solid fa-plus"></i></button>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -279,8 +284,10 @@
             <button class="view-tab" data-filter="active" data-i18n="filter_active">Actifs</button>
             <button class="view-tab" data-filter="expired" data-i18n="filter_expired">Expirés</button>
         </div>
+        <?php if (empty($isEvaluateur)): ?>
         <button class="btn btn-primary" onclick="openModal('affichage')"><i class="fa-solid fa-plus"></i><span
                 data-i18n="add_affichage">Nouvel affichage</span></button>
+        <?php endif; ?>
     </div>
     <div class="search-row">
         <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text"
@@ -326,11 +333,13 @@
                             data-i18n-title="action_edit">
                             <i class="fa-solid fa-pen"></i>
                         </button>
+                        <?php if (empty($isEvaluateur)): ?>
                         <button type="button" class="btn-icon btn-icon-delete"
                             onclick="event.stopPropagation(); deleteAffichage('<?= e($aId) ?>', this.closest('tr'))"
                             title="Supprimer" data-i18n-title="action_delete">
                             <i class="fa-solid fa-trash"></i>
                         </button>
+                        <?php endif; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -473,6 +482,15 @@
                 <p id="detail-candidate-email" class="contact-value">—</p>
                 <h3 class="contact-heading"><i class="fa-solid fa-phone"></i> <span data-i18n="form_phone">Téléphone</span></h3>
                 <p id="detail-candidate-phone" class="contact-value">—</p>
+                <h3 class="contact-heading mt-2"><i class="fa-solid fa-file-lines"></i> <span data-i18n="cv_label">CV</span></h3>
+                <div id="detail-candidate-cv-wrap" class="mt-1">
+                    <a id="detail-candidate-cv-link" href="#" target="_blank" rel="noopener" class="btn btn-secondary btn-sm hidden">
+                        <i class="fa-solid fa-file-pdf"></i> <span data-i18n="action_download_cv">Télécharger CV</span>
+                    </a>
+                    <span id="detail-candidate-cv-missing" class="text-muted text-sm">
+                        <span data-i18n="cv_missing">CV manquant</span>
+                    </span>
+                </div>
             </div>
 
             <!-- Détails de l'enregistrement uniquement (date, reprises, temps) -->

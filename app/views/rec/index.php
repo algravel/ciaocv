@@ -39,13 +39,14 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
     <div id="rec-step1" class="rec-card rec-hidden">
         <p class="rec-meta">Remplissez vos coordonnées pour accéder à l'entrevue de présélection.</p>
         <form id="rec-form" class="rec-form" novalidate>
-            <div class="form-row">
-                <label for="rec-nom">Nom</label>
-                <input type="text" id="rec-nom" name="nom" required placeholder="Votre nom">
-            </div>
+            <div id="rec-form-error" class="rec-form-error rec-hidden"></div>
             <div class="form-row">
                 <label for="rec-prenom">Prénom</label>
                 <input type="text" id="rec-prenom" name="prenom" required placeholder="Votre prénom">
+            </div>
+            <div class="form-row">
+                <label for="rec-nom">Nom</label>
+                <input type="text" id="rec-nom" name="nom" required placeholder="Votre nom">
             </div>
             <div class="form-row">
                 <label for="rec-tel">Téléphone</label>
@@ -54,6 +55,11 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
             <div class="form-row">
                 <label for="rec-email">Courriel</label>
                 <input type="email" id="rec-email" name="email" required placeholder="votre@courriel.com">
+            </div>
+            <div class="form-row">
+                <label for="rec-cv">CV (optionnel)</label>
+                <input type="file" id="rec-cv" name="cv" accept=".pdf,.doc,.docx" class="rec-file-input">
+                <span class="rec-file-hint" id="rec-cv-hint">PDF, DOC ou DOCX — max 5 Mo</span>
             </div>
             <button type="submit" class="rec-btn rec-btn-primary">Continuer</button>
         </form>
@@ -177,21 +183,27 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
         // Step 1 → Step 2 (conserver les données en JS, pas de sauvegarde DB)
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-            // Validation basique
             const nom = document.getElementById('rec-nom').value.trim();
             const prenom = document.getElementById('rec-prenom').value.trim();
             const email = document.getElementById('rec-email').value.trim();
             const tel = document.getElementById('rec-tel').value.trim();
+            const cvInput = document.getElementById('rec-cv');
+            const cvFile = cvInput && cvInput.files && cvInput.files[0] ? cvInput.files[0] : null;
 
+            const formError = document.getElementById('rec-form-error');
+            formError.classList.add('rec-hidden');
             if (!nom || !prenom || !email) {
-                status.textContent = 'Veuillez remplir tous les champs obligatoires.';
-                status.style.color = '#EF4444';
+                formError.textContent = 'Veuillez remplir tous les champs obligatoires.';
+                formError.classList.remove('rec-hidden');
+                return;
+            }
+            if (cvFile && cvFile.size > 5 * 1024 * 1024) {
+                formError.textContent = 'Le CV ne doit pas dépasser 5 Mo.';
+                formError.classList.remove('rec-hidden');
                 return;
             }
 
-            // Stocker localement
-            formData = { nom, prenom, email, telephone: tel };
-
+            formData = { nom, prenom, email, telephone: tel, cvFile };
             goToStep(2);
             initCamera();
         });
@@ -200,7 +212,7 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
         async function initCamera() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+                    video: { width: { ideal: 720 }, height: { ideal: 1280 }, facingMode: 'user' },
                     audio: true
                 });
                 videoPreview.srcObject = stream;
@@ -310,10 +322,13 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
             transferOverlay.classList.remove('rec-hidden');
 
             try {
-                // 1. Obtenir le presigned URL R2
+                // 1. Obtenir le presigned URL R2 (vidéo + CV si présent)
                 const urlFormData = new FormData();
                 urlFormData.append('longId', LONG_ID);
                 urlFormData.append('_csrf_token', CSRF_TOKEN);
+                if (formData.cvFile) {
+                    urlFormData.append('cvFileName', formData.cvFile.name);
+                }
 
                 const urlRes = await fetch('/entrevue/upload-url', {
                     method: 'POST',
@@ -322,7 +337,7 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
                 const urlData = await urlRes.json();
                 if (urlData.error) throw new Error(urlData.error);
 
-                // 2. Upload direct vers R2 (presigned PUT)
+                // 2. Upload vidéo vers R2 (presigned PUT)
                 await new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
                     xhr.open('PUT', urlData.uploadUrl, true);
@@ -349,6 +364,26 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
                     xhr.send(recordedBlob);
                 });
 
+                // 2b. Upload CV vers R2 si présent
+                let cvPath = '';
+                if (formData.cvFile && urlData.cvUploadUrl && urlData.cvFileName) {
+                    const cvContentType = formData.cvFile.type || 'application/octet-stream';
+                    await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', urlData.cvUploadUrl, true);
+                        xhr.setRequestHeader('Content-Type', cvContentType);
+                        xhr.timeout = 60000;
+                        xhr.onload = () => {
+                            if (xhr.status >= 200 && xhr.status < 300) resolve();
+                            else reject(new Error('Échec upload CV (HTTP ' + xhr.status + ')'));
+                        };
+                        xhr.onerror = () => reject(new Error('Erreur réseau upload CV'));
+                        xhr.ontimeout = () => reject(new Error('Délai upload CV dépassé'));
+                        xhr.send(formData.cvFile);
+                    });
+                    cvPath = urlData.cvFileName;
+                }
+
                 // Calculate total time spent on this step
                 const timeSpentSeconds = recordingStepStartTime > 0
                     ? Math.round((Date.now() - recordingStepStartTime) / 1000)
@@ -368,6 +403,7 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
                         email: formData.email,
                         telephone: formData.telephone,
                         videoPath: urlData.fileName,
+                        cvPath: cvPath || undefined,
                         retakes: retakesCount,
                         timeSpent: timeSpentSeconds
                     })

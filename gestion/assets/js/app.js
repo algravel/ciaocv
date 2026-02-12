@@ -164,6 +164,8 @@ function openForfaitEditModal(row) {
     var videoEl = document.getElementById('forfait-edit-video-limit');
     var priceMoEl = document.getElementById('forfait-edit-price-monthly');
     var priceYrEl = document.getElementById('forfait-edit-price-yearly');
+    var featuresEl = document.getElementById('forfait-edit-features');
+    var isPopularEl = document.getElementById('forfait-edit-is-popular');
     if (!idEl || !statusEl) return;
     idEl.value = row.dataset.planId || '';
     statusEl.value = row.dataset.active === '1' ? '1' : '0';
@@ -172,6 +174,13 @@ function openForfaitEditModal(row) {
     if (videoEl) videoEl.value = row.dataset.videoLimit || '';
     if (priceMoEl) priceMoEl.value = row.dataset.priceMonthly || '';
     if (priceYrEl) priceYrEl.value = row.dataset.priceYearly || '';
+    if (featuresEl) {
+        try {
+            var features = JSON.parse(row.dataset.features || '[]');
+            featuresEl.value = Array.isArray(features) ? features.join('\n') : '';
+        } catch (_) { featuresEl.value = ''; }
+    }
+    if (isPopularEl) isPopularEl.checked = row.dataset.isPopular === '1';
     openModal('forfait-edit');
 }
 

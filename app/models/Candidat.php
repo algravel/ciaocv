@@ -60,11 +60,18 @@ class Candidat
                 $colorIdx = crc32($name) % count(self::$avatarColors);
                 $color = self::$avatarColors[abs($colorIdx)];
 
-                // Presigned GET URL pour la vidéo
+                // Presigned GET URL pour la vidéo et le CV
                 $videoUrl = null;
+                $cvUrl = null;
                 if (!empty($row['video_path'])) {
                     require_once dirname(__DIR__) . '/helpers/R2Signer.php';
                     $videoUrl = R2Signer::videoUrl($row['video_path']);
+                }
+                if (!empty($row['cv_path'])) {
+                    if (!class_exists('R2Signer')) {
+                        require_once dirname(__DIR__) . '/helpers/R2Signer.php';
+                    }
+                    $cvUrl = R2Signer::videoUrl($row['cv_path']);
                 }
 
                 $result[$id] = [
@@ -78,6 +85,7 @@ class Candidat
                     'color' => $color,
                     'rating' => (int) ($row['rating'] ?? 0),
                     'video' => $videoUrl,
+                    'cv' => $cvUrl,
                     'comments' => [], // TODO: load comments
                     'date' => $row['created_at'] ? date('Y-m-d H:i', strtotime($row['created_at'])) : '',
                     'statusBg' => $style['bg'],
@@ -90,6 +98,78 @@ class Candidat
             return $result;
         } catch (Throwable $e) {
             error_log('Candidat::getAll error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Tous les candidats pour un évaluateur (affichages invités uniquement).
+     */
+    public static function getAllForEvaluateur(int $evaluateurPlatformUserId): array
+    {
+        if ($evaluateurPlatformUserId <= 0) {
+            return [];
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $stmt = $pdo->prepare("
+                SELECT c.*, a.poste_id, p.title AS poste_title
+                FROM app_candidatures c
+                JOIN app_affichages a ON a.id = c.affichage_id
+                JOIN app_postes p ON p.id = a.poste_id
+                JOIN app_affichage_evaluateurs ae ON ae.affichage_id = a.id AND ae.platform_user_id = ?
+                ORDER BY c.created_at DESC
+            ");
+            $stmt->execute([$evaluateurPlatformUserId]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $result = [];
+            foreach ($rows as $row) {
+                $id = 'c' . $row['id'];
+                $name = trim($row['prenom'] . ' ' . $row['nom']);
+                $status = $row['status'] ?: 'new';
+                $style = self::$statusStyles[$status] ?? self::$statusStyles['new'];
+                $colorIdx = crc32($name) % count(self::$avatarColors);
+                $color = self::$avatarColors[abs($colorIdx)];
+
+                $videoUrl = null;
+                $cvUrl = null;
+                if (!empty($row['video_path'])) {
+                    require_once dirname(__DIR__) . '/helpers/R2Signer.php';
+                    $videoUrl = R2Signer::videoUrl($row['video_path']);
+                }
+                if (!empty($row['cv_path'])) {
+                    if (!class_exists('R2Signer')) {
+                        require_once dirname(__DIR__) . '/helpers/R2Signer.php';
+                    }
+                    $cvUrl = R2Signer::videoUrl($row['cv_path']);
+                }
+
+                $result[$id] = [
+                    'id' => $id,
+                    'name' => $name,
+                    'email' => $row['email'] ?? '',
+                    'phone' => $row['telephone'] ?? '',
+                    'role' => $row['poste_title'] ?? '',
+                    'status' => $status,
+                    'isFavorite' => (bool) ($row['is_favorite'] ?? false),
+                    'color' => $color,
+                    'rating' => (int) ($row['rating'] ?? 0),
+                    'video' => $videoUrl,
+                    'cv' => $cvUrl,
+                    'comments' => [],
+                    'date' => $row['created_at'] ? date('Y-m-d H:i', strtotime($row['created_at'])) : '',
+                    'statusBg' => $style['bg'],
+                    'statusColor' => $style['color'],
+                    'retakes' => (int) ($row['retakes_count'] ?? 0),
+                    'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
+                ];
+            }
+
+            return $result;
+        } catch (Throwable $e) {
+            error_log('Candidat::getAllForEvaluateur error: ' . $e->getMessage());
             return [];
         }
     }
@@ -128,14 +208,20 @@ class Candidat
                 $colorIdx = crc32($name) % count(self::$avatarColors);
                 $color = self::$avatarColors[abs($colorIdx)];
 
-                // Presigned GET URL pour la vidéo
+                // Presigned GET URL pour la vidéo et le CV
                 $videoUrl = null;
+                $cvUrl = null;
                 if (!empty($row['video_path'])) {
-                    // Signer si nécessaire (non requis si public, mais ici c'est privé)
                     if (!class_exists('R2Signer')) {
                         require_once dirname(__DIR__) . '/helpers/R2Signer.php';
                     }
                     $videoUrl = R2Signer::videoUrl($row['video_path']);
+                }
+                if (!empty($row['cv_path'])) {
+                    if (!class_exists('R2Signer')) {
+                        require_once dirname(__DIR__) . '/helpers/R2Signer.php';
+                    }
+                    $cvUrl = R2Signer::videoUrl($row['cv_path']);
                 }
 
                 if (!isset($result[$affId])) {
@@ -151,6 +237,7 @@ class Candidat
                     'color' => $color,
                     'rating' => (int) ($row['rating'] ?? 0),
                     'video' => $videoUrl,
+                    'cv' => $cvUrl,
                     'date' => $row['created_at'] ? date('Y-m-d H:i', strtotime($row['created_at'])) : '',
                     'statusBg' => $style['bg'],
                     'statusColor' => $style['color'],
@@ -162,6 +249,81 @@ class Candidat
             return $result;
         } catch (Throwable $e) {
             error_log('Candidat::getByAffichage error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Candidats regroupés par affichage, pour un évaluateur (affichages invités uniquement).
+     */
+    public static function getByAffichageForEvaluateur(int $evaluateurPlatformUserId): array
+    {
+        if ($evaluateurPlatformUserId <= 0) {
+            return [];
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $stmt = $pdo->prepare("
+                SELECT c.*, a.id AS aff_id
+                FROM app_candidatures c
+                JOIN app_affichages a ON a.id = c.affichage_id
+                JOIN app_affichage_evaluateurs ae ON ae.affichage_id = a.id AND ae.platform_user_id = ?
+                ORDER BY c.created_at DESC
+            ");
+            $stmt->execute([$evaluateurPlatformUserId]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $result = [];
+            foreach ($rows as $row) {
+                $affId = (string) $row['aff_id'];
+                $id = 'c' . $row['id'];
+                $name = trim($row['prenom'] . ' ' . $row['nom']);
+                $status = $row['status'] ?: 'new';
+                $style = self::$statusStyles[$status] ?? self::$statusStyles['new'];
+                $colorIdx = crc32($name) % count(self::$avatarColors);
+                $color = self::$avatarColors[abs($colorIdx)];
+
+                $videoUrl = null;
+                $cvUrl = null;
+                if (!empty($row['video_path'])) {
+                    if (!class_exists('R2Signer')) {
+                        require_once dirname(__DIR__) . '/helpers/R2Signer.php';
+                    }
+                    $videoUrl = R2Signer::videoUrl($row['video_path']);
+                }
+                if (!empty($row['cv_path'])) {
+                    if (!class_exists('R2Signer')) {
+                        require_once dirname(__DIR__) . '/helpers/R2Signer.php';
+                    }
+                    $cvUrl = R2Signer::videoUrl($row['cv_path']);
+                }
+
+                if (!isset($result[$affId])) {
+                    $result[$affId] = [];
+                }
+
+                $result[$affId][] = [
+                    'id' => $id,
+                    'name' => $name,
+                    'email' => $row['email'] ?? '',
+                    'status' => $status,
+                    'isFavorite' => (bool) ($row['is_favorite'] ?? false),
+                    'color' => $color,
+                    'rating' => (int) ($row['rating'] ?? 0),
+                    'video' => $videoUrl,
+                    'cv' => $cvUrl,
+                    'date' => $row['created_at'] ? date('Y-m-d H:i', strtotime($row['created_at'])) : '',
+                    'statusBg' => $style['bg'],
+                    'statusColor' => $style['color'],
+                    'retakes' => (int) ($row['retakes_count'] ?? 0),
+                    'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
+                ];
+            }
+
+            return $result;
+        } catch (Throwable $e) {
+            error_log('Candidat::getByAffichageForEvaluateur error: ' . $e->getMessage());
             return [];
         }
     }
@@ -196,15 +358,16 @@ class Candidat
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             $pdo = Database::get();
 
-            // Vérifier que le candidat appartient à un affichage de l'entreprise
+            // Vérifier que le candidat appartient à un affichage de l'entreprise ou que l'utilisateur est évaluateur invité
             $stmt = $pdo->prepare("
                 SELECT c.id 
                 FROM app_candidatures c
                 JOIN app_affichages a ON a.id = c.affichage_id
-                WHERE c.id = ? AND a.platform_user_id = ?
+                LEFT JOIN app_affichage_evaluateurs ae ON ae.affichage_id = a.id AND ae.platform_user_id = ?
+                WHERE c.id = ? AND (a.platform_user_id = ? OR ae.platform_user_id IS NOT NULL)
                 LIMIT 1
             ");
-            $stmt->execute([$candidatId, $platformUserId]);
+            $stmt->execute([$platformUserId, $candidatId, $platformUserId]);
             if (!$stmt->fetch()) {
                 return false;
             }

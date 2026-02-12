@@ -865,19 +865,24 @@ function showAffichageDetail(id) {
         shareUrlEl.textContent = url;
     }
 
-    // Status select
+    // Status select (absent pour les évaluateurs)
     var statusSelect = document.getElementById('affichage-status-select');
-    var statusKey = (data.status || 'Actif').toLowerCase().replace('é', 'e').replace('é', 'e');
-    if (statusKey === 'actif') statusSelect.value = 'actif';
-    else if (statusKey === 'termine') statusSelect.value = 'termine';
-    else if (statusKey === 'archive') statusSelect.value = 'archive';
-    else statusSelect.value = 'actif';
-    applyStatusSelectStyle(statusSelect);
+    if (statusSelect) {
+        var statusKey = (data.status || 'Actif').toLowerCase().replace(/é/g, 'e');
+        if (statusKey === 'actif') statusSelect.value = 'actif';
+        else if (statusKey === 'termine') statusSelect.value = 'termine';
+        else if (statusKey === 'archive') statusSelect.value = 'archive';
+        else statusSelect.value = 'actif';
+        applyStatusSelectStyle(statusSelect);
+    }
 
     // Alerte terminé
     var alert = document.getElementById('affichage-termine-alert');
-    if (statusSelect.value === 'termine') alert.classList.remove('hidden');
-    else alert.classList.add('hidden');
+    if (alert) {
+        var statusVal = statusSelect ? statusSelect.value : '';
+        if (statusVal === 'termine') alert.classList.remove('hidden');
+        else alert.classList.add('hidden');
+    }
 
     renderAffichageCandidatsTable(id, 'all');
 
@@ -1123,6 +1128,19 @@ function showCandidateDetail(id, source) {
     document.getElementById('detail-candidate-role-source').textContent = (data.role || 'Candidat');
     document.getElementById('detail-candidate-email').textContent = data.email || '—';
     document.getElementById('detail-candidate-phone').textContent = data.phone || '—';
+
+    var cvLink = document.getElementById('detail-candidate-cv-link');
+    var cvMissing = document.getElementById('detail-candidate-cv-missing');
+    if (cvLink && cvMissing) {
+        if (data.cv) {
+            cvLink.href = data.cv;
+            cvLink.classList.remove('hidden');
+            cvMissing.classList.add('hidden');
+        } else {
+            cvLink.classList.add('hidden');
+            cvMissing.classList.remove('hidden');
+        }
+    }
 
     var ss = document.getElementById('detail-candidate-status-select');
     if (ss) {
@@ -1491,9 +1509,15 @@ function renderEvaluateurs() {
     container.innerHTML = '';
     countEl.textContent = evaluateurs.length + ' évaluateur' + (evaluateurs.length !== 1 ? 's' : '');
 
+    var isEvaluateur = !!(typeof APP_DATA !== 'undefined' && APP_DATA.isEvaluateur);
     evaluateurs.forEach(function (ev, index) {
         var initials = ev.name.split(' ').map(function (w) { return w.charAt(0).toUpperCase(); }).join('').substring(0, 2);
-
+        var evId = ev.id != null ? ev.id : '';
+        var deleteBtn = '';
+        if (!isEvaluateur) {
+            var onclickAttr = evId ? 'onclick="event.preventDefault();event.stopPropagation();deleteEvaluateur(' + index + ', ' + evId + ')"' : 'onclick="event.preventDefault();event.stopPropagation();deleteEvaluateur(' + index + ', null)"';
+            deleteBtn = '<button type="button" class="btn-icon btn-icon--danger" title="Retirer" ' + onclickAttr + '><i class="fa-solid fa-trash"></i></button>';
+        }
         var div = document.createElement('div');
         div.className = 'evaluateur-item';
         div.innerHTML =
@@ -1501,8 +1525,7 @@ function renderEvaluateurs() {
             '<div class="evaluateur-info">' +
             '<div class="evaluateur-name">' + escapeHtml(ev.name) + '</div>' +
             '<div class="evaluateur-email">' + escapeHtml(ev.email) + '</div>' +
-            '</div>' +
-            '<button class="btn-icon btn-icon--danger" title="Retirer" onclick="deleteEvaluateur(' + index + ')"><i class="fa-solid fa-trash"></i></button>';
+            '</div>' + deleteBtn;
         container.appendChild(div);
     });
 
@@ -1513,31 +1536,88 @@ function renderEvaluateurs() {
 
 function addEvaluateur() {
     var id = window._currentAffichageId;
-    if (!id || !affichagesData[id]) return;
+    if (!id || !affichagesData[id]) {
+        alert('Veuillez d\'abord sélectionner un affichage.');
+        return;
+    }
 
     var prenomInput = document.getElementById('eval-new-prenom');
     var nomInput = document.getElementById('eval-new-nom');
     var emailInput = document.getElementById('eval-new-email');
+    if (!prenomInput || !nomInput || !emailInput) {
+        alert('Champs du formulaire introuvables.');
+        return;
+    }
     var prenom = prenomInput.value.trim();
     var nom = nomInput.value.trim();
     var email = emailInput.value.trim();
-    if (!prenom || !nom || !email) return;
+    if (!prenom || !nom || !email) {
+        alert('Veuillez remplir le prénom, le nom et le courriel.');
+        return;
+    }
 
-    var name = prenom + ' ' + nom;
-    if (!affichagesData[id].evaluateurs) affichagesData[id].evaluateurs = [];
-    affichagesData[id].evaluateurs.push({ name: name, email: email });
-    prenomInput.value = '';
-    nomInput.value = '';
-    emailInput.value = '';
-    prenomInput.focus();
-    renderEvaluateurs();
+    var formData = new FormData();
+    formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    formData.append('affichage_id', String(id));
+    formData.append('prenom', prenom);
+    formData.append('nom', nom);
+    formData.append('email', email);
+
+    fetch('/affichages/evaluateur/add', { method: 'POST', body: formData })
+        .then(function (r) {
+            var ct = r.headers.get('Content-Type') || '';
+            if (!ct.includes('application/json')) {
+                throw new Error(r.status === 403 ? 'Session expirée. Rechargez la page.' : 'Erreur serveur (HTTP ' + r.status + ')');
+            }
+            return r.json();
+        })
+        .then(function (res) {
+            if (res.success) {
+                if (!affichagesData[id].evaluateurs) affichagesData[id].evaluateurs = [];
+                affichagesData[id].evaluateurs.push(res.evaluateur);
+                prenomInput.value = '';
+                nomInput.value = '';
+                emailInput.value = '';
+                if (prenomInput) prenomInput.focus();
+                renderEvaluateurs();
+                if (!res.email_sent) {
+                    alert('Évaluateur ajouté, mais l\'envoi du courriel a échoué. Contactez ' + email + ' pour l\'informer.');
+                }
+            } else {
+                alert('Erreur: ' + (res.error || 'Impossible d\'ajouter l\'évaluateur'));
+            }
+        })
+        .catch(function (err) { alert(err && err.message ? err.message : 'Erreur réseau'); });
 }
 
-function deleteEvaluateur(index) {
+function deleteEvaluateur(index, evaluateurId) {
     var id = window._currentAffichageId;
     if (!id || !affichagesData[id] || !affichagesData[id].evaluateurs) return;
-    affichagesData[id].evaluateurs.splice(index, 1);
-    renderEvaluateurs();
+    var ev = affichagesData[id].evaluateurs[index];
+    if (!ev) return;
+
+    if (!confirm('Retirer cet évaluateur de l\'affichage ?')) return;
+
+    if (evaluateurId && evaluateurId > 0) {
+        var formData = new FormData();
+        formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+        formData.append('affichage_id', String(id));
+        formData.append('evaluateur_id', String(evaluateurId));
+        fetch('/affichages/evaluateur/remove', { method: 'POST', body: formData })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (res.success) {
+                    affichagesData[id].evaluateurs.splice(index, 1);
+                    renderEvaluateurs();
+                } else {
+                    alert('Erreur: ' + (res.error || 'Impossible de retirer'));
+                }
+            })
+            .catch(function () { alert('Erreur réseau'); });
+    } else {
+        affichagesData[id].evaluateurs.splice(index, 1);
+        renderEvaluateurs();
+    }
 }
 
 /* ═══════════════════════════════════════════════

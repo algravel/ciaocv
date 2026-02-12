@@ -12,12 +12,61 @@ class DashboardController extends Controller
     {
         $this->requireAuth();
         $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        $userRole = $_SESSION['user_role'] ?? 'client';
+        $isEvaluateur = ($userRole === 'evaluateur');
 
-        // Charger les données depuis les modèles (filtrées par entreprise si connecté)
-        $postes = Poste::getAll($platformUserId);
-        $affichages = Affichage::getAll($platformUserId);
-        $candidats = Candidat::getAll($platformUserId);
-        $candidatsByAff = Candidat::getByAffichage($platformUserId);
+        // Fallback : si role=client mais l'utilisateur est dans app_affichage_evaluateurs sans posséder d'affichage, le traiter comme évaluateur
+        if (!$isEvaluateur && $platformUserId && $userRole === 'client') {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $stmt = $pdo->prepare('SELECT 1 FROM app_affichages WHERE platform_user_id = ? LIMIT 1');
+            $stmt->execute([$platformUserId]);
+            $ownsAffichage = $stmt->fetch();
+            if (!$ownsAffichage) {
+                $stmt = $pdo->prepare('SELECT 1 FROM app_affichage_evaluateurs WHERE platform_user_id = ? LIMIT 1');
+                $stmt->execute([$platformUserId]);
+                if ($stmt->fetch()) {
+                    $isEvaluateur = true;
+                    $_SESSION['user_role'] = 'evaluateur';
+                    $platformUserModel = new PlatformUser();
+                    $pu = $platformUserModel->findById($platformUserId);
+                    if ($pu) {
+                        $platformUserModel->update($platformUserId, [
+                            'prenom' => $pu['prenom'] ?? '',
+                            'nom' => $pu['nom'] ?? $pu['name'] ?? '',
+                            'email' => $pu['email'] ?? '',
+                            'role' => 'evaluateur',
+                            'plan_id' => $pu['plan_id'] ?? null,
+                            'billable' => $pu['billable'] ?? false,
+                            'active' => $pu['active'] ?? true,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Rediriger les évaluateurs vers /affichages s'ils accèdent à des sections non autorisées
+        if ($isEvaluateur) {
+            $path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
+            $path = rtrim($path, '/') ?: '/';
+            if (in_array($path, ['/postes', '/candidats', '/parametres'], true)) {
+                $this->redirect('/affichages');
+                return;
+            }
+        }
+
+        // Charger les données depuis les modèles
+        if ($isEvaluateur) {
+            $postes = [];
+            $affichages = Affichage::getAllForEvaluateur($platformUserId);
+            $candidats = Candidat::getAllForEvaluateur($platformUserId);
+            $candidatsByAff = Candidat::getByAffichageForEvaluateur($platformUserId);
+        } else {
+            $postes = Poste::getAll($platformUserId);
+            $affichages = Affichage::getAll($platformUserId);
+            $candidats = Candidat::getAll($platformUserId);
+            $candidatsByAff = Candidat::getByAffichage($platformUserId);
+        }
         $emailTemplates = EmailTemplate::getAll();
 
         // ?demo=new_org simule une nouvelle organisation (tests)
@@ -43,6 +92,15 @@ class DashboardController extends Controller
             try {
                 $entrepriseModel = new Entreprise();
                 $entreprise = $entrepriseModel->getByPlatformUserId($platformUserId);
+                // Pour les évaluateurs (pas d'entreprise propre), récupérer celle du propriétaire du premier affichage
+                if (!$entreprise && $isEvaluateur && !empty($affichages)) {
+                    $firstAff = reset($affichages);
+                    $ownerId = (int) ($firstAff['platform_user_id'] ?? 0);
+                    if ($ownerId > 0) {
+                        $entreprise = $entrepriseModel->getByPlatformUserId($ownerId);
+                        $_SESSION['company_name'] = $entreprise['name'] ?? $_SESSION['company_name'] ?? '';
+                    }
+                }
             } catch (Throwable $e) {
                 // Ignorer si table non encore créée
             }
@@ -115,7 +173,7 @@ class DashboardController extends Controller
             '/affichages' => 'affichages',
             '/candidats' => 'candidats',
             '/parametres' => 'parametres',
-            default => 'statistiques',
+            default => $isEvaluateur ? 'affichages' : 'statistiques',
         };
 
         // Forfaits facturation (depuis gestion_plans en base) — même source que gestion/tarifs
@@ -160,10 +218,11 @@ class DashboardController extends Controller
         }
 
         $this->view('dashboard.index', [
-            'pageTitle' => 'Tableau de bord',
+            'pageTitle' => $isEvaluateur ? 'Mes affichages' : 'Tableau de bord',
             'companyName' => $companyName,
             'userTimezone' => ($entreprise['timezone'] ?? null) ?: 'America/Montreal',
             'entreprise' => $entreprise,
+            'isEvaluateur' => $isEvaluateur,
             'postes' => $postes,
             'affichages' => $affichages,
             'candidats' => $candidats,
@@ -230,6 +289,10 @@ class DashboardController extends Controller
     public function history(): void
     {
         $this->requireAuth();
+        if (($_SESSION['user_role'] ?? 'client') === 'evaluateur') {
+            $this->redirect('/affichages');
+            return;
+        }
         $platformUserId = (int) $_SESSION['user_id'];
 
         $user = [
@@ -262,6 +325,7 @@ class DashboardController extends Controller
     public function saveCompany(): void
     {
         $this->requireAuth();
+        if (!$this->requireNotEvaluateur()) return;
         $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
         if (!$platformUserId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -291,6 +355,7 @@ class DashboardController extends Controller
     {
         try {
             $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
             $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
             if (!$platformUserId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -338,6 +403,7 @@ class DashboardController extends Controller
     {
         try {
             $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
             $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
             if (!$platformUserId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -396,6 +462,7 @@ class DashboardController extends Controller
     public function deletePoste(): void
     {
         $this->requireAuth();
+        if (!$this->requireNotEvaluateur()) return;
         $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
         if (!$platformUserId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -435,6 +502,7 @@ class DashboardController extends Controller
     {
         try {
             $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
             $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
             if (!$platformUserId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -483,6 +551,7 @@ class DashboardController extends Controller
     {
         try {
             $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
             $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
             if (!$platformUserId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
@@ -522,6 +591,151 @@ class DashboardController extends Controller
         }
     }
 
+    /**
+     * Retirer un évaluateur d'un affichage.
+     * POST /affichages/evaluateur/remove
+     */
+    public function removeEvaluateur(): void
+    {
+        try {
+            $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
+            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+            if (!$platformUserId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $affichageId = (int) ($_POST['affichage_id'] ?? 0);
+            $evaluateurId = (int) ($_POST['evaluateur_id'] ?? 0);
+            if ($affichageId <= 0 || $evaluateurId <= 0) {
+                $this->json(['success' => false, 'error' => 'Paramètres manquants'], 400);
+                return;
+            }
+            $affichage = Affichage::find((string) $affichageId, $platformUserId);
+            if (!$affichage) {
+                $this->json(['success' => false, 'error' => 'Affichage introuvable'], 404);
+                return;
+            }
+            $success = Affichage::removeEvaluateur($affichageId, $evaluateurId);
+            $this->json(['success' => $success]);
+        } catch (Throwable $e) {
+            error_log('removeEvaluateur error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
+
+    /**
+     * Ajouter un évaluateur à un affichage. Crée le compte si nécessaire.
+     * Envoie un email (identifiants ou notification d'assignation).
+     * POST /affichages/evaluateur/add
+     */
+    public function addEvaluateur(): void
+    {
+        try {
+            $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
+            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+            if (!$platformUserId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $affichageId = (int) ($_POST['affichage_id'] ?? 0);
+            $prenom = trim($_POST['prenom'] ?? '');
+            $nom = trim($_POST['nom'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            if ($affichageId <= 0 || $nom === '' || $email === '') {
+                $this->json(['success' => false, 'error' => 'Prénom, nom et courriel requis'], 400);
+                return;
+            }
+            $affichage = Affichage::find((string) $affichageId, $platformUserId);
+            if (!$affichage) {
+                $this->json(['success' => false, 'error' => 'Affichage introuvable'], 404);
+                return;
+            }
+            $fullName = trim($prenom . ' ' . $nom) ?: $nom;
+            $posteTitle = $affichage['title'] ?? 'Poste';
+
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $platformUserModel = new PlatformUser();
+            $owner = $platformUserModel->findById($platformUserId);
+            $ownerPlanId = ($owner !== null && isset($owner['plan_id'])) ? $owner['plan_id'] : null;
+
+            $existingUser = $platformUserModel->findByEmail($email);
+            $evaluateurId = null;
+            $isNewUser = false;
+
+            if ($existingUser) {
+                $evPlanId = $existingUser['plan_id'] ?? null;
+                // Rejeter seulement si l'utilisateur a un plan différent (pas null = pas encore assigné)
+                if ($evPlanId !== null && $ownerPlanId !== null && $evPlanId !== $ownerPlanId) {
+                    $this->json(['success' => false, 'error' => 'Cet utilisateur appartient à une autre organisation'], 400);
+                    return;
+                }
+                $evaluateurId = (int) $existingUser['id'];
+                // Mettre à jour le rôle et le plan pour rattacher l'évaluateur à cette entreprise
+                $platformUserModel->update($evaluateurId, [
+                    'prenom' => $existingUser['prenom'] ?? '',
+                    'nom' => $existingUser['nom'] ?? $existingUser['name'] ?? '',
+                    'email' => $existingUser['email'],
+                    'role' => 'evaluateur',
+                    'plan_id' => $ownerPlanId,
+                    'billable' => $existingUser['billable'] ?? false,
+                    'active' => $existingUser['active'] ?? true,
+                ]);
+            } else {
+                $newPassword = bin2hex(random_bytes(8));
+                $evaluateurId = $platformUserModel->create([
+                    'prenom' => $prenom,
+                    'nom' => $nom,
+                    'email' => $email,
+                    'role' => 'evaluateur',
+                    'plan_id' => $ownerPlanId,
+                    'billable' => false,
+                    'active' => true,
+                    'password' => $newPassword,
+                ]);
+                $isNewUser = true;
+            }
+
+            $added = Affichage::addEvaluateur($affichageId, $evaluateurId);
+            if (!$added) {
+                $this->json(['success' => false, 'error' => 'Cet évaluateur est déjà assigné'], 400);
+                return;
+            }
+
+            $appUrl = rtrim($_ENV['APP_URL'] ?? $_ENV['SITE_URL'] ?? 'https://app.ciaocv.com', '/');
+            $viewPath = '/affichages?open=' . $affichageId;
+            $viewUrl = $appUrl . '/connexion?next=' . rawurlencode($viewPath);
+
+            $emailSent = false;
+            try {
+                if ($isNewUser) {
+                    $emailSent = zeptomail_send_new_platform_user_credentials($email, $fullName, $newPassword);
+                }
+                // Toujours notifier (nouveau ou existant) de l'assignation à l'affichage
+                $emailSent = zeptomail_send_evaluateur_assigned($email, $fullName, $posteTitle, $viewUrl) || $emailSent;
+            } catch (Throwable $mailErr) {
+                error_log('addEvaluateur email error: ' . $mailErr->getMessage());
+            }
+
+            $this->json([
+                'success' => true,
+                'evaluateur' => ['id' => $evaluateurId, 'name' => $fullName, 'email' => $email, 'notifications_enabled' => true],
+                'email_sent' => $emailSent,
+            ]);
+        } catch (Throwable $e) {
+            error_log('addEvaluateur error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
 
     /**
      * Mettre à jour le statut ou le favori d'un candidat.

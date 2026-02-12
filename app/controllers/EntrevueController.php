@@ -9,30 +9,49 @@ class EntrevueController extends Controller
 {
     /**
      * Génère un presigned PUT URL pour upload direct vers Cloudflare R2.
-     * Le navigateur envoie la vidéo directement à R2 sans passer par le serveur.
+     * Le navigateur envoie la vidéo (et optionnellement le CV) directement à R2 sans passer par le serveur.
      */
     public function getUploadUrl(): void
     {
         $longId = trim($_POST['longId'] ?? '');
         if (!preg_match('/^[a-f0-9]{16}$/', $longId)) {
             $this->json(['error' => 'longId invalide'], 400);
+            return;
         }
 
-        // Nom de fichier : entrevue/{longId}/{random}.mp4
         $randomName = bin2hex(random_bytes(8));
-        $objectKey = 'entrevue/' . $longId . '/' . $randomName . '.mp4';
+        $videoKey = 'entrevue/' . $longId . '/' . $randomName . '.mp4';
 
-        // Générer un presigned PUT URL via R2Signer
-        $presignedUrl = R2Signer::presignedUrl($objectKey, 'PUT', 'video/mp4', 3600);
-
+        $presignedUrl = R2Signer::presignedUrl($videoKey, 'PUT', 'video/mp4', 3600);
         if (!$presignedUrl) {
             $this->json(['error' => 'Configuration R2 manquante'], 500);
+            return;
         }
 
-        $this->json([
+        $result = [
             'uploadUrl' => $presignedUrl,
-            'fileName' => $objectKey,
-        ]);
+            'fileName' => $videoKey,
+        ];
+
+        // Générer une URL presignée pour le CV si demandé
+        $cvFileName = trim($_POST['cvFileName'] ?? '');
+        if ($cvFileName !== '') {
+            $ext = strtolower(pathinfo($cvFileName, PATHINFO_EXTENSION));
+            $mimeMap = [
+                'pdf' => 'application/pdf',
+                'doc' => 'application/msword',
+                'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ];
+            $cvMime = $mimeMap[$ext] ?? 'application/octet-stream';
+            $cvKey = 'entrevue/' . $longId . '/' . bin2hex(random_bytes(8)) . '.' . ($ext ?: 'pdf');
+            $cvPresignedUrl = R2Signer::presignedUrl($cvKey, 'PUT', $cvMime, 3600);
+            if ($cvPresignedUrl) {
+                $result['cvUploadUrl'] = $cvPresignedUrl;
+                $result['cvFileName'] = $cvKey;
+            }
+        }
+
+        $this->json($result);
     }
 
     /**
@@ -52,6 +71,7 @@ class EntrevueController extends Controller
         $email = trim($input['email'] ?? '');
         $telephone = trim($input['telephone'] ?? '');
         $videoPath = trim($input['videoPath'] ?? '');
+        $cvPath = trim($input['cvPath'] ?? '');
         $retakes = (int) ($input['retakes'] ?? 0);
         $timeSpent = (int) ($input['timeSpent'] ?? 0);
 
@@ -89,10 +109,21 @@ class EntrevueController extends Controller
         $pdo = Database::get();
 
         $stmt = $pdo->prepare("
-            INSERT INTO app_candidatures (affichage_id, nom, prenom, email, telephone, video_path, retakes_count, time_spent_seconds, ip_address)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO app_candidatures (affichage_id, nom, prenom, email, telephone, video_path, cv_path, retakes_count, time_spent_seconds, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$affichageId, $nom, $prenom, $email, $telephone ?: null, $videoPath, $retakes, $timeSpent, $ipAddress]);
+        $stmt->execute([$affichageId, $nom, $prenom, $email, $telephone ?: null, $videoPath, $cvPath ?: null, $retakes, $timeSpent, $ipAddress]);
+
+        $posteTitle = $affichage['title'] ?? 'Poste';
+        $candidatName = trim($prenom . ' ' . $nom) ?: $nom;
+        $siteUrl = rtrim($_ENV['SITE_URL'] ?? 'https://www.ciaocv.com', '/');
+        $viewPath = '/affichages?open=' . $affichageId;
+        $viewUrl = $siteUrl . '/connexion?next=' . rawurlencode($viewPath);
+
+        $recipients = Affichage::getNotificationRecipientsForAffichage($affichageId);
+        foreach ($recipients as $r) {
+            zeptomail_send_new_candidature_notification($r['email'], $r['name'], $posteTitle, $candidatName, $viewUrl);
+        }
 
         $this->json(['success' => true, 'id' => (int) $pdo->lastInsertId()]);
     }

@@ -25,13 +25,16 @@
             </div>
 
             <nav class="nav-links">
-                <?php $def = $defaultSection ?? 'statistiques'; ?>
+                <?php $def = $defaultSection ?? 'statistiques'; $isEvaluateur = !empty($isEvaluateur ?? false); ?>
+                <?php if (!$isEvaluateur): ?>
                 <a href="/tableau-de-bord" class="nav-item<?= $def === 'statistiques' ? ' active' : '' ?>"
                     data-section="statistiques" data-i18n="nav_dashboard">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Tableau de bord</span>
                 </a>
+                <?php endif; ?>
 
+                <?php if (!$isEvaluateur): ?>
                 <a href="/postes" class="nav-item has-submenu<?= $def === 'postes' ? ' active' : '' ?>"
                     data-section="postes" data-i18n="nav_postes">
                     <i class="fa-solid fa-briefcase"></i>
@@ -46,11 +49,12 @@
                         <a href="/postes#postes-archives" class="nav-subitem" data-i18n="filter_archived">Archivés</a>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <a href="/affichages" class="nav-item has-submenu<?= $def === 'affichages' ? ' active' : '' ?>"
                     data-section="affichages" data-i18n="nav_affichages">
                     <i class="fa-solid fa-bullhorn"></i>
-                    <span>Affichages</span>
+                    <span><?= $isEvaluateur ? 'Mes affichages' : 'Affichages' ?></span>
                     <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                 </a>
                 <div class="nav-submenu" data-parent="affichages">
@@ -62,6 +66,7 @@
                     </div>
                 </div>
 
+                <?php if (!$isEvaluateur): ?>
                 <a href="/candidats" class="nav-item has-submenu<?= $def === 'candidats' ? ' active' : '' ?>"
                     data-section="candidats" data-i18n="nav_candidats">
                     <i class="fa-solid fa-user-group"></i>
@@ -92,13 +97,14 @@
                         <a href="/parametres#parametres-departments" class="nav-subitem settings-subitem"
                             data-target="settings-departments" data-i18n="settings_departments">Départements</a>
                         <a href="/parametres#parametres-team" class="nav-subitem settings-subitem"
-                            data-target="settings-team" data-i18n="settings_team">Équipe</a>
+                            data-target="settings-team" data-i18n="settings_team">Évaluateurs</a>
                         <a href="/parametres#parametres-billing" class="nav-subitem settings-subitem"
                             data-target="settings-billing" data-i18n="settings_billing">Facturation</a>
                         <a href="/parametres#parametres-communications" class="nav-subitem settings-subitem"
                             data-target="settings-communications">Communication</a>
                     </div>
                 </div>
+                <?php endif; ?>
             </nav>
         </aside>
 
@@ -119,9 +125,11 @@
                         <button class="lang-btn active" data-lang="fr">FR</button>
                         <button class="lang-btn" data-lang="en">EN</button>
                     </div>
+                    <?php if (!$isEvaluateur): ?>
                     <button class="icon-btn" onclick="document.querySelector('a[data-section=\'parametres\']').click()">
                         <i class="fa-solid fa-gear"></i>
                     </button>
+                    <?php endif; ?>
                     <button class="icon-btn">
                         <i class="fa-regular fa-bell"></i>
                     </button>
@@ -170,7 +178,8 @@
             emailTemplates: <?= json_encode($emailTemplates ?? [], JSON_UNESCAPED_UNICODE) ?>,
             departments: <?= json_encode($departments ?? [], JSON_UNESCAPED_UNICODE) ?>,
             teamMembers: <?= json_encode($teamMembers ?? [], JSON_UNESCAPED_UNICODE) ?>,
-            events: <?= json_encode($events ?? [], JSON_UNESCAPED_UNICODE) ?>
+            events: <?= json_encode($events ?? [], JSON_UNESCAPED_UNICODE) ?>,
+            isEvaluateur: <?= json_encode(!empty($isEvaluateur)) ?>
         };
     </script>
     <script src="<?= asset('assets/js/i18n.js') ?>"></script>

@@ -51,6 +51,8 @@ RewriteEngine On
 RewriteCond %{HTTP_HOST} !^app\.ciaocv\.com$ [NC]
 RewriteRule ^ - [F,L]
 
+# favicon.ico → assets/img/favicon.png (évite 404)
+RewriteRule ^favicon\.ico$ assets/img/favicon.png [L]
 
 # /gestion : application autonome
 RewriteRule ^gestion/?(.*)$ gestion/index.php [QSA,L]

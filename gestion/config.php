@@ -162,6 +162,23 @@ try {
             INDEX idx_platform_user (platform_user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
+    $stmt = $pdo->query("SHOW TABLES LIKE 'app_affichage_evaluateurs'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("CREATE TABLE app_affichage_evaluateurs (
+            affichage_id INT UNSIGNED NOT NULL,
+            platform_user_id INT UNSIGNED NOT NULL,
+            notifications_enabled TINYINT(1) NOT NULL DEFAULT 1,
+            PRIMARY KEY (affichage_id, platform_user_id),
+            FOREIGN KEY (affichage_id) REFERENCES app_affichages(id) ON DELETE CASCADE,
+            FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM app_affichage_evaluateurs LIKE 'notifications_enabled'");
+        if ($stmt->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE app_affichage_evaluateurs ADD COLUMN notifications_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER platform_user_id");
+        }
+    } catch (Throwable $e) { /* ignorer */ }
     $stmt = $pdo->query("SHOW TABLES LIKE 'app_entreprises'");
     if ($stmt->rowCount() === 0) {
         $pdo->exec("CREATE TABLE app_entreprises (
@@ -224,6 +241,10 @@ try {
         $stmt = $pdo->query("SHOW COLUMNS FROM app_candidatures LIKE 'rating'");
         if ($stmt->rowCount() === 0) {
             $pdo->exec("ALTER TABLE app_candidatures ADD COLUMN rating TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Appréciation 0-5' AFTER is_favorite");
+        }
+        $stmt = $pdo->query("SHOW COLUMNS FROM app_candidatures LIKE 'cv_path'");
+        if ($stmt->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE app_candidatures ADD COLUMN cv_path VARCHAR(500) NULL COMMENT 'Chemin R2: entrevue/{longId}/{filename}' AFTER video_path");
         }
     } catch (Throwable $e) {
         // ignorer si la table n'existe pas encore
@@ -318,6 +339,55 @@ if (!function_exists('csrf_verify')) {
     }
 }
 
+/**
+ * Envoie une requête POST à l'API ZeptoMail (utilise cURL si disponible).
+ * @return array{success: bool, response: string|null}
+ */
+function _zeptomail_post(string $apiUrl, string $auth, array $payload): array
+{
+    $body = json_encode($payload);
+    if (function_exists('curl_init')) {
+        $ch = curl_init($apiUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_HTTPHEADER => [
+                'Accept: application/json',
+                'Content-Type: application/json',
+                'Authorization: ' . $auth,
+            ],
+        ]);
+        $response = curl_exec($ch);
+        $errno = curl_errno($ch);
+        curl_close($ch);
+        if ($errno !== 0) {
+            error_log('[Zepto] curl error ' . $errno . ': ' . ($response ?: 'no response'));
+            return ['success' => false, 'response' => $response ?: null];
+        }
+        $data = json_decode($response, true);
+        $ok = isset($data['request_id']) || (isset($data['data']) && !isset($data['error']));
+        return ['success' => $ok, 'response' => $response];
+    }
+    $ctx = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
+            'content' => $body,
+            'timeout' => 15,
+        ],
+    ]);
+    $response = @file_get_contents($apiUrl, false, $ctx);
+    if ($response === false) {
+        error_log('[Zepto] file_get_contents failed (allow_url_fopen?)');
+        return ['success' => false, 'response' => null];
+    }
+    $data = json_decode($response, true);
+    $ok = isset($data['request_id']) || (isset($data['data']) && !isset($data['error']));
+    return ['success' => $ok, 'response' => $response];
+}
+
 function zeptomail_send_otp(string $toEmail, string $toName, string $otpCode, string $lang = 'fr', string $accentColor = '#800020'): bool
 {
     $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
@@ -349,20 +419,8 @@ function zeptomail_send_otp(string $toEmail, string $toName, string $otpCode, st
             '<p style="color:#666;font-size:14px;">' . $bodyExpire . '</p>' .
             '<p style="color:#666;font-size:12px;">' . $bodyTeam . '</p></div>',
     ];
-    $ctx = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
-            'content' => json_encode($payload),
-            'timeout' => 15,
-        ],
-    ]);
-    $response = @file_get_contents($apiUrl, false, $ctx);
-    if ($response === false) {
-        return false;
-    }
-    $data = json_decode($response, true);
-    return isset($data['request_id']) || (isset($data['data']) && !isset($data['error']));
+    $r = _zeptomail_post($apiUrl, $auth, $payload);
+    return $r['success'];
 }
 
 function _zeptomail_email_logo(): string
@@ -409,20 +467,8 @@ function zeptomail_send_new_admin_credentials(string $toEmail, string $toName, s
             '<p style="color:#666;font-size:14px;">Pour des raisons de sécurité, nous vous recommandons de modifier ce mot de passe après votre prochaine connexion.</p>' .
             '<p style="color:#666;font-size:12px;">— L\'équipe CiaoCV</p></div>',
     ];
-    $ctx = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
-            'content' => json_encode($payload),
-            'timeout' => 15,
-        ],
-    ]);
-    $response = @file_get_contents($apiUrl, false, $ctx);
-    if ($response === false) {
-        return false;
-    }
-    $data = json_decode($response, true);
-    return isset($data['request_id']) || (isset($data['data']) && !isset($data['error']));
+    $r = _zeptomail_post($apiUrl, $auth, $payload);
+    return $r['success'];
 }
 
 function zeptomail_send_new_platform_user_credentials(string $toEmail, string $toName, string $newPassword): bool
@@ -430,16 +476,14 @@ function zeptomail_send_new_platform_user_credentials(string $toEmail, string $t
     $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
     $token = $_ENV['ZEPTO_TOKEN'] ?? '';
     $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
-    $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'CIAOCV';
-    $logPath = dirname(__DIR__) . '/.cursor/debug.log';
+    $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'ciaocv';
     if ($token === '') {
-        file_put_contents($logPath, json_encode(['timestamp' => round(microtime(true) * 1000), 'location' => 'config.php:zeptomail_platform_user', 'message' => 'token empty', 'data' => ['hasToken' => false], 'hypothesisId' => 'H1']) . "\n", FILE_APPEND | LOCK_EX);
+        error_log('[Zepto] platform_user_credentials: token empty');
         return false;
     }
-    file_put_contents($logPath, json_encode(['timestamp' => round(microtime(true) * 1000), 'location' => 'config.php:zeptomail_platform_user', 'message' => 'token present, calling API', 'data' => ['hasToken' => true], 'hypothesisId' => 'H1']) . "\n", FILE_APPEND | LOCK_EX);
     $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
-    $appUrl = rtrim($_ENV['APP_URL'] ?? 'https://app.ciaocv.com', '/');
-    $loginUrl = $appUrl . '/connexion';
+    $siteUrl = rtrim($_ENV['SITE_URL'] ?? 'https://www.ciaocv.com', '/');
+    $loginUrl = $siteUrl . '/connexion';
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
         'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
@@ -455,23 +499,11 @@ function zeptomail_send_new_platform_user_credentials(string $toEmail, string $t
             '<p style="color:#666;font-size:14px;">Pour des raisons de sécurité, nous vous recommandons de modifier ce mot de passe après votre prochaine connexion.</p>' .
             '<p style="color:#666;font-size:12px;">— L\'équipe CiaoCV</p></div>',
     ];
-    $ctx = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
-            'content' => json_encode($payload),
-            'timeout' => 15,
-        ],
-    ]);
-    $response = @file_get_contents($apiUrl, false, $ctx);
-    if ($response === false) {
-        file_put_contents($logPath, json_encode(['timestamp' => round(microtime(true) * 1000), 'location' => 'config.php:zeptomail_platform_user', 'message' => 'file_get_contents failed', 'data' => ['response' => false], 'hypothesisId' => 'H2']) . "\n", FILE_APPEND | LOCK_EX);
-        return false;
+    $r = _zeptomail_post($apiUrl, $auth, $payload);
+    if (!$r['success'] && $r['response']) {
+        error_log('[Zepto] platform_user_credentials failed: ' . substr($r['response'], 0, 500));
     }
-    $data = json_decode($response, true);
-    $success = isset($data['request_id']) || (isset($data['data']) && !isset($data['error']));
-    file_put_contents($logPath, json_encode(['timestamp' => round(microtime(true) * 1000), 'location' => 'config.php:zeptomail_platform_user', 'message' => 'API response', 'data' => ['success' => $success, 'hasRequestId' => isset($data['request_id']), 'hasError' => isset($data['error']), 'responseKeys' => array_keys($data ?? [])], 'hypothesisId' => 'H3']) . "\n", FILE_APPEND | LOCK_EX);
-    return $success;
+    return $r['success'];
 }
 
 function zeptomail_send_platform_user_password_reset(string $toEmail, string $toName, string $newPassword): bool
@@ -484,8 +516,8 @@ function zeptomail_send_platform_user_password_reset(string $toEmail, string $to
         return false;
     }
     $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
-    $appUrl = rtrim($_ENV['APP_URL'] ?? 'https://app.ciaocv.com', '/');
-    $loginUrl = $appUrl . '/connexion';
+    $siteUrl = rtrim($_ENV['SITE_URL'] ?? 'https://www.ciaocv.com', '/');
+    $loginUrl = $siteUrl . '/connexion';
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
         'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
@@ -501,20 +533,67 @@ function zeptomail_send_platform_user_password_reset(string $toEmail, string $to
             '<p style="color:#666;font-size:14px;">Pour des raisons de sécurité, nous vous recommandons de modifier ce mot de passe après votre prochaine connexion.</p>' .
             '<p style="color:#666;font-size:12px;">— L\'équipe CiaoCV</p></div>',
     ];
-    $ctx = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
-            'content' => json_encode($payload),
-            'timeout' => 15,
-        ],
-    ]);
-    $response = @file_get_contents($apiUrl, false, $ctx);
-    if ($response === false) {
+    $r = _zeptomail_post($apiUrl, $auth, $payload);
+    return $r['success'];
+}
+
+function zeptomail_send_new_candidature_notification(string $toEmail, string $toName, string $posteTitle, string $candidatName, string $viewUrl): bool
+{
+    $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
+    $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'ciaocv';
+    if ($token === '') {
         return false;
     }
-    $data = json_decode($response, true);
-    return isset($data['request_id']) || (isset($data['data']) && !isset($data['error']));
+    $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
+    $payload = [
+        'from' => ['address' => $fromAddr, 'name' => $fromName],
+        'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
+        'subject' => 'Nouvelle candidature reçue – ' . $posteTitle,
+        'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:2rem 1rem;">' .
+            _zeptomail_email_logo_user() .
+            '<h2 style="color:#2563EB;font-size:1.25rem;margin-bottom:1rem;">Nouvelle candidature</h2>' .
+            '<p>Bonjour ' . htmlspecialchars($toName) . ',</p>' .
+            '<p>Une nouvelle candidature vidéo a été reçue pour le poste <strong>' . htmlspecialchars($posteTitle) . '</strong>.</p>' .
+            '<p><strong>Candidat :</strong> ' . htmlspecialchars($candidatName) . '</p>' .
+            '<p><a href="' . htmlspecialchars($viewUrl) . '" style="display:inline-block;background:#2563EB;color:white;padding:0.75rem 1.5rem;text-decoration:none;border-radius:8px;margin-top:1rem;">Voir la candidature</a></p>' .
+            '<p style="color:#666;font-size:12px;">— L\'équipe CiaoCV</p></div>',
+    ];
+    $r = _zeptomail_post($apiUrl, $auth, $payload);
+    return $r['success'];
+}
+
+/**
+ * Notifie un évaluateur existant qu'il a été assigné à un affichage.
+ */
+function zeptomail_send_evaluateur_assigned(string $toEmail, string $toName, string $posteTitle, string $viewUrl): bool
+{
+    $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
+    $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'ciaocv';
+    if ($token === '') {
+        return false;
+    }
+    $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
+    $payload = [
+        'from' => ['address' => $fromAddr, 'name' => $fromName],
+        'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
+        'subject' => 'Vous avez été assigné comme évaluateur – ' . $posteTitle,
+        'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:2rem 1rem;">' .
+            _zeptomail_email_logo_user() .
+            '<h2 style="color:#2563EB;font-size:1.25rem;margin-bottom:1rem;">Nouvelle assignation</h2>' .
+            '<p>Bonjour ' . htmlspecialchars($toName) . ',</p>' .
+            '<p>Vous avez été assigné comme évaluateur pour le poste <strong>' . htmlspecialchars($posteTitle) . '</strong>.</p>' .
+            '<p><a href="' . htmlspecialchars($viewUrl) . '" style="display:inline-block;background:#2563EB;color:white;padding:0.75rem 1.5rem;text-decoration:none;border-radius:8px;margin-top:1rem;">Voir l\'affichage</a></p>' .
+            '<p style="color:#666;font-size:12px;">— L\'équipe CiaoCV</p></div>',
+    ];
+    $r = _zeptomail_post($apiUrl, $auth, $payload);
+    if (!$r['success'] && $r['response']) {
+        error_log('[Zepto] evaluateur_assigned failed: ' . substr($r['response'], 0, 500));
+    }
+    return $r['success'];
 }
 
 function zeptomail_send_password_reset(string $toEmail, string $toName, string $newPassword): bool
@@ -545,20 +624,8 @@ function zeptomail_send_password_reset(string $toEmail, string $toName, string $
             '<p style="color:#666;font-size:14px;">Pour des raisons de sécurité, nous vous recommandons de modifier ce mot de passe après votre prochaine connexion.</p>' .
             '<p style="color:#666;font-size:12px;">— L\'équipe CiaoCV</p></div>',
     ];
-    $ctx = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nAuthorization: $auth\r\n",
-            'content' => json_encode($payload),
-            'timeout' => 15,
-        ],
-    ]);
-    $response = @file_get_contents($apiUrl, false, $ctx);
-    if ($response === false) {
-        return false;
-    }
-    $data = json_decode($response, true);
-    return isset($data['request_id']) || (isset($data['data']) && !isset($data['error']));
+    $r = _zeptomail_post($apiUrl, $auth, $payload);
+    return $r['success'];
 }
 
 if (!function_exists('turnstile_verify')) {

@@ -28,6 +28,7 @@
 
                 <form action="/connexion" method="POST">
                     <?= csrf_field() ?>
+                    <?php if (!empty($redirectNext)): ?><input type="hidden" name="next" value="<?= e($redirectNext) ?>"><?php endif; ?>
                     <input type="hidden" id="login-lang" name="lang" value="fr">
                     <div class="form-group mb-5">
                         <label for="email" data-i18n="login.email.label">Courriel</label>

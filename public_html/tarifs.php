@@ -25,14 +25,18 @@ $lang = ($_COOKIE['language'] ?? 'fr') === 'en' ? 'en' : 'fr';
 try {
     require_once $projectRoot . '/gestion/includes/Database.php';
     $pdo = Database::get();
-    $stmt = $pdo->query('SELECT id, name_fr, name_en, video_limit, price_monthly, price_yearly FROM gestion_plans WHERE COALESCE(active, 1) = 1 ORDER BY price_monthly ASC');
+    $stmt = $pdo->query('SELECT id, name_fr, name_en, video_limit, price_monthly, price_yearly, features_json, is_popular FROM gestion_plans WHERE COALESCE(active, 1) = 1 ORDER BY price_monthly ASC');
     while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $featuresJson = $r['features_json'] ?? null;
+        $features = $featuresJson ? (json_decode($featuresJson, true) ?: []) : [];
         $plans[] = [
             'id' => (int) $r['id'],
             'name' => $lang === 'en' ? ($r['name_en'] ?? $r['name_fr']) : ($r['name_fr'] ?? $r['name_en']),
             'video_limit' => (int) $r['video_limit'],
             'price_monthly' => (float) $r['price_monthly'],
             'price_yearly' => (float) $r['price_yearly'],
+            'features' => $features,
+            'is_popular' => !empty($r['is_popular']),
         ];
     }
 } catch (Throwable $e) {
@@ -52,7 +56,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs et forfaits - CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1770814389">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1770868074">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         .pricing-hero { text-align: center; padding: 6rem 5% 3rem; max-width: 900px; margin: 0 auto; }
@@ -178,7 +182,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             <?php
             $featuredIndex = -1;
             foreach ($plans as $i => $p) {
-                if (strcasecmp(trim($p['name']), 'Pro') === 0) { $featuredIndex = $i; break; }
+                if (!empty($p['is_popular']) || strcasecmp(trim($p['name']), 'Pro') === 0) { $featuredIndex = $i; break; }
             }
             foreach ($plans as $i => $p):
                 $isFree = $p['price_monthly'] == 0 && $p['price_yearly'] == 0;
@@ -203,10 +207,17 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
                     </div>
                 </div>
                 <ul class="features-list">
+                    <?php
+                    $planFeatures = $p['features'] ?? [];
+                    if (!empty($planFeatures)):
+                        foreach ($planFeatures as $f): ?>
+                    <li><?= e($f) ?></li>
+                    <?php endforeach; else: ?>
                     <li><?= e($videoText) ?></li>
                     <li data-i18n="pricing.card.pro.feat.3">Outils collaboratifs</li>
                     <li data-i18n="pricing.card.pro.feat.4">Marque employeur</li>
                     <li data-i18n="pricing.card.one.feat.4">Questions personnalisées</li>
+                    <?php endif; ?>
                 </ul>
                 <button type="button" class="btn-price <?= $isFeatured ? 'primary' : 'outline' ?>" data-plan-id="<?= e($p['id']) ?>" data-plan-name="<?= e($p['name']) ?>" data-is-free="<?= $isFree ? '1' : '0' ?>" data-price-monthly="<?= e($p['price_monthly']) ?>" data-price-yearly="<?= e($p['price_yearly']) ?>" onclick="openPlanModal(this)">
                     <?= $isFree ? ($lang === 'en' ? 'Create account' : 'Créer un compte') : ($lang === 'en' ? 'Start now' : 'Démarrer maintenant') ?>
@@ -281,8 +292,8 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             <div class="footer-links">
                 <h4 data-i18n="footer.legal">Légal</h4>
                 <ul>
-                    <li><a href="#" data-i18n="footer.privacy">Politique de confidentialité</a></li>
-                    <li><a href="#" data-i18n="footer.terms">Conditions d'utilisation</a></li>
+                    <li><a href="/confidentialite" data-i18n="footer.privacy">Politique de confidentialité</a></li>
+                    <li><a href="/conditions" data-i18n="footer.terms">Conditions d'utilisation</a></li>
                     <li><a href="#">EFVP</a></li>
                 </ul>
             </div>
@@ -337,6 +348,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             });
         });
     </script>
-    <script src="assets/js/i18n.js?v=1770814389"></script>
+    <script src="assets/js/i18n.js?v=1770868074"></script>
+    <script src="assets/js/cookie-consent.js"></script>
 </body>
 </html>

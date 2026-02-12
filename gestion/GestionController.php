@@ -232,6 +232,10 @@ class GestionController
         $videoLimit = (int) ($_POST['video_limit'] ?? 10);
         $priceMonthly = (float) str_replace(',', '.', $_POST['price_monthly'] ?? '0');
         $priceYearly = (float) str_replace(',', '.', $_POST['price_yearly'] ?? '0');
+        $featuresRaw = trim($_POST['features'] ?? '');
+        $featuresArr = array_values(array_filter(array_map('trim', explode("\n", str_replace("\r", '', $featuresRaw)))));
+        $featuresJson = !empty($featuresArr) ? json_encode($featuresArr) : null;
+        $isPopular = isset($_POST['is_popular']) && $_POST['is_popular'] === '1';
         if ($nameFr === '' || $nameEn === '') {
             $_SESSION['gestion_flash_error'] = 'Le nom en français et en anglais est requis.';
             $this->redirect(GESTION_BASE_PATH . '/forfaits');
@@ -248,7 +252,7 @@ class GestionController
         }
         try {
             $planModel = new Plan();
-            $planId = $planModel->create($nameFr, $nameEn, $videoLimit, $priceMonthly, $priceYearly);
+            $planId = $planModel->create($nameFr, $nameEn, $videoLimit, $priceMonthly, $priceYearly, $featuresJson, $isPopular);
             $this->logEvent('create', 'plan', (string) $planId, "Forfait créé : {$nameFr} — {$videoLimit} vidéos, {$priceMonthly} \$/mois");
             $_SESSION['gestion_flash_success'] = 'Forfait créé avec succès.';
         } catch (Throwable $e) {
@@ -270,6 +274,10 @@ class GestionController
         $priceMonthly = (float) str_replace(',', '.', $_POST['price_monthly'] ?? '0');
         $priceYearly = (float) str_replace(',', '.', $_POST['price_yearly'] ?? '0');
         $active = isset($_POST['active']) && $_POST['active'] === '1';
+        $featuresRaw = trim($_POST['features'] ?? '');
+        $featuresArr = array_values(array_filter(array_map('trim', explode("\n", str_replace("\r", '', $featuresRaw)))));
+        $featuresJson = !empty($featuresArr) ? json_encode($featuresArr) : null;
+        $isPopular = isset($_POST['is_popular']) && $_POST['is_popular'] === '1';
         if ($id <= 0 || $nameFr === '' || $nameEn === '') {
             $_SESSION['gestion_flash_error'] = 'Données invalides.';
             $this->redirect(GESTION_BASE_PATH . '/forfaits');
@@ -282,7 +290,7 @@ class GestionController
         }
         try {
             $planModel = new Plan();
-            if ($planModel->update($id, $nameFr, $nameEn, $videoLimit, $priceMonthly, $priceYearly, $active)) {
+            if ($planModel->update($id, $nameFr, $nameEn, $videoLimit, $priceMonthly, $priceYearly, $active, $featuresJson, $isPopular)) {
                 $this->logEvent('update', 'plan', (string) $id, "Forfait modifié : {$nameFr} — {$videoLimit} vidéos, {$priceMonthly} \$/mois" . ($active ? '' : ', désactivé'));
                 $_SESSION['gestion_flash_success'] = 'Forfait mis à jour.';
             } else {
@@ -377,6 +385,11 @@ class GestionController
                 'active' => $active,
                 'password' => $newPassword,
             ]);
+            // Les évaluateurs n'ont pas d'entreprise propre (ils sont invités par un employeur)
+            if ($role !== 'evaluateur') {
+                $entrepriseModel = new Entreprise();
+                $entrepriseModel->createWithDefaults($userId);
+            }
             file_put_contents(dirname(__DIR__) . '/.cursor/debug.log', json_encode(['timestamp' => round(microtime(true) * 1000), 'location' => 'GestionController.php:createPlatformUser', 'message' => 'create success, before zeptomail', 'data' => ['userId' => $userId], 'hypothesisId' => 'H4']) . "\n", FILE_APPEND | LOCK_EX);
             $this->logEvent('create', 'platform_user', (string) $userId, "Utilisateur ajouté : {$fullName} ({$email}), rôle {$role}");
             $sent = zeptomail_send_new_platform_user_credentials($email, $fullName, $newPassword);

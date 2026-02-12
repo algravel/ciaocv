@@ -27,7 +27,7 @@ class Affichage
     /**
      * Formate une ligne DB en structure attendue par le frontend.
      */
-    private static function formatRow(array $r): array
+    private static function formatRow(array $r, array $evaluateurs = []): array
     {
         $map = self::statusMap();
         $s = $map[$r['status'] ?? 'active'] ?? $map['active'];
@@ -35,6 +35,7 @@ class Affichage
         $endDate = $r['end_date'] ?? null;
         return [
             'id' => (string) $r['id'],
+            'platform_user_id' => (int) ($r['platform_user_id'] ?? 0),
             'shareLongId' => $r['share_long_id'] ?? '',
             'posteId' => (string) ($r['poste_id'] ?? ''),
             'title' => $r['title'] ?? '',
@@ -48,8 +49,130 @@ class Affichage
             'apps' => '0',
             'completed' => 0,
             'sent' => 0,
-            'evaluateurs' => [],
+            'evaluateurs' => $evaluateurs,
         ];
+    }
+
+    /**
+     * Retourne les évaluateurs assignés à un affichage.
+     * @return array<array{id: int, name: string, email: string}>
+     */
+    public static function getEvaluateursByAffichageId(int $affichageId): array
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        $hasNotifications = $pdo->query("SHOW COLUMNS FROM app_affichage_evaluateurs LIKE 'notifications_enabled'")->rowCount() > 0;
+        $cols = 'u.id, u.prenom_encrypted, u.name_encrypted, u.email_encrypted';
+        if ($hasNotifications) {
+            $cols .= ', ae.notifications_enabled';
+        }
+        $stmt = $pdo->prepare("
+            SELECT {$cols}
+            FROM app_affichage_evaluateurs ae
+            INNER JOIN gestion_platform_users u ON u.id = ae.platform_user_id
+            WHERE ae.affichage_id = ?
+        ");
+        $stmt->execute([$affichageId]);
+        $list = [];
+        $encryption = new \Encryption();
+        while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $nom = $encryption->decrypt($r['name_encrypted'] ?? '');
+            $prenom = '';
+            if (!empty($r['prenom_encrypted'])) {
+                $dec = $encryption->decrypt($r['prenom_encrypted']);
+                $prenom = $dec !== false ? $dec : '';
+            }
+            $email = $encryption->decrypt($r['email_encrypted'] ?? '');
+            if ($nom === false || $email === false) {
+                continue;
+            }
+            $fullName = trim($prenom . ' ' . $nom) ?: $nom;
+            $notifications = $hasNotifications ? (bool) ($r['notifications_enabled'] ?? 1) : true;
+            $list[] = ['id' => (int) $r['id'], 'name' => $fullName, 'email' => $email, 'notifications_enabled' => $notifications];
+        }
+        return $list;
+    }
+
+    /**
+     * Retourne les destinataires pour notification nouvelle candidature.
+     * Propriétaire de l'affichage + évaluateurs avec notifications activées.
+     * @return array<array{email: string, name: string}>
+     */
+    public static function getNotificationRecipientsForAffichage(int $affichageId): array
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        $encryption = new \Encryption();
+
+        $stmt = $pdo->prepare("
+            SELECT a.platform_user_id
+            FROM app_affichages a
+            WHERE a.id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$affichageId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return [];
+        }
+        $ownerId = (int) $row['platform_user_id'];
+
+        $hasNotifications = $pdo->query("SHOW COLUMNS FROM app_affichage_evaluateurs LIKE 'notifications_enabled'")->rowCount() > 0;
+        $recipients = [];
+        $seenEmails = [];
+
+        $platformUserStmt = $pdo->prepare("SELECT id, prenom_encrypted, name_encrypted, email_encrypted FROM gestion_platform_users WHERE id = ?");
+        $platformUserStmt->execute([$ownerId]);
+        $owner = $platformUserStmt->fetch(PDO::FETCH_ASSOC);
+        if ($owner) {
+            $email = $encryption->decrypt($owner['email_encrypted'] ?? '');
+            $nom = $encryption->decrypt($owner['name_encrypted'] ?? '');
+            $prenom = '';
+            if (!empty($owner['prenom_encrypted'])) {
+                $dec = $encryption->decrypt($owner['prenom_encrypted']);
+                $prenom = $dec !== false ? $dec : '';
+            }
+            if ($email !== false && $nom !== false && $email !== '') {
+                $emailNorm = strtolower(trim($email));
+                $seenEmails[$emailNorm] = true;
+                $recipients[] = ['email' => $email, 'name' => trim($prenom . ' ' . $nom) ?: $nom];
+            }
+        }
+
+        $cols = 'u.id, u.prenom_encrypted, u.name_encrypted, u.email_encrypted';
+        if ($hasNotifications) {
+            $cols .= ', ae.notifications_enabled';
+        }
+        $stmt = $pdo->prepare("
+            SELECT {$cols}
+            FROM app_affichage_evaluateurs ae
+            INNER JOIN gestion_platform_users u ON u.id = ae.platform_user_id
+            WHERE ae.affichage_id = ?
+        ");
+        $stmt->execute([$affichageId]);
+        while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if ($hasNotifications && empty($r['notifications_enabled'])) {
+                continue;
+            }
+            $email = $encryption->decrypt($r['email_encrypted'] ?? '');
+            $nom = $encryption->decrypt($r['name_encrypted'] ?? '');
+            $prenom = '';
+            if (!empty($r['prenom_encrypted'])) {
+                $dec = $encryption->decrypt($r['prenom_encrypted']);
+                $prenom = $dec !== false ? $dec : '';
+            }
+            if ($email === false || $nom === false || $email === '') {
+                continue;
+            }
+            $emailNorm = strtolower(trim($email));
+            if (!empty($seenEmails[$emailNorm])) {
+                continue;
+            }
+            $seenEmails[$emailNorm] = true;
+            $recipients[] = ['email' => $email, 'name' => trim($prenom . ' ' . $nom) ?: $nom];
+        }
+
+        return $recipients;
     }
 
     /**
@@ -76,7 +199,36 @@ class Affichage
         $result = [];
         while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $id = (string) $r['id'];
-            $result[$id] = self::formatRow($r);
+            $evaluateurs = self::getEvaluateursByAffichageId((int) $r['id']);
+            $result[$id] = self::formatRow($r, $evaluateurs);
+        }
+        return $result;
+    }
+
+    /**
+     * Affichages accessibles par un évaluateur (ceux auxquels il est invité).
+     * @param int $evaluateurPlatformUserId ID de l'évaluateur
+     * @return array<string, array<string, mixed>> Indexé par id
+     */
+    public static function getAllForEvaluateur(int $evaluateurPlatformUserId): array
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare("
+            SELECT a.id, a.platform_user_id, a.poste_id, a.share_long_id, a.platform,
+                   a.start_date, a.end_date, a.status, a.created_at,
+                   p.title, p.department
+            FROM app_affichages a
+            INNER JOIN app_postes p ON p.id = a.poste_id AND p.platform_user_id = a.platform_user_id
+            INNER JOIN app_affichage_evaluateurs ae ON ae.affichage_id = a.id AND ae.platform_user_id = ?
+            ORDER BY a.created_at DESC
+        ");
+        $stmt->execute([$evaluateurPlatformUserId]);
+        $result = [];
+        while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $id = (string) $r['id'];
+            $evaluateurs = self::getEvaluateursByAffichageId((int) $r['id']);
+            $result[$id] = self::formatRow($r, $evaluateurs);
         }
         return $result;
     }
@@ -102,7 +254,11 @@ class Affichage
         ");
         $stmt->execute([$id, $platformUserId]);
         $r = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $r ? self::formatRow($r) : null;
+        if (!$r) {
+            return null;
+        }
+        $evaluateurs = self::getEvaluateursByAffichageId((int) $r['id']);
+        return self::formatRow($r, $evaluateurs);
     }
 
     /**
@@ -124,7 +280,37 @@ class Affichage
         ");
         $stmt->execute([$longId]);
         $r = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $r ? self::formatRow($r) : null;
+        if (!$r) {
+            return null;
+        }
+        $evaluateurs = self::getEvaluateursByAffichageId((int) $r['id']);
+        return self::formatRow($r, $evaluateurs);
+    }
+
+    /**
+     * Vérifie qu'un évaluateur a accès à un affichage et le retourne.
+     */
+    public static function findForEvaluateur(string $id, int $evaluateurPlatformUserId): ?array
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare("
+            SELECT a.id, a.platform_user_id, a.poste_id, a.share_long_id, a.platform,
+                   a.start_date, a.end_date, a.status, a.created_at,
+                   p.title, p.department
+            FROM app_affichages a
+            INNER JOIN app_postes p ON p.id = a.poste_id AND p.platform_user_id = a.platform_user_id
+            INNER JOIN app_affichage_evaluateurs ae ON ae.affichage_id = a.id AND ae.platform_user_id = ?
+            WHERE a.id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$evaluateurPlatformUserId, $id]);
+        $r = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$r) {
+            return null;
+        }
+        $evaluateurs = self::getEvaluateursByAffichageId((int) $r['id']);
+        return self::formatRow($r, $evaluateurs);
     }
 
     /**
@@ -217,6 +403,50 @@ class Affichage
         $pdo = Database::get();
         $stmt = $pdo->prepare("DELETE FROM app_affichages WHERE id = ? AND platform_user_id = ?");
         $stmt->execute([$id, $platformUserId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Associe un évaluateur (platform_user_id) à un affichage.
+     */
+    public static function addEvaluateur(int $affichageId, int $platformUserId): bool
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        try {
+            $stmt = $pdo->prepare('INSERT IGNORE INTO app_affichage_evaluateurs (affichage_id, platform_user_id) VALUES (?, ?)');
+            $stmt->execute([$affichageId, $platformUserId]);
+            return $stmt->rowCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Active ou désactive les notifications pour un évaluateur d'un affichage.
+     */
+    public static function updateEvaluateurNotifications(int $affichageId, int $platformUserId, bool $enabled): bool
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->query("SHOW COLUMNS FROM app_affichage_evaluateurs LIKE 'notifications_enabled'");
+        if ($stmt->rowCount() === 0) {
+            return false;
+        }
+        $stmt = $pdo->prepare('UPDATE app_affichage_evaluateurs SET notifications_enabled = ? WHERE affichage_id = ? AND platform_user_id = ?');
+        $stmt->execute([$enabled ? 1 : 0, $affichageId, $platformUserId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Retire un évaluateur d'un affichage.
+     */
+    public static function removeEvaluateur(int $affichageId, int $platformUserId): bool
+    {
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('DELETE FROM app_affichage_evaluateurs WHERE affichage_id = ? AND platform_user_id = ?');
+        $stmt->execute([$affichageId, $platformUserId]);
         return $stmt->rowCount() > 0;
     }
 }

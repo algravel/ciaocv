@@ -58,6 +58,18 @@ class Controller
     }
 
     /**
+     * Empêche les évaluateurs d'accéder aux actions réservées aux propriétaires.
+     */
+    protected function requireNotEvaluateur(): bool
+    {
+        if (($_SESSION['user_role'] ?? 'client') === 'evaluateur') {
+            $this->json(['success' => false, 'error' => 'Accès non autorisé'], 403);
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Exige une session authentifiée, sinon redirige vers /connexion.
      */
     protected function requireAuth(): void

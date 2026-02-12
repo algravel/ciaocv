@@ -1,9 +1,4 @@
 <?php
-// Disable caching
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
 /**
  * CiaoCV – Front Controller
  *
@@ -26,36 +21,38 @@ require_once __DIR__ . '/models/Candidat.php';
 require_once __DIR__ . '/models/EmailTemplate.php';
 require_once __DIR__ . '/models/User.php';
 
-// ─── Helpers ───────────────────────────────────────────────────────────
-require_once __DIR__ . '/helpers/R2Signer.php';
-
 // ─── Fonctions partagées ───────────────────────────────────────────────
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/helpers/R2Signer.php';
 
 // ─── Routes ────────────────────────────────────────────────────────────
 $router = new Router();
 
 // Authentification (slugs SEO-friendly)
-$router->get('/', 'AuthController', 'login');
-$router->get('/connexion', 'AuthController', 'login');
-$router->post('/connexion', 'AuthController', 'authenticate');
-$router->post('/connexion/otp', 'AuthController', 'verifyOtp');
-$router->get('/deconnexion', 'AuthController', 'logout');
-$router->get('/logout', 'AuthController', 'logout'); // alias, redirige vers /connexion après déco
+$router->get('/',              'AuthController', 'login');
+$router->get('/connexion',     'AuthController', 'login');
+$router->post('/connexion',    'AuthController', 'authenticate');
+$router->get('/deconnexion',   'AuthController', 'logout');
+$router->get('/logout',       'AuthController', 'logout'); // alias, redirige vers /connexion après déco
 
-// Dashboard employeur (sections accessibles par URL)
+// Dashboard employeur (sections accessibles par URL directe)
 $router->get('/tableau-de-bord', 'DashboardController', 'index');
 $router->get('/postes', 'DashboardController', 'index');
 $router->get('/affichages', 'DashboardController', 'index');
 $router->get('/candidats', 'DashboardController', 'index');
 $router->get('/parametres', 'DashboardController', 'index');
+$router->get('/statistiques', 'DashboardController', 'index');
 $router->get('/historique', 'DashboardController', 'history');
+
+// API Dashboard (POST)
 $router->post('/parametres/entreprise', 'DashboardController', 'saveCompany');
 $router->post('/postes', 'DashboardController', 'createPoste');
 $router->post('/postes/update', 'DashboardController', 'updatePoste');
 $router->post('/postes/delete', 'DashboardController', 'deletePoste');
 $router->post('/affichages', 'DashboardController', 'createAffichage');
 $router->post('/affichages/delete', 'DashboardController', 'deleteAffichage');
+$router->post('/affichages/evaluateur/remove', 'DashboardController', 'removeEvaluateur');
+$router->post('/affichages/evaluateur/add', 'DashboardController', 'addEvaluateur');
 $router->post('/candidats/update', 'DashboardController', 'updateCandidate');
 
 // Feedback (FAB bugs et idées)
@@ -70,22 +67,11 @@ $router->post('/entrevue/submit', 'EntrevueController', 'submit');
 $router->get('/purge-cache', 'PurgeController', 'index');
 
 // Redirections 301 : anciennes URLs → slugs
-$router->get('/login', 'RedirectController', 'toConnexion');
-$router->post('/login', 'RedirectController', 'toConnexion');
-$router->get('/dashboard', 'RedirectController', 'toTableauDeBord');
+$router->get('/login',      'RedirectController', 'toConnexion');
+$router->get('/tableau-de-bord500', 'RedirectController', 'toTableauDeBord');
+$router->post('/login',     'RedirectController', 'toConnexion');
+$router->get('/dashboard',  'RedirectController', 'toTableauDeBord');
 $router->getPattern('#^/rec/([a-f0-9]{16})$#', 'RedirectController', 'toEntrevue');
 
 // ─── Dispatch ──────────────────────────────────────────────────────────
-try {
-    $router->dispatch();
-} catch (Throwable $e) {
-    error_log('CiaoCV dispatch: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-    $isApi = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && in_array(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), ['/postes', '/postes/update', '/postes/delete', '/parametres/entreprise', '/feedback', '/affichages', '/affichages/delete', '/candidats/update']);
-    if ($isApi) {
-        http_response_code(500);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => false, 'error' => 'Erreur serveur: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
-    } else {
-        throw $e;
-    }
-}
+$router->dispatch();
