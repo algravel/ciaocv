@@ -247,6 +247,7 @@
             <tr>
                 <th>Candidat</th>
                 <th>Statut</th>
+                <th data-i18n="th_rating">Note</th>
                 <th>Favori</th>
                 <th>Postulé le</th>
             </tr>
@@ -454,6 +455,12 @@
                     <i class="fa-solid fa-play-circle icon-xl"></i>
                     <div class="mt-2" data-i18n="video_preview">Aperçu vidéo</div>
                 </div>
+            </div>
+            <!-- Playback Speed Controls -->
+            <div class="playback-speed-controls hidden" id="video-speed-controls">
+                <button type="button" class="speed-btn active" onclick="setPlaybackSpeed(1, this)">1x</button>
+                <button type="button" class="speed-btn" onclick="setPlaybackSpeed(1.5, this)">1.5x</button>
+                <button type="button" class="speed-btn" onclick="setPlaybackSpeed(2, this)">2x</button>
             </div>
 
             <div class="card candidate-comments-card">

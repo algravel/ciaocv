@@ -11,15 +11,56 @@
     <link rel="stylesheet" href="assets/css/design-system.css?v=1770868074">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
-        .legal-page { max-width: 800px; margin: 0 auto; padding: 6rem 5% 4rem; }
-        .legal-page h1 { font-size: 2rem; font-weight: 800; margin-bottom: 2rem; color: var(--text-white); }
-        .legal-page h2 { font-size: 1.25rem; font-weight: 700; margin: 2rem 0 0.75rem; color: var(--text-white); }
-        .legal-page p, .legal-page li { color: var(--text-gray); line-height: 1.7; margin-bottom: 1rem; }
-        .legal-page ul { margin-left: 1.5rem; padding-left: 0; }
-        .legal-page a { color: var(--primary); }
-        .legal-page a:hover { text-decoration: underline; }
-        .legal-back { display: inline-block; margin-bottom: 2rem; color: var(--text-gray); text-decoration: none; }
-        .legal-back:hover { color: var(--primary); }
+        .legal-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 6rem 5% 4rem;
+        }
+
+        .legal-page h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-white);
+        }
+
+        .legal-page h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 2rem 0 0.75rem;
+            color: var(--text-white);
+        }
+
+        .legal-page p,
+        .legal-page li {
+            color: var(--text-gray);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .legal-page ul {
+            margin-left: 1.5rem;
+            padding-left: 0;
+        }
+
+        .legal-page a {
+            color: var(--primary);
+        }
+
+        .legal-page a:hover {
+            text-decoration: underline;
+        }
+
+        .legal-back {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .legal-back:hover {
+            color: var(--primary);
+        }
     </style>
 </head>
 
@@ -32,47 +73,92 @@
             <a href="/guide-candidat" data-i18n="nav.guide">Guide candidat</a>
         </nav>
         <div class="nav-actions">
-            <a href="#" class="lang-toggle" id="langToggleDesktop" style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
+            <a href="#" class="lang-toggle" id="langToggleDesktop"
+                style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
             <a href="/connexion" class="btn-header-primary" data-i18n="nav.login">Se connecter</a>
-            <button class="hamburger" aria-label="Menu" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+            <button class="hamburger" aria-label="Menu"
+                onclick="toggleMenu()"><span></span><span></span><span></span></button>
         </div>
     </header>
     <div class="mobile-menu" id="mobileMenu">
-        <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%;" onclick="toggleMenu()"><span></span><span></span><span></span></button>
-        <a href="#" class="lang-toggle" id="langToggleMobile" style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
+        <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%;"
+            onclick="toggleMenu()"><span></span><span></span><span></span></button>
+        <a href="#" class="lang-toggle" id="langToggleMobile"
+            style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
         <a href="/tarifs" onclick="toggleMenu()" data-i18n="nav.service">Nos forfaits</a>
         <a href="/guide-candidat" onclick="toggleMenu()" data-i18n="nav.guide">Guide candidat</a>
-        <a href="/connexion" class="btn-header-primary" style="display:block; text-align:center; padding:1rem; margin-top:2rem;" onclick="toggleMenu()" data-i18n="nav.login">Se connecter</a>
+        <a href="/connexion" class="btn-header-primary"
+            style="display:block; text-align:center; padding:1rem; margin-top:2rem;" onclick="toggleMenu()"
+            data-i18n="nav.login">Se connecter</a>
     </div>
 
     <main class="legal-page">
-        <a href="/" class="legal-back">← Retour à l'accueil</a>
+        <a href="/" class="legal-back" data-i18n="legal.back">← Retour à l'accueil</a>
         <h1 data-i18n="legal.privacy.title">Politique de confidentialité</h1>
-        <p><strong>Dernière mise à jour :</strong> février 2026</p>
+        <p><strong data-i18n="legal.privacy.update_label">Dernière mise à jour :</strong> <span
+                data-i18n="legal.privacy.update_date">12 février 2026</span></p>
 
-        <h2 data-i18n="legal.privacy.h1">1. Responsable du traitement</h2>
-        <p>CiaoCV (« nous », « notre ») traite vos données personnelles. Pour toute question : <a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a>.</p>
+        <p data-i18n="legal.privacy.intro">Chez CiaoCV, nous croyons que le recrutement doit être humain, transparent et
+            respectueux. La protection de votre vie privée est au cœur de cet engagement. Cette politique explique
+            clairement comment nous traitons vos informations.</p>
 
-        <h2 data-i18n="legal.privacy.h2">2. Données collectées</h2>
-        <p>Nous collectons les données que vous fournissez (courriel, nom, prénom, contenus vidéo dans le cadre des entrevues de présélection) ainsi que des données techniques (adresse IP, type de navigateur) pour le bon fonctionnement du service.</p>
+        <h2 data-i18n="legal.privacy.h1">1. Qui sommes-nous ?</h2>
+        <p data-i18n="legal.privacy.p1">CiaoCV est une plateforme de recrutement vidéo éditée par CiaoCV Inc. Nous
+            agissons en tant que responsable du traitement de vos données personnelles.<br>
+            Pour toute question : <a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a>.</p>
 
-        <h2 data-i18n="legal.privacy.h3">3. Finalités</h2>
-        <p>Vos données sont utilisées pour : proposer les fonctionnalités de la plateforme, gérer votre compte, envoyer des notifications par courriel, améliorer nos services et respecter nos obligations légales.</p>
+        <h2 data-i18n="legal.privacy.h2">2. Quelles données collectons-nous ?</h2>
+        <ul>
+            <li data-i18n="legal.privacy.li1"><strong>Pour les Candidats :</strong> Informations de profil (nom,
+                courriel, téléphone), CV, et surtout vos <strong>réponses vidéo</strong> aux entrevues.</li>
+            <li data-i18n="legal.privacy.li2"><strong>Pour les Recruteurs :</strong> Informations professionnelles,
+                détails de l'entreprise, offres d'emploi publiées.</li>
+            <li data-i18n="legal.privacy.li3"><strong>Données techniques :</strong> Adresse IP, type de navigateur, et
+                données de navigation pour assurer la sécurité et la performance du site.</li>
+        </ul>
 
-        <h2 data-i18n="legal.privacy.h4">4. Base légale</h2>
-        <p>Le traitement repose sur l’exécution du contrat, votre consentement (par ex. pour les cookies) et nos intérêts légitimes (sécurité, amélioration du service).</p>
+        <h2 data-i18n="legal.privacy.h3">3. Pourquoi utilisons-nous vos données ?</h2>
+        <p data-i18n="legal.privacy.p3">Nous utilisons vos données pour :</p>
+        <ul>
+            <li data-i18n="legal.privacy.use1"><strong>Permettre le recrutement :</strong> Transmettre vos candidatures
+                vidéo aux recruteurs concernés.</li>
+            <li data-i18n="legal.privacy.use2"><strong>Améliorer l'expérience :</strong> Vous notifier du statut de vos
+                candidatures ou de nouvelles opportunités.</li>
+            <li data-i18n="legal.privacy.use3"><strong>Sécuriser la plateforme :</strong> Prévenir la fraude et assurer
+                la confidentialité des échanges.</li>
+        </ul>
 
-        <h2 data-i18n="legal.privacy.h5">5. Conservation</h2>
-        <p>Les données sont conservées pendant la durée nécessaire aux finalités indiquées, puis supprimées ou anonymisées, sauf obligation légale de conservation.</p>
+        <h2 data-i18n="legal.privacy.h4">4. Avec qui partageons-nous vos données ?</h2>
+        <p data-i18n="legal.privacy.p4_1">Vos données de candidature (vidéos, CV) ne sont accessibles qu'aux
+            <strong>recruteurs</strong> des entreprises auxquelles vous postulez. Nous ne vendons
+            <strong>jamais</strong> vos données à des tiers publicitaires.</p>
+        <p data-i18n="legal.privacy.p4_2">Nous collaborons avec des sous-traitants de confiance pour l'hébergement (ex:
+            serveurs sécurisés au Canada/USA) et l'envoi de courriels, qui sont tenus à de strictes obligations de
+            confidentialité.</p>
+
+        <h2 data-i18n="legal.privacy.h5">5. Sécurité de vos vidéos</h2>
+        <p data-i18n="legal.privacy.p5">Vos entrevues vidéo sont stockées de manière sécurisée et chiffrée. Elles ne
+            sont consultables que via notre plateforme sécurisée par les recruteurs autorisés.</p>
 
         <h2 data-i18n="legal.privacy.h6">6. Vos droits</h2>
-        <p>Vous disposez d’un droit d’accès, de rectification, d’effacement, de limitation, de portabilité et d’opposition. Pour exercer ces droits ou déposer une réclamation : <a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a>.</p>
+        <p data-i18n="legal.privacy.p6">Vous gardez le contrôle. Vous pouvez à tout moment demander :</p>
+        <ul>
+            <li data-i18n="legal.privacy.rights1">L'accès à vos données.</li>
+            <li data-i18n="legal.privacy.rights2">La rectification d'informations inexactes.</li>
+            <li data-i18n="legal.privacy.rights3">La suppression complète de votre compte et de vos vidéos (« droit à
+                l'oubli »).</li>
+        </ul>
+        <p data-i18n="legal.privacy.contact">Pour exercer ces droits, écrivez-nous simplement à <a
+                href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a>.</p>
 
         <h2 data-i18n="legal.privacy.h7">7. Cookies</h2>
-        <p>Nous utilisons des cookies essentiels et, si vous l’acceptez, des cookies d’analyse. Vous pouvez modifier votre choix à tout moment.</p>
+        <p data-i18n="legal.privacy.p7">Nous utilisons des cookies essentiels au fonctionnement du site (session,
+            sécurité) et des outils d'analyse anonymes pour comprendre comment notre site est utilisé, sans vous tracer
+            individuellement.</p>
 
         <h2 data-i18n="legal.privacy.h8">8. Modifications</h2>
-        <p>Nous pouvons mettre à jour cette politique. Les changements substantiels seront communiqués par courriel ou sur cette page.</p>
+        <p data-i18n="legal.privacy.p8">Cette politique peut évoluer. En cas de changement majeur, nous vous en
+            informerons par courriel ou via une notification sur la plateforme.</p>
     </main>
 
     <footer>
@@ -93,7 +179,9 @@
             </div>
             <div class="footer-links">
                 <h4 data-i18n="footer.contact">Contact</h4>
-                <ul><li><a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a></li></ul>
+                <ul>
+                    <li><a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a></li>
+                </ul>
             </div>
         </div>
         <div class="footer-bottom">
@@ -111,7 +199,8 @@
             menu.classList.toggle('active');
             document.querySelectorAll('.hamburger').forEach(btn => btn.classList.toggle('active'));
         }
-        document.querySelectorAll('.lang-toggle').forEach(btn => btn.addEventListener('click', function(e) { e.preventDefault(); if(typeof toggleLanguage === 'function') toggleLanguage(); }));
+        document.querySelectorAll('.lang-toggle').forEach(btn => btn.addEventListener('click', function (e) { e.preventDefault(); if (typeof toggleLanguage === 'function') toggleLanguage(); }));
     </script>
 </body>
+
 </html>

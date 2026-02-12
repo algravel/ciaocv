@@ -827,19 +827,27 @@ function renderAffichageCandidatsTable(id, filter) {
         row.style.cursor = 'pointer';
         row.onclick = function () { if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id); };
         var statusLabel = statusToLabel(c.status);
+
+        var stars = '';
+        var rating = c.rating || c.stars || 0;
+        for (var i = 1; i <= 5; i++) {
+            stars += '<i class="fa-' + (i <= rating ? 'solid' : 'regular') + ' fa-star"></i>';
+        }
+
         row.innerHTML =
             '<td><div style="display: flex; align-items: center; gap: 0.75rem;">' +
             '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
             '<div><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
             '</div></td>' +
             '<td><span class="status-badge" style="background:' + (c.statusBg || '#DBEAFE') + '; color:' + (c.statusColor || '#1D4ED8') + ';">' + escapeHtml(statusLabel) + '</span></td>' +
-            '<td style="text-align: center;">' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color: #EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color: #D1D5DB;"></i>') + '</td>' +
+            '<td><div class="star-color">' + stars + '</div></td>' +
+            '<td>' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color: #EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color: #D1D5DB;"></i>') + '</td>' +
             '<td>' + escapeHtml(formatUtcToLocal(c.date)) + '</td>';
         tbody.appendChild(row);
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #94A3B8;">' + (candidates.length === 0 ? 'Aucun candidat pour cet affichage.' : 'Aucun candidat pour ce filtre.') + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #94A3B8;">' + (candidates.length === 0 ? 'Aucun candidat pour cet affichage.' : 'Aucun candidat pour ce filtre.') + '</td></tr>';
     }
 
     // Mettre à jour l'onglet actif
@@ -1200,8 +1208,26 @@ function showCandidateDetail(id, source) {
 
     var vp = document.getElementById('detail-candidate-video-player');
     var ph = document.getElementById('detail-video-placeholder');
-    if (data.video) { vp.style.display = 'block'; ph.style.display = 'none'; vp.src = data.video; }
-    else { vp.style.display = 'none'; ph.style.display = 'block'; }
+    var speedControls = document.getElementById('video-speed-controls');
+
+    if (data.video) {
+        vp.style.display = 'block';
+        ph.style.display = 'none';
+        vp.src = data.video;
+        if (speedControls) speedControls.classList.remove('hidden');
+        // Reset speed to 1x
+        vp.playbackRate = 1.0;
+        if (speedControls) {
+            speedControls.querySelectorAll('.speed-btn').forEach(function (btn) {
+                btn.classList.remove('active');
+                if (btn.textContent === '1x') btn.classList.add('active');
+            });
+        }
+    } else {
+        vp.style.display = 'none';
+        ph.style.display = 'block';
+        if (speedControls) speedControls.classList.add('hidden');
+    }
 
     renderTimeline(data.comments || []);
     updateCommentFormUser();
@@ -1291,6 +1317,7 @@ function goBackToCandidates() {
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
 
     if (currentCandidateSource === 'affichage' && window._currentAffichageId) {
+        renderAffichageCandidatsTable(window._currentAffichageId);
         document.getElementById('affichage-candidats-section').classList.add('active');
     } else {
         document.getElementById('candidats-section').classList.add('active');
@@ -1603,6 +1630,7 @@ function deleteEvaluateur(index, evaluateurId) {
         formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
         formData.append('affichage_id', String(id));
         formData.append('evaluateur_id', String(evaluateurId));
+
         fetch('/affichages/evaluateur/remove', { method: 'POST', body: formData })
             .then(function (r) { return r.json(); })
             .then(function (res) {
@@ -1617,6 +1645,19 @@ function deleteEvaluateur(index, evaluateurId) {
     } else {
         affichagesData[id].evaluateurs.splice(index, 1);
         renderEvaluateurs();
+    }
+}
+
+function setPlaybackSpeed(speed, btn) {
+    var vp = document.getElementById('detail-candidate-video-player');
+    if (vp) {
+        vp.playbackRate = speed;
+    }
+    if (btn && btn.parentNode) {
+        btn.parentNode.querySelectorAll('.speed-btn').forEach(function (b) {
+            b.classList.remove('active');
+        });
+        btn.classList.add('active');
     }
 }
 

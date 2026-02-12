@@ -11,15 +11,56 @@
     <link rel="stylesheet" href="assets/css/design-system.css?v=1770868074">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
-        .legal-page { max-width: 800px; margin: 0 auto; padding: 6rem 5% 4rem; }
-        .legal-page h1 { font-size: 2rem; font-weight: 800; margin-bottom: 2rem; color: var(--text-white); }
-        .legal-page h2 { font-size: 1.25rem; font-weight: 700; margin: 2rem 0 0.75rem; color: var(--text-white); }
-        .legal-page p, .legal-page li { color: var(--text-gray); line-height: 1.7; margin-bottom: 1rem; }
-        .legal-page ul { margin-left: 1.5rem; padding-left: 0; }
-        .legal-page a { color: var(--primary); }
-        .legal-page a:hover { text-decoration: underline; }
-        .legal-back { display: inline-block; margin-bottom: 2rem; color: var(--text-gray); text-decoration: none; }
-        .legal-back:hover { color: var(--primary); }
+        .legal-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 6rem 5% 4rem;
+        }
+
+        .legal-page h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-white);
+        }
+
+        .legal-page h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 2rem 0 0.75rem;
+            color: var(--text-white);
+        }
+
+        .legal-page p,
+        .legal-page li {
+            color: var(--text-gray);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .legal-page ul {
+            margin-left: 1.5rem;
+            padding-left: 0;
+        }
+
+        .legal-page a {
+            color: var(--primary);
+        }
+
+        .legal-page a:hover {
+            text-decoration: underline;
+        }
+
+        .legal-back {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .legal-back:hover {
+            color: var(--primary);
+        }
     </style>
 </head>
 
@@ -32,47 +73,80 @@
             <a href="/guide-candidat" data-i18n="nav.guide">Guide candidat</a>
         </nav>
         <div class="nav-actions">
-            <a href="#" class="lang-toggle" id="langToggleDesktop" style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
+            <a href="#" class="lang-toggle" id="langToggleDesktop"
+                style="font-weight:600; margin-right:1rem; color:var(--text-gray); text-decoration:none;">EN</a>
             <a href="/connexion" class="btn-header-primary" data-i18n="nav.login">Se connecter</a>
-            <button class="hamburger" aria-label="Menu" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+            <button class="hamburger" aria-label="Menu"
+                onclick="toggleMenu()"><span></span><span></span><span></span></button>
         </div>
     </header>
     <div class="mobile-menu" id="mobileMenu">
-        <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%;" onclick="toggleMenu()"><span></span><span></span><span></span></button>
-        <a href="#" class="lang-toggle" id="langToggleMobile" style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
+        <button class="hamburger active" style="position:absolute; top: 1.25rem; right: 5%;"
+            onclick="toggleMenu()"><span></span><span></span><span></span></button>
+        <a href="#" class="lang-toggle" id="langToggleMobile"
+            style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 700; text-decoration: none;">EN</a>
         <a href="/tarifs" onclick="toggleMenu()" data-i18n="nav.service">Nos forfaits</a>
         <a href="/guide-candidat" onclick="toggleMenu()" data-i18n="nav.guide">Guide candidat</a>
-        <a href="/connexion" class="btn-header-primary" style="display:block; text-align:center; padding:1rem; margin-top:2rem;" onclick="toggleMenu()" data-i18n="nav.login">Se connecter</a>
+        <a href="/connexion" class="btn-header-primary"
+            style="display:block; text-align:center; padding:1rem; margin-top:2rem;" onclick="toggleMenu()"
+            data-i18n="nav.login">Se connecter</a>
     </div>
 
     <main class="legal-page">
-        <a href="/" class="legal-back">← Retour à l'accueil</a>
+        <a href="/" class="legal-back" data-i18n="legal.back">← Retour à l'accueil</a>
         <h1 data-i18n="legal.terms.title">Conditions d'utilisation</h1>
-        <p><strong>Dernière mise à jour :</strong> février 2026</p>
+        <p><strong data-i18n="legal.terms.update_label">Dernière mise à jour :</strong> <span
+                data-i18n="legal.terms.update_date">12 février 2026</span></p>
 
-        <h2 data-i18n="legal.terms.h1">1. Objet</h2>
-        <p>Les présentes conditions régissent l’utilisation de la plateforme CiaoCV, qui permet aux recruteurs de diffuser des offres d’emploi et aux candidats de réaliser des entrevues vidéo de présélection.</p>
+        <p data-i18n="legal.terms.intro">Bienvenue sur CiaoCV. En utilisant notre plateforme, vous acceptez de jouer
+            selon les règles définies ci-dessous. Notre but est de créer un environnement de recrutement sûr,
+            professionnel et bienveillant.</p>
 
-        <h2 data-i18n="legal.terms.h2">2. Acceptation</h2>
-        <p>En utilisant CiaoCV, vous acceptez ces conditions. Si vous n’y souscrivez pas, veuillez ne pas utiliser le service.</p>
+        <h2 data-i18n="legal.terms.h1">1. Objet du service</h2>
+        <p data-i18n="legal.terms.p1">CiaoCV est une plateforme SaaS permettant aux entreprises (« Recruteurs ») de
+            créer des processus de présélection vidéo et aux chercheurs d'emploi (« Candidats ») d'y répondre par vidéo.
+            Nous fournissons les outils techniques, mais nous n'intervenons pas dans les décisions d'embauche.</p>
 
-        <h2 data-i18n="legal.terms.h3">3. Compte et usage</h2>
-        <p>Vous vous engagez à fournir des informations exactes et à maintenir la confidentialité de vos identifiants. Vous êtes responsable de toute activité effectuée sous votre compte.</p>
+        <h2 data-i18n="legal.terms.h2">2. Inscription et Accès</h2>
+        <p data-i18n="legal.terms.p2">Pour utiliser CiaoCV, vous devez créer un compte. Vous vous engagez à fournir des
+            informations exactes et à garder vos identifiants confidentiels. Vous êtes responsable de toute activité sur
+            votre compte.</p>
 
-        <h2 data-i18n="legal.terms.h4">4. Contenu</h2>
-        <p>Vous ne devez pas publier de contenu illégal, offensant ou diffamatoire. Les contenus vidéo restent votre propriété ; vous nous accordez une licence pour les héberger et les afficher dans le cadre du service.</p>
+        <h2 data-i18n="legal.terms.h3">3. Engagements de l'utilisateur</h2>
+        <p data-i18n="legal.terms.p3_1"><strong>Candidats :</strong> Vous vous engagez à répondre aux questions de
+            manière authentique et respectueuse. </p>
+        <p data-i18n="legal.terms.p3_2"><strong>Recruteurs :</strong> Vous vous engagez à utiliser la plateforme pour
+            des besoins réels de recrutement, à ne pas discriminer les candidats, et à respecter la confidentialité de
+            leurs vidéos.</p>
+        <p data-i18n="legal.terms.p3_3">Il est strictement interdit de publier du contenu haineux, diffamatoire,
+            pornographique ou illégal sur CiaoCV.</p>
 
-        <h2 data-i18n="legal.terms.h5">5. Tarification</h2>
-        <p>Les tarifs sont indiqués sur la page <a href="/tarifs">Nos forfaits</a>. Les modalités de facturation et d’annulation sont décrites lors de l’inscription.</p>
+        <h2 data-i18n="legal.terms.h4">4. Propriété Intellectuelle</h2>
+        <ul>
+            <li data-i18n="legal.terms.li4_1"><strong>Vos contenus :</strong> Les vidéos des candidats restent leur
+                propriété. En les soumettant, vous accordez à CiaoCV et au Recruteur concerné une licence pour les
+                héberger, les visionner et les évaluer dans le cadre du processus de recrutement.</li>
+            <li data-i18n="legal.terms.li4_2"><strong>Notre plateforme :</strong> Le design, le code, les logos et la
+                marque CiaoCV sont notre propriété exclusive.</li>
+        </ul>
+
+        <h2 data-i18n="legal.terms.h5">5. Tarification et Paiements</h2>
+        <p data-i18n="legal.terms.p5">L'accès pour les Candidats est gratuit. Pour les Recruteurs, l'accès est soumis
+            aux tarifs en vigueur décrits sur la page <a href="/tarifs">Nos forfaits</a>. Les abonnements sont
+            renouvelables tacitement sauf résiliation avant l'échéance.</p>
 
         <h2 data-i18n="legal.terms.h6">6. Limitation de responsabilité</h2>
-        <p>CiaoCV est fourni « en l’état ». Nous ne garantissons pas une disponibilité ou un résultat particulier. Notre responsabilité est limitée dans la mesure prévue par la loi.</p>
+        <p data-i18n="legal.terms.p6">CiaoCV met tout en œuvre pour assurer la disponibilité du service, mais ne peut
+            garantir une absence totale de pannes ou de bugs. Nous ne sommes pas responsables des conséquences d'une
+            décision d'embauche (ou de non-embauche) prise via notre outil.</p>
 
         <h2 data-i18n="legal.terms.h7">7. Résiliation</h2>
-        <p>Nous pouvons suspendre ou résilier votre accès en cas de non-respect des présentes conditions. Vous pouvez fermer votre compte à tout moment.</p>
+        <p data-i18n="legal.terms.p7">Nous nous réservons le droit de suspendre ou supprimer tout compte ne respectant
+            pas ces conditions, sans préavis ni indemnité.</p>
 
-        <h2 data-i18n="legal.terms.h8">8. Contact</h2>
-        <p>Pour toute question : <a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a>.</p>
+        <h2 data-i18n="legal.terms.h8">8. Droit applicable</h2>
+        <p data-i18n="legal.terms.p8">Ces conditions sont régies par les lois de la province de Québec et du Canada.
+            Tout litige sera soumis aux tribunaux du district judiciaire de Montréal.</p>
     </main>
 
     <footer>
@@ -93,7 +167,9 @@
             </div>
             <div class="footer-links">
                 <h4 data-i18n="footer.contact">Contact</h4>
-                <ul><li><a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a></li></ul>
+                <ul>
+                    <li><a href="mailto:bonjour@ciaocv.com">bonjour@ciaocv.com</a></li>
+                </ul>
             </div>
         </div>
         <div class="footer-bottom">
@@ -111,7 +187,8 @@
             menu.classList.toggle('active');
             document.querySelectorAll('.hamburger').forEach(btn => btn.classList.toggle('active'));
         }
-        document.querySelectorAll('.lang-toggle').forEach(btn => btn.addEventListener('click', function(e) { e.preventDefault(); if(typeof toggleLanguage === 'function') toggleLanguage(); }));
+        document.querySelectorAll('.lang-toggle').forEach(btn => btn.addEventListener('click', function (e) { e.preventDefault(); if (typeof toggleLanguage === 'function') toggleLanguage(); }));
     </script>
 </body>
+
 </html>
