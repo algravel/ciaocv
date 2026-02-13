@@ -431,6 +431,7 @@
         // ─── Modal Mot de passe oublié ───
         function openForgotModal() {
             const overlay = document.getElementById('forgotOverlay');
+            if (!overlay) return;
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
             if (typeof updateContent === 'function') updateContent();
@@ -449,6 +450,16 @@
 
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') closeForgotModal();
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var forgotLink = document.getElementById('login-forgot-password-link');
+            if (forgotLink) {
+                forgotLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    openForgotModal();
+                });
+            }
         });
 
         // ─── Sélecteur de langue (page login) ───
