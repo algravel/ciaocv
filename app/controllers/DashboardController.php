@@ -869,6 +869,56 @@ class DashboardController extends Controller
     }
 
     /**
+     * Ajouter un commentaire à un candidat (employeur ou évaluateur).
+     */
+    public function addComment(): void
+    {
+        if (!isset($_SESSION['user_id'])) {
+            $this->json(['success' => false, 'error' => 'Non authentifié'], 401);
+            return;
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'error' => 'Méthode invalide'], 405);
+            return;
+        }
+        try {
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $platformUserId = (int) $_SESSION['user_id'];
+            $id = $_POST['id'] ?? '';
+            $text = trim($_POST['text'] ?? '');
+            $userName = trim($_SESSION['user_name'] ?? 'Utilisateur');
+            if (empty($userName)) {
+                $userName = $_SESSION['user_email'] ?? 'Utilisateur';
+            }
+            if (!$id || $text === '') {
+                $this->json(['success' => false, 'error' => 'ID ou texte manquant'], 400);
+                return;
+            }
+            $candidatureId = (int) str_replace('c', '', $id);
+            if ($candidatureId <= 0) {
+                $this->json(['success' => false, 'error' => 'ID candidat invalide'], 400);
+                return;
+            }
+            $ok = Candidat::addComment($candidatureId, $platformUserId, $userName, $text);
+            if (!$ok) {
+                $this->json(['success' => false, 'error' => 'Accès refusé ou erreur'], 403);
+                return;
+            }
+            $this->json(['success' => true, 'comment' => [
+                'user' => $userName,
+                'date' => date('c'),
+                'text' => $text,
+            ]]);
+        } catch (Throwable $e) {
+            error_log('addComment error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
+
+    /**
      * Envoyer des courriels aux candidats sélectionnés.
      * POST /candidats/notify
      */

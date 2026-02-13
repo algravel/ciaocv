@@ -434,6 +434,22 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /* Filtre candidats par affichage (Tous / Nouveaux / Évalués / Refusés) */
+document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest && e.target.closest('[data-action="add-comment"]');
+    if (btn) {
+        e.preventDefault();
+        if (typeof addComment === 'function') addComment();
+    }
+});
+
+document.addEventListener('keydown', function (e) {
+    var input = document.getElementById('detail-new-comment-input');
+    if (input && document.activeElement === input && e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (typeof addComment === 'function') addComment();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     var tabs = document.getElementById('affichage-candidats-filter-tabs');
     if (tabs) {
@@ -1196,22 +1212,34 @@ function showCandidateDetail(id, source) {
         }
     }
 
-    var data = candidatsData[id];
-    // Fallback: search in affichageCandidats if not in global list
-    if (!data) {
+    var data = null;
+    // Quand on vient d'un affichage, prioriser l'objet de affichageCandidats (même référence pour addComment)
+    if (currentCandidateSource === 'affichage') {
         for (var affId in affichageCandidats) {
-            var found = affichageCandidats[affId].find(function (c) { return c.id === id; });
+            var list = affichageCandidats[affId];
+            if (!Array.isArray(list)) continue;
+            var found = list.find(function (c) { return String(c.id) === String(id); });
             if (found) {
                 data = found;
-                if (!data.comments) data.comments = [];
-                // Sync into candidatsData so toggleFavorite/addComment/saveRating work
-                candidatsData[id] = data;
+                break;
+            }
+        }
+    }
+    if (!data) data = candidatsData[id] || candidatsData[String(id)];
+    if (!data) {
+        for (var affId in affichageCandidats) {
+            var list = affichageCandidats[affId];
+            if (!Array.isArray(list)) continue;
+            var found = list.find(function (c) { return String(c.id) === String(id); });
+            if (found) {
+                data = found;
                 break;
             }
         }
     }
     if (!data) return;
     if (!Array.isArray(data.comments)) data.comments = [];
+    candidatsData[id] = data;
 
     document.getElementById('detail-candidate-name').textContent = data.name;
     document.getElementById('detail-candidate-role-source').textContent = (data.role || 'Candidat');
@@ -1319,10 +1347,14 @@ function showCandidateDetail(id, source) {
 }
 
 function getCurrentCandidateData() {
-    var data = candidatsData[currentCandidateId];
+    if (!currentCandidateId) return null;
+    var id = String(currentCandidateId);
+    var data = candidatsData[currentCandidateId] || candidatsData[id];
     if (data) return data;
     for (var affId in affichageCandidats) {
-        var found = affichageCandidats[affId].find(function (c) { return c.id === currentCandidateId; });
+        var list = affichageCandidats[affId];
+        if (!Array.isArray(list)) continue;
+        var found = list.find(function (c) { return String(c.id) === id; });
         if (found) return found;
     }
     return null;
@@ -1427,7 +1459,9 @@ function commentAvatarColor(userName) {
 
 function renderTimeline(comments) {
     var container = document.getElementById('detail-timeline-list');
+    if (!container) return;
     container.innerHTML = '';
+    if (!Array.isArray(comments)) comments = [];
 
     if (comments.length === 0) {
         var empty = document.createElement('div');
@@ -1472,25 +1506,43 @@ function updateCommentFormUser() {
 
 function addComment() {
     var input = document.getElementById('detail-new-comment-input');
+    if (!input) return;
     var text = input.value.trim();
     if (!text || !currentCandidateId) return;
     var data = getCurrentCandidateData();
     if (!data) return;
-    if (!data.comments) data.comments = [];
-    var userName = (typeof APP_DATA !== 'undefined' && APP_DATA.currentUser) ? APP_DATA.currentUser : 'Moi';
-    var newComment = { user: userName, date: new Date().toISOString(), text: text };
-    data.comments.unshift(newComment);
-    // Synchroniser dans affichageCandidats (objets distincts possiblement)
-    for (var affId in affichageCandidats) {
-        var found = affichageCandidats[affId].find(function (c) { return String(c.id) === String(currentCandidateId); });
-        if (found) {
-            if (!found.comments) found.comments = [];
-            found.comments.unshift(newComment);
-            break;
-        }
-    }
-    renderTimeline(data.comments);
+    var params = new URLSearchParams();
+    params.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    params.append('id', currentCandidateId);
+    params.append('text', text);
     input.value = '';
+    fetch('/candidats/comment', { method: 'POST', body: params })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (!res.success) {
+                console.error('Erreur ajout commentaire:', res.error);
+                input.value = text;
+                return;
+            }
+            var newComment = res.comment || { user: (typeof APP_DATA !== 'undefined' && APP_DATA.currentUser) ? APP_DATA.currentUser : 'Moi', date: new Date().toISOString(), text: text };
+            if (!Array.isArray(data.comments)) data.comments = [];
+            data.comments.unshift(newComment);
+            for (var affId in affichageCandidats) {
+                var list = affichageCandidats[affId];
+                if (!Array.isArray(list)) continue;
+                var found = list.find(function (c) { return String(c.id) === String(currentCandidateId); });
+                if (found && found !== data) {
+                    if (!Array.isArray(found.comments)) found.comments = [];
+                    found.comments.unshift(newComment);
+                    break;
+                }
+            }
+            renderTimeline(data.comments);
+        })
+        .catch(function (e) {
+            console.error('Erreur réseau:', e);
+            input.value = text;
+        });
 }
 
 /* ═══════════════════════════════════════════════

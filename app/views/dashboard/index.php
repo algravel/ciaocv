@@ -494,7 +494,7 @@
                     <div class="comment-add-form">
                         <textarea class="form-input" id="detail-new-comment-input" rows="2"
                             placeholder="Écrire un commentaire..." data-i18n-placeholder="add_note_placeholder"></textarea>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="addComment()">
+                        <button type="button" class="btn btn-primary btn-sm" id="comment-send-btn" data-action="add-comment">
                             <i class="fa-solid fa-paper-plane"></i> <span data-i18n="comment_send">Envoyer</span>
                         </button>
                     </div>

@@ -86,7 +86,7 @@ class Candidat
                     'rating' => (int) ($row['rating'] ?? 0),
                     'video' => $videoUrl,
                     'cv' => $cvUrl,
-                    'comments' => [], // TODO: load comments
+                    'comments' => [],
                     'date' => $row['created_at'] ? date('Y-m-d H:i', strtotime($row['created_at'])) : '',
                     'statusBg' => $style['bg'],
                     'statusColor' => $style['color'],
@@ -94,7 +94,14 @@ class Candidat
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
                 ];
             }
-
+            $allCandIds = array_map(function ($id) { return (int) str_replace('c', '', $id); }, array_keys($result));
+            $comments = self::getCommentsForCandidatures(array_unique($allCandIds));
+            foreach ($result as $id => $c) {
+                $n = (int) str_replace('c', '', $id);
+                if (isset($comments[$n])) {
+                    $result[$id]['comments'] = $comments[$n];
+                }
+            }
             return $result;
         } catch (Throwable $e) {
             error_log('Candidat::getAll error: ' . $e->getMessage());
@@ -166,7 +173,14 @@ class Candidat
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
                 ];
             }
-
+            $allCandIds = array_map(function ($id) { return (int) str_replace('c', '', $id); }, array_keys($result));
+            $comments = self::getCommentsForCandidatures(array_unique($allCandIds));
+            foreach ($result as $id => $c) {
+                $n = (int) str_replace('c', '', $id);
+                if (isset($comments[$n])) {
+                    $result[$id]['comments'] = $comments[$n];
+                }
+            }
             return $result;
         } catch (Throwable $e) {
             error_log('Candidat::getAllForEvaluateur error: ' . $e->getMessage());
@@ -258,11 +272,15 @@ class Candidat
                 }
             }
             $comms = self::getLastCommunications(array_unique($allCandIds));
+            $comments = self::getCommentsForCandidatures(array_unique($allCandIds));
             foreach ($result as $affId => $list) {
                 foreach ($list as $i => $c) {
                     $n = (int) str_replace('c', '', $c['id']);
                     if (isset($comms[$n])) {
                         $result[$affId][$i]['lastCommunication'] = $comms[$n];
+                    }
+                    if (isset($comments[$n])) {
+                        $result[$affId][$i]['comments'] = $comments[$n];
                     }
                 }
             }
@@ -354,11 +372,15 @@ class Candidat
                 }
             }
             $comms = self::getLastCommunications(array_unique($allCandIds));
+            $comments = self::getCommentsForCandidatures(array_unique($allCandIds));
             foreach ($result as $affId => $list) {
                 foreach ($list as $i => $c) {
                     $n = (int) str_replace('c', '', $c['id']);
                     if (isset($comms[$n])) {
                         $result[$affId][$i]['lastCommunication'] = $comms[$n];
+                    }
+                    if (isset($comments[$n])) {
+                        $result[$affId][$i]['comments'] = $comments[$n];
                     }
                 }
             }
@@ -621,6 +643,94 @@ class Candidat
         } catch (Throwable $e) {
             error_log('Candidat::getLastCommunications error: ' . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Récupère les commentaires par candidature (pour employeur et évaluateurs).
+     * @param int[] $candidatureIds
+     * @return array<int, array<array{user: string, date: string, text: string}>>
+     */
+    public static function getCommentsForCandidatures(array $candidatureIds): array
+    {
+        if (empty($candidatureIds)) {
+            return [];
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $ids = array_map('intval', array_unique($candidatureIds));
+            $placeholders = implode(',', $ids);
+            $stmt = $pdo->query("
+                SELECT candidature_id, user_name, text, created_at
+                FROM app_candidature_comments
+                WHERE candidature_id IN ($placeholders)
+                ORDER BY created_at DESC
+            ");
+            $result = [];
+            foreach ($ids as $id) {
+                $result[$id] = [];
+            }
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $cid = (int) $row['candidature_id'];
+                $result[$cid][] = [
+                    'user' => $row['user_name'] ?? 'Utilisateur',
+                    'date' => $row['created_at'] ?? '',
+                    'text' => $row['text'] ?? '',
+                ];
+            }
+            return $result;
+        } catch (Throwable $e) {
+            error_log('Candidat::getCommentsForCandidatures error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Vérifie si l'utilisateur a accès à la candidature (propriétaire ou évaluateur).
+     */
+    public static function userCanAccessCandidature(int $candidatureId, int $platformUserId): bool
+    {
+        if ($candidatureId <= 0 || $platformUserId <= 0) {
+            return false;
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $stmt = $pdo->prepare("
+                SELECT 1 FROM app_candidatures c
+                JOIN app_affichages a ON a.id = c.affichage_id
+                LEFT JOIN app_affichage_evaluateurs ae ON ae.affichage_id = a.id AND ae.platform_user_id = ?
+                WHERE c.id = ? AND (a.platform_user_id = ? OR ae.platform_user_id IS NOT NULL)
+                LIMIT 1
+            ");
+            $stmt->execute([$platformUserId, $candidatureId, $platformUserId]);
+            return (bool) $stmt->fetch();
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Ajoute un commentaire. Retourne true en cas de succès.
+     */
+    public static function addComment(int $candidatureId, int $platformUserId, string $userName, string $text): bool
+    {
+        if ($candidatureId <= 0 || $platformUserId <= 0 || trim($text) === '') {
+            return false;
+        }
+        if (!self::userCanAccessCandidature($candidatureId, $platformUserId)) {
+            return false;
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $stmt = $pdo->prepare('INSERT INTO app_candidature_comments (candidature_id, platform_user_id, user_name, text) VALUES (?, ?, ?, ?)');
+            $stmt->execute([$candidatureId, $platformUserId, trim($userName), trim($text)]);
+            return true;
+        } catch (Throwable $e) {
+            error_log('Candidat::addComment error: ' . $e->getMessage());
+            return false;
         }
     }
 }

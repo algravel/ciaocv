@@ -327,6 +327,26 @@ try {
         // ignorer
     }
 
+    // Migration : table commentaires candidats (équipe)
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'app_candidature_comments'");
+        if ($stmt->rowCount() === 0) {
+            echo "Migration: table app_candidature_comments\n";
+            $pdo->exec("CREATE TABLE app_candidature_comments (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                candidature_id INT UNSIGNED NOT NULL,
+                platform_user_id INT UNSIGNED NOT NULL,
+                user_name VARCHAR(255) NOT NULL,
+                text TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (candidature_id) REFERENCES app_candidatures(id) ON DELETE CASCADE,
+                INDEX idx_candidature (candidature_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        }
+    } catch (Throwable $e) {
+        // ignorer
+    }
+
     // ─── Auto-seed si nécessaire ─────────────────────────────────────────────
     
     // Seed PlatformUser id=1 (Demo)
