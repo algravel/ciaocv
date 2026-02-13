@@ -14,7 +14,13 @@
 .rec-container {
     max-width: 640px;
     margin: 0 auto;
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
+}
+
+@media (max-width: 480px) {
+    .rec-container {
+        padding: 0.75rem 1rem;
+    }
 }
 
 .rec-header {
@@ -282,7 +288,7 @@
 /* ─── Video ──────────────────────────────────────────────────────── */
 .rec-video-wrap {
     position: relative;
-    width: min(360px, 100%);
+    width: min(200px, 100%);
     margin-left: auto;
     margin-right: auto;
     background: #111827;
@@ -293,6 +299,27 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* Taille confortable sur mobile (priorité) */
+@media (max-width: 480px) {
+    .rec-video-wrap {
+        width: min(160px, 100%);
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Légèrement plus grand sur tablette/desktop */
+@media (min-width: 481px) {
+    .rec-video-wrap {
+        width: min(220px, 100%);
+    }
+}
+
+@media (min-width: 768px) {
+    .rec-video-wrap {
+        width: min(260px, 100%);
+    }
 }
 
 .rec-video-wrap video {
@@ -327,10 +354,18 @@
     display: flex;
     gap: 0.5rem;
     margin-top: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .rec-controls .rec-btn {
     flex: 1;
+    min-width: 120px;
+}
+
+@media (max-width: 480px) {
+    .rec-controls .rec-btn {
+        min-height: 48px;
+    }
 }
 
 .rec-status {

@@ -867,4 +867,72 @@ class DashboardController extends Controller
             $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
         }
     }
+
+    /**
+     * Envoyer des courriels aux candidats sélectionnés.
+     * POST /candidats/notify
+     */
+    public function notifyCandidats(): void
+    {
+        if (!isset($_SESSION['user_id'])) {
+            $this->json(['success' => false, 'error' => 'Non authentifié'], 401);
+            return;
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'error' => 'Méthode invalide'], 405);
+            return;
+        }
+        try {
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $platformUserId = (int) $_SESSION['user_id'];
+            $affichageId = isset($_POST['affichage_id']) ? (int) $_POST['affichage_id'] : 0;
+            $message = trim($_POST['message'] ?? '');
+            $candidateIds = isset($_POST['candidate_ids']) && is_array($_POST['candidate_ids'])
+                ? array_values(array_filter($_POST['candidate_ids'], 'is_string'))
+                : [];
+
+            if ($affichageId <= 0 || empty($candidateIds)) {
+                $this->json(['success' => false, 'error' => 'Affichage et candidats requis'], 400);
+                return;
+            }
+            if ($message === '') {
+                $this->json(['success' => false, 'error' => 'Veuillez rédiger un message'], 400);
+                return;
+            }
+
+            $candidates = Candidat::getByIdsForNotify($candidateIds, $platformUserId, $affichageId);
+            if (empty($candidates)) {
+                $this->json(['success' => false, 'error' => 'Aucun candidat valide trouvé'], 400);
+                return;
+            }
+
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $sent = 0;
+            $failed = [];
+            foreach ($candidates as $c) {
+                if (zeptomail_send_candidate_notification($c['email'], $c['name'], $message)) {
+                    $candidatureId = (int) str_replace('c', '', $c['id']);
+                    if ($candidatureId > 0) {
+                        Candidat::logCommunication($candidatureId, $message);
+                    }
+                    $sent++;
+                } else {
+                    $failed[] = $c['name'];
+                }
+            }
+
+            $this->json([
+                'success' => true,
+                'sent' => $sent,
+                'total' => count($candidates),
+                'failed' => $failed,
+            ]);
+        } catch (Throwable $e) {
+            error_log('notifyCandidats error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
 }

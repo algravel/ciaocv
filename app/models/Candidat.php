@@ -243,7 +243,27 @@ class Candidat
                     'statusColor' => $style['color'],
                     'retakes' => (int) ($row['retakes_count'] ?? 0),
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
+                    'lastCommunication' => null,
                 ];
+            }
+
+            $allCandIds = [];
+            foreach ($result as $list) {
+                foreach ($list as $c) {
+                    $n = (int) str_replace('c', '', $c['id']);
+                    if ($n > 0) {
+                        $allCandIds[] = $n;
+                    }
+                }
+            }
+            $comms = self::getLastCommunications(array_unique($allCandIds));
+            foreach ($result as $affId => $list) {
+                foreach ($list as $i => $c) {
+                    $n = (int) str_replace('c', '', $c['id']);
+                    if (isset($comms[$n])) {
+                        $result[$affId][$i]['lastCommunication'] = $comms[$n];
+                    }
+                }
             }
 
             return $result;
@@ -318,7 +338,27 @@ class Candidat
                     'statusColor' => $style['color'],
                     'retakes' => (int) ($row['retakes_count'] ?? 0),
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
+                    'lastCommunication' => null,
                 ];
+            }
+
+            $allCandIds = [];
+            foreach ($result as $list) {
+                foreach ($list as $c) {
+                    $n = (int) str_replace('c', '', $c['id']);
+                    if ($n > 0) {
+                        $allCandIds[] = $n;
+                    }
+                }
+            }
+            $comms = self::getLastCommunications(array_unique($allCandIds));
+            foreach ($result as $affId => $list) {
+                foreach ($list as $i => $c) {
+                    $n = (int) str_replace('c', '', $c['id']);
+                    if (isset($comms[$n])) {
+                        $result[$affId][$i]['lastCommunication'] = $comms[$n];
+                    }
+                }
             }
 
             return $result;
@@ -459,6 +499,126 @@ class Candidat
         } catch (Throwable $e) {
             error_log('Candidat::update error: ' . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Récupère les candidats par IDs pour envoi de notifications (email, nom).
+     * @param array $ids IDs frontend (ex: ['c42', 'c43'])
+     * @param int $platformUserId ID entreprise (sécu)
+     * @param int|null $affichageId Limiter à un affichage (optionnel)
+     * @return array<array{id: string, email: string, name: string}>
+     */
+    public static function getByIdsForNotify(array $ids, int $platformUserId, ?int $affichageId = null): array
+    {
+        if (empty($ids) || $platformUserId <= 0) {
+            return [];
+        }
+        $numericIds = [];
+        foreach ($ids as $id) {
+            $n = (int) str_replace('c', '', (string) $id);
+            if ($n > 0) {
+                $numericIds[] = $n;
+            }
+        }
+        if (empty($numericIds)) {
+            return [];
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $placeholders = implode(',', array_fill(0, count($numericIds), '?'));
+            $params = array_merge([$platformUserId], $numericIds);
+            $sql = "
+                SELECT c.id, c.email, c.prenom, c.nom
+                FROM app_candidatures c
+                JOIN app_affichages a ON a.id = c.affichage_id
+                WHERE a.platform_user_id = ? AND c.id IN ($placeholders)
+            ";
+            if ($affichageId !== null && $affichageId > 0) {
+                $sql .= " AND c.affichage_id = ?";
+                $params[] = $affichageId;
+            }
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $result = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $email = trim($row['email'] ?? '');
+                if ($email === '' || strpos($email, '@') === false) {
+                    continue;
+                }
+                $name = trim(($row['prenom'] ?? '') . ' ' . ($row['nom'] ?? ''));
+                if ($name === '') {
+                    $name = 'Candidat';
+                }
+                $result[] = [
+                    'id' => 'c' . $row['id'],
+                    'email' => $email,
+                    'name' => $name,
+                ];
+            }
+            return $result;
+        } catch (Throwable $e) {
+            error_log('Candidat::getByIdsForNotify error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Enregistre une communication envoyée à un candidat.
+     */
+    public static function logCommunication(int $candidatureId, string $message): bool
+    {
+        if ($candidatureId <= 0 || trim($message) === '') {
+            return false;
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $stmt = $pdo->prepare('INSERT INTO app_candidature_communications (candidature_id, message) VALUES (?, ?)');
+            $stmt->execute([$candidatureId, $message]);
+            return true;
+        } catch (Throwable $e) {
+            error_log('Candidat::logCommunication error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Récupère la dernière communication envoyée par candidat.
+     * @param int[] $candidatureIds
+     * @return array<int, array{message: string, sent_at: string}> id => { message, sent_at }
+     */
+    public static function getLastCommunications(array $candidatureIds): array
+    {
+        if (empty($candidatureIds)) {
+            return [];
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $pdo = Database::get();
+            $ids = array_map('intval', $candidatureIds);
+            $placeholders = implode(',', $ids);
+            $stmt = $pdo->query("
+                SELECT candidature_id, message, sent_at
+                FROM app_candidature_communications
+                WHERE candidature_id IN ($placeholders)
+                ORDER BY sent_at DESC
+            ");
+            $result = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $id = (int) $row['candidature_id'];
+                if (!isset($result[$id])) {
+                    $result[$id] = [
+                        'message' => $row['message'] ?? '',
+                        'sent_at' => $row['sent_at'] ?? '',
+                    ];
+                }
+            }
+            return $result;
+        } catch (Throwable $e) {
+            error_log('Candidat::getLastCommunications error: ' . $e->getMessage());
+            return [];
         }
     }
 }

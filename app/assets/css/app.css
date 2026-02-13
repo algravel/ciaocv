@@ -2193,6 +2193,14 @@ code {
     border-radius: 8px;
 }
 
+/* Colonne Communication dans le tableau candidats */
+.cell-communication--sent {
+    cursor: pointer;
+}
+.cell-communication--sent:hover {
+    opacity: 0.8;
+}
+
 /* Alignement des étoiles favori dans le modal Notifier les candidats */
 .notify-row-favorite {
     display: inline-flex;

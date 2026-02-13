@@ -394,6 +394,42 @@ function zeptomail_send_password_reset(string $toEmail, string $toName, string $
     return $r['success'];
 }
 
+/**
+ * Envoie un courriel personnalisé à un candidat (refus, poste comblé, etc.).
+ * @param string $toEmail Courriel du candidat
+ * @param string $toName Nom du candidat
+ * @param string $message Corps du message (texte brut, converti en HTML)
+ */
+function zeptomail_send_candidate_notification(string $toEmail, string $toName, string $message): bool
+{
+    $apiUrl = $_ENV['ZEPTO_API_URL'] ?? 'https://api.zeptomail.com/v1.1/email';
+    $token = $_ENV['ZEPTO_TOKEN'] ?? '';
+    $fromAddr = $_ENV['ZEPTO_FROM_ADDRESS'] ?? 'noreply@ciaocv.com';
+    $fromName = $_ENV['ZEPTO_FROM_NAME'] ?? 'CiaoCV';
+    if ($token === '' || trim($toEmail) === '' || strpos($toEmail, '@') === false) {
+        return false;
+    }
+    $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
+    $subject = 'Mise à jour de votre candidature – CiaoCV';
+    $message = preg_replace('/^\s*Bonjour\s*,?\s*\n?\s*/iu', '', trim($message));
+    $messageHtml = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
+    $payload = [
+        'from' => ['address' => $fromAddr, 'name' => $fromName],
+        'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
+        'subject' => $subject,
+        'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:2rem 1rem;">' .
+            _zeptomail_email_logo_user() .
+            '<h2 style="color:#2563EB;font-size:1.25rem;margin-bottom:1rem;">Mise à jour de votre candidature</h2>' .
+            '<p>Bonjour ' . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ',</p>' .
+            '<div style="white-space:pre-wrap;">' . $messageHtml . '</div></div>',
+    ];
+    $r = _zeptomail_post($apiUrl, $auth, $payload);
+    if (!$r['success'] && $r['response']) {
+        error_log('[Zepto] candidate_notification failed: ' . substr($r['response'], 0, 500));
+    }
+    return $r['success'];
+}
+
 if (!function_exists('turnstile_verify')) {
     function turnstile_verify(string $token, ?string $remoteIp = null): array
     {

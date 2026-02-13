@@ -309,6 +309,24 @@ try {
         // ignorer si la table n'existe pas encore
     }
 
+    // Migration : table communications envoyées aux candidats
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'app_candidature_communications'");
+        if ($stmt->rowCount() === 0) {
+            echo "Migration: table app_candidature_communications\n";
+            $pdo->exec("CREATE TABLE app_candidature_communications (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                candidature_id INT UNSIGNED NOT NULL,
+                message TEXT NOT NULL,
+                sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (candidature_id) REFERENCES app_candidatures(id) ON DELETE CASCADE,
+                INDEX idx_candidature (candidature_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        }
+    } catch (Throwable $e) {
+        // ignorer
+    }
+
     // ─── Auto-seed si nécessaire ─────────────────────────────────────────────
     
     // Seed PlatformUser id=1 (Demo)

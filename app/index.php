@@ -54,6 +54,7 @@ $router->post('/affichages/delete', 'DashboardController', 'deleteAffichage');
 $router->post('/affichages/evaluateur/remove', 'DashboardController', 'removeEvaluateur');
 $router->post('/affichages/evaluateur/add', 'DashboardController', 'addEvaluateur');
 $router->post('/candidats/update', 'DashboardController', 'updateCandidate');
+$router->post('/candidats/notify', 'DashboardController', 'notifyCandidats');
 
 // Feedback (FAB bugs et idées)
 $router->post('/feedback', 'FeedbackController', 'submit');

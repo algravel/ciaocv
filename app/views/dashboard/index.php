@@ -268,6 +268,7 @@
                 <th>Statut</th>
                 <th data-i18n="th_rating">Note</th>
                 <th>Favori</th>
+                <th>Communication</th>
                 <th>Postulé le</th>
             </tr>
         </thead>
@@ -946,6 +947,21 @@
             <button type="button" class="btn btn-secondary" onclick="closeModal('notify-candidats')">Annuler</button>
             <button type="button" class="btn btn-primary" onclick="confirmNotifyCandidats()"><i
                     class="fa-solid fa-paper-plane"></i> Envoyer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Détail communication envoyée -->
+<div class="modal-overlay" id="communication-detail-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" id="communication-detail-title"><i class="fa-solid fa-envelope-open"></i> Message envoyé</h2>
+            <button class="btn-icon" onclick="closeModal('communication-detail')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="subtitle-muted mb-4" id="communication-detail-date"></p>
+        <div id="communication-detail-content" class="form-input" style="white-space: pre-wrap; min-height: 8rem; background: var(--bg-secondary);"></div>
+        <div class="modal-actions mt-5">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('communication-detail')">Fermer</button>
         </div>
     </div>
 </div>

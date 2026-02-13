@@ -906,6 +906,12 @@ function renderAffichageCandidatsTable(id, filter) {
             stars += '<i class="fa-' + (i <= rating ? 'solid' : 'regular') + ' fa-star"></i>';
         }
 
+        var commCell = '';
+        if (c.lastCommunication && c.lastCommunication.message) {
+            commCell = '<td class="cell-communication cell-communication--sent" onclick="event.stopPropagation();showCommunicationModalFromCandidate(\'' + escapeHtml(String(c.id)) + '\')" title="Voir le message envoyé"><i class="fa-solid fa-envelope-circle-check" style="color:var(--success-color);"></i></td>';
+        } else {
+            commCell = '<td class="cell-communication" title="Aucune communication envoyée">—</td>';
+        }
         row.innerHTML =
             '<td><div style="display: flex; align-items: center; gap: 0.75rem;">' +
             '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
@@ -914,12 +920,13 @@ function renderAffichageCandidatsTable(id, filter) {
             '<td><span class="status-badge" style="background:' + (c.statusBg || '#DBEAFE') + '; color:' + (c.statusColor || '#1D4ED8') + ';">' + escapeHtml(statusLabel) + '</span></td>' +
             '<td><div class="star-color">' + stars + '</div></td>' +
             '<td>' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color: #EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color: #D1D5DB;"></i>') + '</td>' +
+            commCell +
             '<td>' + escapeHtml(formatUtcToLocal(c.date)) + '</td>';
         tbody.appendChild(row);
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #94A3B8;">' + (candidates.length === 0 ? 'Aucun candidat pour cet affichage.' : 'Aucun candidat pour ce filtre.') + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #94A3B8;">' + (candidates.length === 0 ? 'Aucun candidat pour cet affichage.' : 'Aucun candidat pour ce filtre.') + '</td></tr>';
     }
 
     // Mettre à jour l'onglet actif
@@ -1320,6 +1327,21 @@ function getCurrentCandidateData() {
     return null;
 }
 
+function syncCandidateUpdatesToAllSources(candidateId, updates) {
+    function apply(o) {
+        if (!o) return;
+        if (updates.status !== undefined) o.status = updates.status;
+        if (updates.isFavorite !== undefined) o.isFavorite = updates.isFavorite;
+        if (updates.rating !== undefined) { o.rating = updates.rating; o.stars = updates.rating; }
+    }
+    var data = candidatsData[candidateId] || candidatsData[String(candidateId)];
+    if (data) apply(data);
+    for (var affId in affichageCandidats) {
+        var found = affichageCandidats[affId].find(function (c) { return String(c.id) === String(candidateId); });
+        if (found) apply(found);
+    }
+}
+
 function saveCandidateState(updates) {
     if (!currentCandidateId) return;
 
@@ -1331,13 +1353,8 @@ function saveCandidateState(updates) {
     if (updates.isFavorite !== undefined) params.append('is_favorite', updates.isFavorite ? '1' : '0');
     if (updates.rating !== undefined) params.append('rating', String(updates.rating));
 
-    // Optimistic UI update (sync in both candidatsData and affichageCandidats)
-    var data = getCurrentCandidateData();
-    if (data) {
-        if (updates.status !== undefined) data.status = updates.status;
-        if (updates.isFavorite !== undefined) data.isFavorite = updates.isFavorite;
-        if (updates.rating !== undefined) { data.rating = updates.rating; data.stars = updates.rating; }
-    }
+    // Optimistic UI update : sync dans candidatsData ET affichageCandidats (objets distincts en JS)
+    syncCandidateUpdatesToAllSources(currentCandidateId, updates);
 
     fetch('/candidats/update', { method: 'POST', body: params })
         .then(function (r) { return r.json(); })
@@ -1496,6 +1513,21 @@ function updateAffichageStatus(value) {
     affichagesData[id].statusClass = classes[value] || 'status-active';
 }
 
+function showCommunicationModalFromCandidate(candidateId) {
+    var affId = window._currentAffichageId;
+    if (!affId) return;
+    var candidates = affichageCandidats[affId] || [];
+    var c = candidates.find(function (x) { return String(x.id) === String(candidateId); });
+    if (!c || !c.lastCommunication || !c.lastCommunication.message) return;
+    var contentEl = document.getElementById('communication-detail-content');
+    var titleEl = document.getElementById('communication-detail-title');
+    var dateEl = document.getElementById('communication-detail-date');
+    if (contentEl) contentEl.innerHTML = escapeHtml(c.lastCommunication.message).replace(/\n/g, '<br>');
+    if (titleEl) titleEl.textContent = 'Dernier message envoyé à ' + (c.name || 'candidat');
+    if (dateEl) dateEl.textContent = formatUtcToLocal(c.lastCommunication.sent_at) || '';
+    openModal('communication-detail');
+}
+
 /* ═══════════════════════════════════════════════
    NOTIFIER CANDIDATS MODAL
    ═══════════════════════════════════════════════ */
@@ -1544,9 +1576,75 @@ function setNotifyMessage(type) {
 }
 
 function confirmNotifyCandidats() {
-    // En production : envoyer la requête API avec les candidats sélectionnés et le message
-    closeModal('notify-candidats');
-    alert('Notifications envoyées avec succès !');
+    var affichageId = window._currentAffichageId;
+    if (!affichageId) {
+        alert('Erreur : aucun affichage sélectionné.');
+        return;
+    }
+    var checkboxes = document.querySelectorAll('.notify-candidate-cb:checked');
+    var candidateIds = [];
+    checkboxes.forEach(function (cb) {
+        var v = (cb.value || '').trim();
+        if (v) candidateIds.push(v);
+    });
+    if (candidateIds.length === 0) {
+        alert('Veuillez sélectionner au moins un candidat.');
+        return;
+    }
+    var message = (document.getElementById('notify-candidats-message') || {}).value || '';
+    if (!message.trim()) {
+        alert('Veuillez rédiger un message à envoyer aux candidats.');
+        return;
+    }
+    var btn = document.querySelector('#notify-candidats-modal .btn-primary');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Envoi en cours...';
+    }
+    var params = new URLSearchParams();
+    params.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    params.append('affichage_id', String(affichageId));
+    params.append('message', message.trim());
+    candidateIds.forEach(function (id) { params.append('candidate_ids[]', id); });
+
+    fetch('/candidats/notify', { method: 'POST', body: params })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            closeModal('notify-candidats');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer';
+            }
+            if (res.success) {
+                if (res.sent > 0 && affichageId) {
+                    var msgText = document.getElementById('notify-candidats-message').value.trim();
+                    var sentAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                    candidateIds.forEach(function (cid) {
+                        var list = affichageCandidats[affichageId] || [];
+                        var cand = list.find(function (x) { return String(x.id) === String(cid); });
+                        if (cand) {
+                            cand.lastCommunication = { message: msgText, sent_at: sentAt };
+                        }
+                    });
+                    renderAffichageCandidatsTable(affichageId, _affichageCandidatsFilter);
+                }
+                var msg = res.sent + ' courriel(s) envoyé(s) avec succès.';
+                if (res.failed && res.failed.length > 0) {
+                    msg += ' Échec pour : ' + res.failed.join(', ');
+                }
+                alert(msg);
+            } else {
+                alert(res.error || 'Une erreur est survenue lors de l\'envoi.');
+            }
+        })
+        .catch(function (e) {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer';
+            }
+            console.error('Notify candidats error:', e);
+            alert('Erreur réseau. Veuillez réessayer.');
+        });
 }
 
 /* ═══════════════════════════════════════════════
