@@ -1,6 +1,0 @@
-{"location":"app.js:deletePoste","message":"deletePoste called","data":{"id":"designer","idType":"string","rowElExists":true,"rowElParent":true,"postesDataKeys":["frontend","manager","designer","analyst"],"hasId":true},"timestamp":1770597908091,"hypothesisId":"A,B,E"}
-{"location":"app.js:confirmDeletePoste","message":"confirmDeletePoste called","data":{"hasPending":true,"pendingId":"designer","rowElExists":true},"timestamp":1770597909342,"hypothesisId":"C,D"}
-{"location":"app.js:confirmDeletePoste","message":"confirmDeletePoste after remove","data":{"id":"designer","didRemove":true},"timestamp":1770597909343,"hypothesisId":"B","runId":"post-fix"}
-{"location":"app.js:deletePoste","message":"deletePoste called","data":{"id":"designer","idType":"string","rowElExists":true,"rowElParent":true,"postesDataKeys":["frontend","manager","designer","analyst"],"hasId":true},"timestamp":1770597913475,"hypothesisId":"A,B,E"}
-{"location":"app.js:confirmDeletePoste","message":"confirmDeletePoste called","data":{"hasPending":true,"pendingId":"designer","rowElExists":true},"timestamp":1770597915158,"hypothesisId":"C,D"}
-{"location":"app.js:confirmDeletePoste","message":"confirmDeletePoste after remove","data":{"id":"designer","didRemove":true},"timestamp":1770597915159,"hypothesisId":"B","runId":"post-fix"}
