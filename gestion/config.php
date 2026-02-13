@@ -322,7 +322,7 @@ function zeptomail_send_new_candidature_notification(string $toEmail, string $to
             '<h2 style="color:#2563EB;font-size:1.25rem;margin-bottom:1rem;">Nouvelle candidature</h2>' .
             '<p>Bonjour ' . htmlspecialchars($toName) . ',</p>' .
             '<p>Une nouvelle candidature vidéo a été reçue pour le poste <strong>' . htmlspecialchars($posteTitle) . '</strong>.</p>' .
-            '<p><strong>Candidat :</strong> ' . htmlspecialchars($candidatName) . '</p>' .
+            '<p>Candidat : <strong>' . htmlspecialchars($candidatName) . '</strong></p>' .
             '<p><a href="' . htmlspecialchars($viewUrl) . '" style="display:inline-block;background:#2563EB;color:white;padding:0.75rem 1.5rem;text-decoration:none;border-radius:8px;margin-top:1rem;">Voir la candidature</a></p>' .
             '<p style="color:#666;font-size:12px;">— L\'équipe CiaoCV</p></div>',
     ];
@@ -410,7 +410,7 @@ function zeptomail_send_candidate_notification(string $toEmail, string $toName, 
         return false;
     }
     $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
-    $subject = 'Mise à jour de votre candidature – CiaoCV';
+    $subject = 'Mise à jour de votre candidature';
     $message = preg_replace('/^\s*Bonjour\s*,?\s*\n?\s*/iu', '', trim($message));
     $messageHtml = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
     $payload = [

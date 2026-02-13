@@ -268,8 +268,8 @@
                 <th>Statut</th>
                 <th data-i18n="th_rating">Note</th>
                 <th>Favori</th>
-                <th>Communication</th>
                 <th>Postulé le</th>
+                <th>Communication</th>
             </tr>
         </thead>
         <tbody id="affichage-candidats-tbody"></tbody>
@@ -802,8 +802,8 @@
                 <option value="evaluateur">Évaluateur</option>
                 <option value="administrateur">Administrateur</option>
             </select>
-            <button class="btn btn-primary" onclick="addTeamMember()" style="flex-shrink:0;"><i
-                    class="fa-solid fa-plus"></i></button>
+            <button class="btn btn-primary" onclick="addTeamMember()" style="flex-shrink:0;" title="Ajouter"><i class="fa-solid fa-plus"></i></button>
+            <button class="btn btn-secondary" onclick="clearTeamMemberForm()" style="flex-shrink:0;" title="Effacer"><i class="fa-solid fa-eraser"></i></button>
         </div>
     </div>
 
@@ -932,13 +932,8 @@
         </div>
         <div class="form-group mb-5">
             <label class="form-label fw-semibold">Message aux candidats</label>
-            <div class="flex-center gap-2 mb-3 flex-wrap">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="setNotifyMessage('polite')">Refus
-                    poli</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="setNotifyMessage('filled')">Poste
-                    comblé</button>
-                <button type="button" class="btn btn-secondary btn-sm"
-                    onclick="setNotifyMessage('custom')">Personnalisé</button>
+            <div id="notify-template-buttons" class="flex-center gap-2 mb-3 flex-wrap">
+                <!-- Boutons générés depuis les modèles Paramètres > Communication -->
             </div>
             <textarea id="notify-candidats-message" class="form-input w-full" rows="4" style="resize: vertical;"
                 placeholder="Rédigez votre message..."></textarea>

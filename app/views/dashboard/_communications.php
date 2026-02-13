@@ -19,11 +19,12 @@
         <h2 class="card-title mb-0" id="email-editor-title">Nouveau modèle</h2>
         <button class="btn-icon btn-back" onclick="closeEmailTemplateEditor()"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form onsubmit="saveEmailTemplate(event)" class="form-vertical--tight">
+    <form id="form-email-template" onsubmit="return saveEmailTemplate(event)" class="form-vertical--tight">
         <?= csrf_field() ?>
+        <input type="hidden" id="email-tpl-id" name="id" value="">
         <div class="form-group">
             <label class="form-label fw-semibold">Titre du modèle</label>
-            <input type="text" id="email-tpl-title" class="form-input" placeholder="Ex: Confirmation de réception" required>
+            <input type="text" id="email-tpl-title" name="title" class="form-input" placeholder="Ex: Confirmation de réception" required>
         </div>
         <div class="form-group">
             <label class="form-label fw-semibold">Contenu du courriel</label>
@@ -33,7 +34,7 @@
                 <code>{{titre_poste}}</code>
                 <code>{{nom_entreprise}}</code>
             </div>
-            <textarea id="email-tpl-content" class="form-input" rows="8" style="resize: vertical;" placeholder="Bonjour {{nom_candidat}},&#10;&#10;..." required></textarea>
+            <textarea id="email-tpl-content" name="content" class="form-input" rows="8" style="resize: vertical;" placeholder="Bonjour {{nom_candidat}},&#10;&#10;..." required></textarea>
         </div>
         <div class="form-actions">
             <button type="button" class="btn btn-secondary" onclick="closeEmailTemplateEditor()">Annuler</button>

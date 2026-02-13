@@ -79,7 +79,7 @@ class DashboardController extends Controller
             $candidats = Candidat::getAll($platformUserId);
             $candidatsByAff = Candidat::getByAffichage($platformUserId);
         }
-        $emailTemplates = EmailTemplate::getAll();
+        $emailTemplates = EmailTemplate::getAll($platformUserId);
 
         // ?demo=new_org simule une nouvelle organisation (tests)
         $forceNewOrg = ($_GET['demo'] ?? '') === 'new_org';
@@ -385,6 +385,78 @@ class DashboardController extends Controller
         $_SESSION['company_name'] = $data['name'];
         $timezone = $data['timezone'] ?? 'America/Montreal';
         $this->json(['success' => $ok, 'company_name' => $data['name'], 'timezone' => $timezone]);
+    }
+
+    /**
+     * Récupérer les modèles de courriels (API pour rafraîchir la liste).
+     */
+    public function getEmailTemplates(): void
+    {
+        $this->requireAuth();
+        if (!$this->requireNotEvaluateur()) return;
+        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        if (!$platformUserId) {
+            $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+            return;
+        }
+        $templates = EmailTemplate::getAll($platformUserId);
+        $this->json(['success' => true, 'templates' => $templates]);
+    }
+
+    /**
+     * Enregistrer un modèle de courriel (création ou mise à jour).
+     */
+    public function saveEmailTemplate(): void
+    {
+        $this->requireAuth();
+        if (!$this->requireNotEvaluateur()) return;
+        if (!csrf_verify()) {
+            $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+            return;
+        }
+        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        if (!$platformUserId) {
+            $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+            return;
+        }
+        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        $title = isset($_POST['title_b64']) ? trim(urldecode(base64_decode($_POST['title_b64']))) : trim($_POST['title'] ?? '');
+        $content = isset($_POST['content_b64']) ? trim(urldecode(base64_decode($_POST['content_b64']))) : trim($_POST['content'] ?? '');
+        if ($title === '') {
+            $this->json(['success' => false, 'error' => 'Titre requis'], 400);
+            return;
+        }
+        $result = EmailTemplate::save($platformUserId, $id > 0 ? $id : null, $title, $content);
+        if ($result) {
+            $this->json(['success' => true, 'template' => $result]);
+        } else {
+            $this->json(['success' => false, 'error' => 'Erreur lors de l\'enregistrement'], 500);
+        }
+    }
+
+    /**
+     * Supprimer un modèle de courriel.
+     */
+    public function deleteEmailTemplate(): void
+    {
+        $this->requireAuth();
+        if (!$this->requireNotEvaluateur()) return;
+        if (!csrf_verify()) {
+            $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+            return;
+        }
+        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        if (!$platformUserId) {
+            $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+            return;
+        }
+        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        if ($id <= 0) {
+            $this->json(['success' => false, 'error' => 'ID invalide'], 400);
+            return;
+        }
+        $ok = EmailTemplate::delete($platformUserId, $id);
+        $this->json(['success' => $ok]);
     }
 
     /**
@@ -939,7 +1011,9 @@ class DashboardController extends Controller
             }
             $platformUserId = (int) $_SESSION['user_id'];
             $affichageId = isset($_POST['affichage_id']) ? (int) $_POST['affichage_id'] : 0;
-            $message = trim($_POST['message'] ?? '');
+            $message = isset($_POST['message_b64'])
+                ? trim(urldecode(base64_decode($_POST['message_b64'])))
+                : trim($_POST['message'] ?? '');
             $candidateIds = isset($_POST['candidate_ids']) && is_array($_POST['candidate_ids'])
                 ? array_values(array_filter($_POST['candidate_ids'], 'is_string'))
                 : [];
@@ -959,14 +1033,40 @@ class DashboardController extends Controller
                 return;
             }
 
+            // Récupérer titre du poste et nom d'entreprise pour l'injection des variables du modèle
+            $affichage = Affichage::find((string) $affichageId, $platformUserId);
+            if (!$affichage) {
+                $affichage = Affichage::findForEvaluateur((string) $affichageId, $platformUserId);
+            }
+            if (!$affichage) {
+                $this->json(['success' => false, 'error' => 'Affichage introuvable'], 400);
+                return;
+            }
+            $titrePoste = $affichage['title'] ?? '';
+            $ownerId = (int) ($affichage['platform_user_id'] ?? $platformUserId);
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $nomEntreprise = $_SESSION['company_name'] ?? '';
+            if ($nomEntreprise === '') {
+                $entrepriseModel = new \Entreprise();
+                $entreprise = $entrepriseModel->getByPlatformUserId($ownerId);
+                $nomEntreprise = $entreprise['name'] ?? '';
+            }
+            if ($nomEntreprise === '') {
+                $nomEntreprise = 'Mon entreprise';
+            }
+
             $sent = 0;
             $failed = [];
             foreach ($candidates as $c) {
-                if (zeptomail_send_candidate_notification($c['email'], $c['name'], $message)) {
+                $messagePersonnalise = str_replace(
+                    ['{{nom_candidat}}', '{{titre_poste}}', '{{nom_entreprise}}'],
+                    [$c['name'], $titrePoste, $nomEntreprise],
+                    $message
+                );
+                if (zeptomail_send_candidate_notification($c['email'], $c['name'], $messagePersonnalise)) {
                     $candidatureId = (int) str_replace('c', '', $c['id']);
                     if ($candidatureId > 0) {
-                        Candidat::logCommunication($candidatureId, $message);
+                        Candidat::logCommunication($candidatureId, $messagePersonnalise);
                     }
                     $sent++;
                 } else {

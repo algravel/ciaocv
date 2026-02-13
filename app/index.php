@@ -47,6 +47,9 @@ $router->get('/historique', 'DashboardController', 'history');
 
 // API Dashboard (POST)
 $router->post('/parametres/entreprise', 'DashboardController', 'saveCompany');
+$router->get('/parametres/email-templates', 'DashboardController', 'getEmailTemplates');
+$router->post('/parametres/email-templates', 'DashboardController', 'saveEmailTemplate');
+$router->post('/parametres/email-templates/delete', 'DashboardController', 'deleteEmailTemplate');
 $router->post('/postes', 'DashboardController', 'createPoste');
 $router->post('/postes/update', 'DashboardController', 'updatePoste');
 $router->post('/postes/delete', 'DashboardController', 'deletePoste');

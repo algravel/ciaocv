@@ -347,6 +347,24 @@ try {
         // ignorer
     }
 
+    // Migration : table modèles de courriels (par utilisateur)
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'app_email_templates'");
+        if ($stmt->rowCount() === 0) {
+            echo "Migration: table app_email_templates\n";
+            $pdo->exec("CREATE TABLE app_email_templates (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                platform_user_id INT UNSIGNED NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_platform_user (platform_user_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        }
+    } catch (Throwable $e) {
+        // ignorer
+    }
+
     // ─── Auto-seed si nécessaire ─────────────────────────────────────────────
     
     // Seed PlatformUser id=1 (Demo)

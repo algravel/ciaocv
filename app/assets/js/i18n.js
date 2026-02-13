@@ -213,6 +213,11 @@ const translations = {
         no_comments: "Aucun commentaire",
         comments_empty_desc: "Soyez le premier à partager votre avis avec l'équipe",
         comment_send: "Envoyer",
+        rating_label: "Appréciation",
+        recording_details_title: "Détails de l'enregistrement",
+        date_label: "Date",
+        retakes_label: "Reprises",
+        duration_label: "Temps passé",
 
         // ─── Dashboard – KPI & Stats ───
         kpi_my_plan: "Mon forfait",
@@ -377,6 +382,11 @@ const translations = {
         no_comments: "No comments",
         comments_empty_desc: "Be the first to share your feedback with the team",
         comment_send: "Send",
+        rating_label: "Rating",
+        recording_details_title: "Recording details",
+        date_label: "Date",
+        retakes_label: "Retakes",
+        duration_label: "Time spent",
 
         // ─── Dashboard – KPI & Stats ───
         kpi_my_plan: "My Plan",
@@ -432,6 +442,7 @@ function getLanguage() {
 function setLanguage(lang) {
     localStorage.setItem('language', lang);
     document.documentElement.lang = lang;
+    document.cookie = 'language=' + lang + '; path=/; max-age=31536000; samesite=Lax' + (location.protocol === 'https:' ? '; secure' : '');
     updateContent();
 }
 
@@ -483,6 +494,9 @@ function toggleLanguage(e) {
 document.addEventListener('DOMContentLoaded', function () {
     var lang = getLanguage();
     document.documentElement.lang = lang;
+    if (!document.cookie.includes('language=')) {
+        document.cookie = 'language=' + lang + '; path=/; max-age=31536000; samesite=Lax' + (location.protocol === 'https:' ? '; secure' : '');
+    }
     updateContent();
 
     // Site vitrine : .lang-toggle

@@ -207,6 +207,7 @@ function handleSubitemClick(subitem) {
                     pane.style.display = 'block';
                     if (targetId === 'settings-team' && typeof renderTeamMembers === 'function') renderTeamMembers();
                     if (targetId === 'settings-departments' && typeof renderDepartments === 'function') renderDepartments();
+                    if (targetId === 'settings-communications' && typeof fetchEmailTemplates === 'function') fetchEmailTemplates();
                 }
             }, 0);
         }
@@ -936,8 +937,8 @@ function renderAffichageCandidatsTable(id, filter) {
             '<td><span class="status-badge" style="background:' + (c.statusBg || '#DBEAFE') + '; color:' + (c.statusColor || '#1D4ED8') + ';">' + escapeHtml(statusLabel) + '</span></td>' +
             '<td><div class="star-color">' + stars + '</div></td>' +
             '<td>' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color: #EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color: #D1D5DB;"></i>') + '</td>' +
-            commCell +
-            '<td>' + escapeHtml(formatUtcToLocal(c.date)) + '</td>';
+            '<td>' + escapeHtml(formatUtcToLocal(c.date)) + '</td>' +
+            commCell;
         tbody.appendChild(row);
     });
 
@@ -1594,12 +1595,6 @@ function showCommunicationModalFromCandidate(candidateId) {
 /* ═══════════════════════════════════════════════
    NOTIFIER CANDIDATS MODAL
    ═══════════════════════════════════════════════ */
-var notifyMessages = {
-    polite: "Bonjour,\n\nNous vous remercions sincèrement pour l'intérêt que vous avez porté à notre offre. Après une analyse attentive de l'ensemble des candidatures reçues, nous avons décidé de poursuivre avec d'autres profils.\n\nCordialement,\nL'équipe de recrutement",
-    filled: "Bonjour,\n\nNous tenons à vous informer que le poste pour lequel vous avez postulé a été comblé.\n\nMerci et bonne continuation,\nL'équipe de recrutement",
-    custom: ""
-};
-
 function openNotifyCandidatsModal() {
     var id = window._currentAffichageId;
     var candidates = affichageCandidats[id] || [];
@@ -1626,6 +1621,26 @@ function openNotifyCandidatsModal() {
     var selectAll = document.getElementById('notify-select-all');
     if (selectAll) selectAll.checked = true;
     document.getElementById('notify-candidats-message').value = '';
+
+    var btnContainer = document.getElementById('notify-template-buttons');
+    if (btnContainer) {
+        btnContainer.innerHTML = '';
+        var templates = Array.isArray(emailTemplates) ? emailTemplates : [];
+        templates.forEach(function (tpl, i) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-secondary btn-sm';
+            btn.textContent = tpl.title || 'Modèle ' + (i + 1);
+            btn.onclick = function () { setNotifyMessage(i); };
+            btnContainer.appendChild(btn);
+        });
+        var customBtn = document.createElement('button');
+        customBtn.type = 'button';
+        customBtn.className = 'btn btn-secondary btn-sm';
+        customBtn.textContent = 'Personnalisé';
+        customBtn.onclick = function () { setNotifyMessage('custom'); };
+        btnContainer.appendChild(customBtn);
+    }
     openModal('notify-candidats');
 }
 
@@ -1633,9 +1648,19 @@ function toggleSelectAllNotify(cb) {
     document.querySelectorAll('.notify-candidate-cb').forEach(function (box) { box.checked = cb.checked; });
 }
 
-function setNotifyMessage(type) {
-    document.getElementById('notify-candidats-message').value = notifyMessages[type];
-    if (type === 'custom') document.getElementById('notify-candidats-message').focus();
+function setNotifyMessage(idxOrCustom) {
+    var textarea = document.getElementById('notify-candidats-message');
+    if (!textarea) return;
+    if (idxOrCustom === 'custom') {
+        textarea.value = '';
+        textarea.focus();
+    } else {
+        var templates = Array.isArray(emailTemplates) ? emailTemplates : [];
+        var idx = parseInt(idxOrCustom, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < templates.length && templates[idx]) {
+            textarea.value = templates[idx].content || '';
+        }
+    }
 }
 
 function confirmNotifyCandidats() {
@@ -1667,18 +1692,38 @@ function confirmNotifyCandidats() {
     var params = new URLSearchParams();
     params.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
     params.append('affichage_id', String(affichageId));
-    params.append('message', message.trim());
+    var msgTrim = message.trim();
+    params.append('message_b64', btoa(unescape(encodeURIComponent(msgTrim))));
     candidateIds.forEach(function (id) { params.append('candidate_ids[]', id); });
 
     fetch('/candidats/notify', { method: 'POST', body: params })
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
+        .then(function (r) {
+            return r.text().then(function (text) {
+                var res = null;
+                try {
+                    res = text ? JSON.parse(text) : {};
+                } catch (parseErr) {
+                    if (!r.ok) {
+                        console.error('Notify candidats: réponse non-JSON (probable erreur serveur)', r.status, text ? text.slice(0, 200) : '');
+                        return { _httpError: true, status: r.status };
+                    }
+                    throw parseErr;
+                }
+                return { ok: r.ok, status: r.status, body: res };
+            });
+        })
+        .then(function (payload) {
             closeModal('notify-candidats');
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer';
             }
-            if (res.success) {
+            if (payload._httpError) {
+                alert('Erreur serveur (code ' + payload.status + '). Veuillez réessayer ou contacter le support.');
+                return;
+            }
+            var res = payload.body;
+            if (payload.ok && res.success) {
                 if (res.sent > 0 && affichageId) {
                     var msgText = document.getElementById('notify-candidats-message').value.trim();
                     var sentAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -1706,7 +1751,7 @@ function confirmNotifyCandidats() {
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer';
             }
             console.error('Notify candidats error:', e);
-            alert('Erreur réseau. Veuillez réessayer.');
+            alert('Erreur réseau. Vérifiez votre connexion et réessayez.');
         });
 }
 
@@ -1991,6 +2036,18 @@ function addTeamMember() {
     renderTeamMembers();
 }
 
+function clearTeamMemberForm() {
+    var prenom = document.getElementById('team-new-prenom');
+    var nom = document.getElementById('team-new-nom');
+    var email = document.getElementById('team-new-email');
+    var role = document.getElementById('team-new-role');
+    if (prenom) prenom.value = '';
+    if (nom) nom.value = '';
+    if (email) email.value = '';
+    if (role) role.value = 'evaluateur';
+    if (prenom) prenom.focus();
+}
+
 function updateTeamMemberRole(index, role) {
     if (index < 0 || index >= teamMembersData.length) return;
     teamMembersData[index].role = role;
@@ -2048,17 +2105,40 @@ function sendFeedback(e) {
    ═══════════════════════════════════════════════ */
 var editingTemplateIndex = -1;
 
+function fetchEmailTemplates() {
+    fetch('/parametres/email-templates')
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.success && Array.isArray(res.templates)) {
+                emailTemplates = res.templates;
+                if (typeof renderEmailTemplates === 'function') renderEmailTemplates();
+            }
+        })
+        .catch(function (err) { console.error('fetchEmailTemplates:', err); });
+}
+
 function openEmailTemplateEditor(index) {
     editingTemplateIndex = (typeof index === 'number') ? index : -1;
+    var editor = document.getElementById('email-template-editor');
+    if (!editor) return;
     document.getElementById('email-editor-title').textContent = editingTemplateIndex >= 0 ? 'Modifier le modèle' : 'Nouveau modèle';
-    document.getElementById('email-tpl-title').value = editingTemplateIndex >= 0 ? emailTemplates[editingTemplateIndex].title : '';
-    document.getElementById('email-tpl-content').value = editingTemplateIndex >= 0 ? emailTemplates[editingTemplateIndex].content : '';
-    document.getElementById('email-template-editor').style.display = 'block';
+    var idInput = document.getElementById('email-tpl-id');
+    if (idInput) idInput.value = editingTemplateIndex >= 0 && emailTemplates[editingTemplateIndex] && emailTemplates[editingTemplateIndex].id ? String(emailTemplates[editingTemplateIndex].id) : '';
+    document.getElementById('email-tpl-title').value = editingTemplateIndex >= 0 ? (emailTemplates[editingTemplateIndex] && emailTemplates[editingTemplateIndex].title) || '' : '';
+    document.getElementById('email-tpl-content').value = editingTemplateIndex >= 0 ? (emailTemplates[editingTemplateIndex] && emailTemplates[editingTemplateIndex].content) || '' : '';
+    editor.classList.remove('hidden');
     document.getElementById('email-tpl-title').focus();
 }
 
 function closeEmailTemplateEditor() {
-    document.getElementById('email-template-editor').style.display = 'none';
+    var editor = document.getElementById('email-template-editor');
+    if (editor) {
+        editor.classList.add('hidden');
+        var form = document.getElementById('form-email-template');
+        if (form) form.reset();
+    }
+    var idEl = document.getElementById('email-tpl-id');
+    if (idEl) idEl.value = '';
     editingTemplateIndex = -1;
 }
 
@@ -2068,21 +2148,82 @@ function deleteEmailTemplate(btn) {
     var row = btn.closest('.email-template-row');
     var rows = Array.from(document.querySelectorAll('.email-template-row'));
     var index = rows.indexOf(row);
-    if (index >= 0) { emailTemplates.splice(index, 1); row.remove(); }
+    if (index < 0) return;
+    var tpl = emailTemplates[index];
+    var id = tpl && tpl.id ? tpl.id : 0;
+    if (!id) {
+        emailTemplates.splice(index, 1);
+        row.remove();
+        return;
+    }
+    if (!confirm('Supprimer ce modèle ?')) return;
+    var params = new URLSearchParams();
+    params.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    params.append('id', String(id));
+    fetch('/parametres/email-templates/delete', { method: 'POST', body: params })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.success) {
+                emailTemplates.splice(index, 1);
+                row.remove();
+            } else {
+                alert(res.error || 'Erreur lors de la suppression.');
+            }
+        })
+        .catch(function (err) {
+            console.error('deleteEmailTemplate:', err);
+            alert('Erreur réseau. Veuillez réessayer.');
+        });
 }
 
 function saveEmailTemplate(e) {
-    e.preventDefault();
-    var title = document.getElementById('email-tpl-title').value.trim();
-    var content = document.getElementById('email-tpl-content').value.trim();
-    if (!title || !content) return;
-    if (editingTemplateIndex >= 0) {
-        emailTemplates[editingTemplateIndex] = { title: title, content: content };
-    } else {
-        emailTemplates.push({ title: title, content: content });
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
     }
-    renderEmailTemplates();
-    closeEmailTemplateEditor();
+    var titleEl = document.getElementById('email-tpl-title');
+    var contentEl = document.getElementById('email-tpl-content');
+    var title = (titleEl && titleEl.value || '').trim();
+    var content = (contentEl && contentEl.value || '').trim();
+    if (!title || !content) {
+        alert('Veuillez remplir le titre et le contenu.');
+        return false;
+    }
+    var idEl = document.getElementById('email-tpl-id');
+    var id = idEl ? idEl.value : '';
+    var form = document.getElementById('form-email-template');
+    if (!form) return false;
+    var formData = new FormData();
+    var csrfToken = (form.querySelector('input[name="_csrf_token"]') || {}).value || '';
+    formData.append('_csrf_token', csrfToken);
+    formData.append('title_b64', btoa(unescape(encodeURIComponent(title))));
+    formData.append('content_b64', btoa(unescape(encodeURIComponent(content))));
+    if (id) formData.append('id', id);
+
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enregistrement...'; }
+    fetch('/parametres/email-templates', { method: 'POST', body: formData })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Enregistrer'; }
+            if (res.success && res.template) {
+                if (editingTemplateIndex >= 0) {
+                    emailTemplates[editingTemplateIndex] = res.template;
+                } else {
+                    emailTemplates.push(res.template);
+                }
+                renderEmailTemplates();
+                closeEmailTemplateEditor();
+            } else {
+                alert(res.error || 'Erreur lors de l\'enregistrement.');
+            }
+        })
+        .catch(function (err) {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Enregistrer'; }
+            console.error('saveEmailTemplate:', err);
+            alert('Erreur réseau. Veuillez réessayer.');
+        });
+    return false;
 }
 
 function renderEmailTemplates() {
@@ -2104,9 +2245,11 @@ function renderEmailTemplates() {
         div.style.cssText = 'display:flex;align-items:center;gap:1rem;padding:1rem;border:1px solid var(--border-color);border-radius:10px;margin-bottom:0.75rem;transition:box-shadow 0.15s;';
         div.onmouseover = function () { this.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; };
         div.onmouseout = function () { this.style.boxShadow = 'none'; };
+        var preview = (tpl.content || '').substring(0, 100);
+        if (preview.length >= 100) preview += '...';
         div.innerHTML =
             '<div style="width:40px;height:40px;background:' + ic.bg + ';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid ' + ic.icon + '" style="color:' + ic.color + ';"></i></div>' +
-            '<div style="flex:1;min-width:0;"><strong style="font-size:0.9rem;color:var(--text-primary);">' + escapeHtml(tpl.title) + '</strong><p style="font-size:0.8rem;color:var(--text-secondary);margin:0.2rem 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(tpl.content.substring(0, 100)) + '...</p></div>' +
+            '<div style="flex:1;min-width:0;"><strong style="font-size:0.9rem;color:var(--text-primary);">' + escapeHtml(tpl.title || '') + '</strong><p style="font-size:0.8rem;color:var(--text-secondary);margin:0.2rem 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(preview) + '</p></div>' +
             '<div style="display:flex;gap:0.5rem;flex-shrink:0;"><button class="btn-icon" title="Modifier" onclick="editEmailTemplate(' + i + ')"><i class="fa-solid fa-pen" style="color:var(--primary-color);"></i></button><button class="btn-icon" title="Supprimer" onclick="deleteEmailTemplate(this)"><i class="fa-solid fa-trash" style="color:#EF4444;"></i></button></div>';
         container.appendChild(div);
     });
