@@ -88,14 +88,15 @@
         <button class="forgot-modal-close" onclick="closeForgotModal()" aria-label="Fermer">&times;</button>
         <h3 data-i18n="forgot.title">Mot de passe oublié ?</h3>
         <p class="forgot-desc" data-i18n="forgot.desc">Entrez votre adresse courriel et nous vous enverrons un lien pour réinitialiser votre mot de passe.</p>
-        <form id="forgotForm" onsubmit="return false;">
+        <form id="forgotForm">
             <?= csrf_field() ?>
             <div class="form-group">
                 <label for="forgot-email" data-i18n="forgot.email.label">Courriel</label>
                 <input type="email" id="forgot-email" name="email" class="form-control"
                     placeholder="votre@courriel.com" data-i18n="forgot.email.placeholder" required>
             </div>
-            <button type="submit" class="btn-primary login-submit" data-i18n="forgot.submit">Envoyer le lien</button>
+            <div id="forgot-error" class="login-error mb-3" style="display:none;"></div>
+            <button type="submit" id="forgot-submit-btn" class="btn-primary login-submit" data-i18n="forgot.submit">Envoyer le lien</button>
         </form>
     </div>
 </div>

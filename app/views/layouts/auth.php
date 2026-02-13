@@ -434,6 +434,8 @@
             if (!overlay) return;
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
+            var err = document.getElementById('forgot-error');
+            if (err) { err.style.display = 'none'; err.textContent = ''; }
             if (typeof updateContent === 'function') updateContent();
             setTimeout(() => {
                 const input = document.getElementById('forgot-email');
@@ -458,6 +460,38 @@
                 forgotLink.addEventListener('click', function (e) {
                     e.preventDefault();
                     openForgotModal();
+                });
+            }
+            var forgotForm = document.getElementById('forgotForm');
+            if (forgotForm) {
+                forgotForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    var emailInput = document.getElementById('forgot-email');
+                    var errorEl = document.getElementById('forgot-error');
+                    var submitBtn = document.getElementById('forgot-submit-btn');
+                    var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
+                    if (!email || email.indexOf('@') === -1) {
+                        if (errorEl) { errorEl.textContent = 'Veuillez entrer une adresse courriel valide.'; errorEl.style.display = 'block'; }
+                        return;
+                    }
+                    if (errorEl) errorEl.style.display = 'none';
+                    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Envoi...'; }
+                    var fd = new FormData(forgotForm);
+                    fetch('/connexion/mot-de-passe-oublie', { method: 'POST', body: fd })
+                        .then(function (r) { return r.json(); })
+                        .then(function (res) {
+                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = document.querySelector('[data-i18n="forgot.submit"]') ? document.querySelector('[data-i18n="forgot.submit"]').textContent : 'Envoyer le lien'; }
+                            if (res.success) {
+                                closeForgotModal();
+                                alert(res.message || 'Un nouveau mot de passe a été envoyé à votre adresse courriel.');
+                            } else {
+                                if (errorEl) { errorEl.textContent = res.error || 'Une erreur est survenue.'; errorEl.style.display = 'block'; }
+                            }
+                        })
+                        .catch(function () {
+                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = document.querySelector('[data-i18n="forgot.submit"]') ? document.querySelector('[data-i18n="forgot.submit"]').textContent : 'Envoyer le lien'; }
+                            if (errorEl) { errorEl.textContent = 'Erreur réseau. Veuillez réessayer.'; errorEl.style.display = 'block'; }
+                        });
                 });
             }
         });

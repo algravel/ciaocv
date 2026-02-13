@@ -32,6 +32,7 @@ $router = new Router();
 $router->get('/',              'AuthController', 'login');
 $router->get('/connexion',     'AuthController', 'login');
 $router->post('/connexion',    'AuthController', 'authenticate');
+$router->post('/connexion/mot-de-passe-oublie', 'AuthController', 'forgotPassword');
 $router->get('/deconnexion',   'AuthController', 'logout');
 $router->get('/logout',       'AuthController', 'logout'); // alias, redirige vers /connexion après déco
 

@@ -282,8 +282,8 @@ function zeptomail_send_platform_user_password_reset(string $toEmail, string $to
         return false;
     }
     $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
-    $siteUrl = rtrim($_ENV['SITE_URL'] ?? 'https://www.ciaocv.com', '/');
-    $loginUrl = $siteUrl . '/connexion';
+    $appUrl = rtrim($_ENV['APP_URL'] ?? $_ENV['SITE_URL'] ?? 'https://app.ciaocv.com', '/');
+    $loginUrl = $appUrl . '/connexion';
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
         'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],

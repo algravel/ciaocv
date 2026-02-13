@@ -271,6 +271,55 @@ class AuthController extends Controller
     }
 
     /**
+     * Mot de passe oublié : génère un nouveau mot de passe et l'envoie par courriel.
+     * POST /connexion/mot-de-passe-oublie
+     */
+    public function forgotPassword(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'error' => 'Méthode invalide'], 405);
+            return;
+        }
+        $email = trim($_POST['email'] ?? '');
+        if ($email === '' || strpos($email, '@') === false) {
+            $this->json(['success' => false, 'error' => 'Veuillez entrer une adresse courriel valide.']);
+            return;
+        }
+        if (!isset($_POST['_csrf_token']) || !isset($_SESSION['_csrf_token']) || !hash_equals($_SESSION['_csrf_token'], $_POST['_csrf_token'] ?? '')) {
+            $this->json(['success' => false, 'error' => 'Erreur de sécurité. Rechargez la page et réessayez.']);
+            return;
+        }
+        try {
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            $platformUserModel = new PlatformUser();
+            $user = $platformUserModel->findByEmail($email);
+            if (!$user) {
+                $this->json(['success' => false, 'error' => 'Aucun compte associé à cette adresse courriel.']);
+                return;
+            }
+            if (empty($user['active'])) {
+                $this->json(['success' => false, 'error' => 'Ce compte est désactivé. Contactez votre administrateur.']);
+                return;
+            }
+            $newPassword = bin2hex(random_bytes(8));
+            if (!$platformUserModel->resetPassword($user['id'], $newPassword)) {
+                $this->json(['success' => false, 'error' => 'Une erreur est survenue. Veuillez réessayer.']);
+                return;
+            }
+            $fullName = $user['name'] ?? 'Utilisateur';
+            $sent = zeptomail_send_platform_user_password_reset($user['email'], $fullName, $newPassword);
+            if (!$sent) {
+                $this->json(['success' => false, 'error' => 'Impossible d\'envoyer le courriel. Veuillez réessayer plus tard.']);
+                return;
+            }
+            $this->json(['success' => true, 'message' => 'Un nouveau mot de passe a été envoyé à votre adresse courriel.']);
+        } catch (Throwable $e) {
+            error_log('AuthController::forgotPassword: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Une erreur est survenue. Veuillez réessayer.']);
+        }
+    }
+
+    /**
      * Déconnecter l'utilisateur.
      */
     public function logout(): void
