@@ -537,7 +537,9 @@ function showPosteDetail(id) {
                 '<button type="button" class="btn-icon btn-icon--copy" title="Copier le lien" data-copy-url="' + escapeHtml(url) + '" onclick="copyPosteShareUrl(this.getAttribute(\'data-copy-url\'))"><i class="fa-regular fa-copy"></i></button>';
         } else {
             var emptyTxt = (typeof translations !== 'undefined' && translations.fr) ? (translations.fr.poste_share_url_empty || 'Créez un affichage pour ce poste pour obtenir le lien.') : 'Créez un affichage pour ce poste pour obtenir le lien.';
-            shareUrlContent.innerHTML = '<span class="subtitle-muted">' + escapeHtml(emptyTxt) + '</span>';
+            var btnTxt = (typeof translations !== 'undefined' && translations.fr) ? (translations.fr.poste_create_affichage || 'Créer un affichage') : 'Créer un affichage';
+            shareUrlContent.innerHTML = '<span class="subtitle-muted">' + escapeHtml(emptyTxt) + '</span> ' +
+                '<button type="button" class="btn btn-primary btn-sm" data-poste-id="' + escapeHtml(String(data.id)) + '" onclick="openAffichageModalForPoste(this.getAttribute(\'data-poste-id\'))"><i class="fa-solid fa-plus"></i> ' + escapeHtml(btnTxt) + '</button>';
         }
     }
 
@@ -545,6 +547,15 @@ function showPosteDetail(id) {
     var detailSection = document.getElementById('poste-detail-section');
     if (detailSection) detailSection.classList.add('active');
     window.scrollTo(0, 0);
+}
+
+function openAffichageModalForPoste(posteId) {
+    if (!posteId) return;
+    var navItem = document.querySelector('.nav-item[data-section="affichages"]');
+    if (navItem) navItem.click();
+    var posteSelect = document.getElementById('affichage-poste_id');
+    if (posteSelect) posteSelect.value = String(posteId);
+    setTimeout(function () { openModal('affichage'); }, 150);
 }
 
 function copyPosteShareUrl(url) {
