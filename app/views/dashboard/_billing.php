@@ -1,9 +1,17 @@
-<!-- Forfait actuel -->
+<!-- Forfait actuel (récupéré depuis gestion_plans / platform_user.plan_id) -->
 <?php
 $planName = $planName ?? 'Découverte';
 $kpiForfaitLimit = $kpiForfaitLimit ?? 5;
 $kpiForfaitUsed = $kpiForfaitUsed ?? 0;
 $planSub = ($kpiForfaitLimit >= 9999) ? 'Illimité' : (($kpiForfaitLimit <= 5) ? 'Gratuit' : $kpiForfaitLimit . ' entrevues');
+$featuresSummary = '1 affichage actif · 5 entrevues vidéo · Questions standards';
+if (isset($currentPlanFeatures) && is_array($currentPlanFeatures)) {
+    $feats = array_map(function ($f) {
+        if (is_array($f) && isset($f['text'])) return $f['text'];
+        return is_string($f) ? $f : '';
+    }, $currentPlanFeatures);
+    $featuresSummary = implode(' · ', array_filter(array_map('e', $feats)));
+}
 ?>
 <div class="card card--featured mb-6">
     <div class="flex-between mb-6">
@@ -16,7 +24,7 @@ $planSub = ($kpiForfaitLimit >= 9999) ? 'Illimité' : (($kpiForfaitLimit <= 5) ?
         </div>
         <div>
             <div class="plan-name"><?= e($planName) ?> <span class="plan-suffix">— <?= e($planSub) ?></span></div>
-            <div class="subtitle-muted"><?= $kpiForfaitLimit >= 9999 ? 'Entrevues illimitées' : $kpiForfaitUsed . ' / ' . $kpiForfaitLimit . ' entrevues utilisées' ?> &middot; Questions personnalisées</div>
+            <div class="subtitle-muted"><?= $featuresSummary ?></div>
         </div>
     </div>
 </div>

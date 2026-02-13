@@ -6,6 +6,18 @@
 class DashboardController extends Controller
 {
     /**
+     * Empêche les évaluateurs d'accéder aux actions réservées aux propriétaires.
+     */
+    protected function requireNotEvaluateur(): bool
+    {
+        if (($_SESSION['user_role'] ?? 'client') === 'evaluateur') {
+            $this->json(['success' => false, 'error' => 'Accès non autorisé'], 403);
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Page principale du tableau de bord.
      */
     public function index(): void
@@ -105,11 +117,23 @@ class DashboardController extends Controller
                 // Ignorer si table non encore créée
             }
         }
+        // Utiliser les départements de l'entreprise si disponibles, sinon défaut (Design et Stratégie exclus)
+        if ($entreprise && !empty($entreprise['departments'])) {
+            $decoded = is_string($entreprise['departments']) ? json_decode($entreprise['departments'], true) : $entreprise['departments'];
+            if (is_array($decoded)) {
+                $excluded = ['Design', 'Stratégie'];
+                $departments = array_values(array_filter($decoded, fn ($d) => !in_array($d, $excluded, true)));
+                if (empty($departments)) {
+                    $departments = Poste::getDepartments();
+                }
+            }
+        }
         $companyName = ($entreprise['name'] ?? null) ?: ($_SESSION['company_name'] ?? '');
 
         $kpiForfaitUsed = 0;
-        $kpiForfaitLimit = 50;
+        $kpiForfaitLimit = 5;
         $planName = 'Découverte';
+        $currentPlan = null;
         $events = [];
         $chartMonths = [];
         $kpiAffichagesActifs = 0;
@@ -119,12 +143,21 @@ class DashboardController extends Controller
         if ($platformUserId) {
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             try {
+                $planModel = new Plan();
                 $platformUserModel = new PlatformUser();
                 $platformUser = $platformUserModel->findById($platformUserId);
                 if ($platformUser && $platformUser['plan_id']) {
-                    $planModel = new Plan();
                     $plan = $planModel->findById($platformUser['plan_id']);
                     if ($plan) {
+                        $currentPlan = $plan;
+                        $kpiForfaitLimit = $plan['video_limit'];
+                        $planName = $plan['name'];
+                    }
+                }
+                if (!$currentPlan) {
+                    $plan = $planModel->findFreePlan();
+                    if ($plan) {
+                        $currentPlan = $plan;
                         $kpiForfaitLimit = $plan['video_limit'];
                         $planName = $plan['name'];
                     }
@@ -234,6 +267,8 @@ class DashboardController extends Controller
             'kpiForfaitUsed' => $kpiForfaitUsed,
             'kpiForfaitLimit' => $kpiForfaitLimit,
             'planName' => $planName,
+            'currentPlan' => $currentPlan,
+            'currentPlanFeatures' => $currentPlan ? self::billingFeaturesForPlan($planName, $kpiForfaitLimit, ($_COOKIE['language'] ?? 'fr') === 'en' ? 'en' : 'fr') : ['1 affichage actif', '5 entrevues vidéo', 'Questions standards'],
             'kpiAffichagesActifs' => $kpiAffichagesActifs,
             'kpiAffichagesActifsPrev' => $kpiAffichagesActifsPrev,
             'kpiTachesRestantes' => $kpiTachesRestantes,

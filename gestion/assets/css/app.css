@@ -256,6 +256,7 @@ a { text-decoration: none; color: inherit; }
    ═══════════════════════════════════════════════ */
 .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; display: inline-block; }
 .status-active { background-color: #D1FAE5; color: #065F46; }
+.status-pending { background-color: #DBEAFE; color: #1E40AF; }
 .status-paused { background-color: #FEF3C7; color: #92400E; }
 .status-closed { background-color: #FEE2E2; color: #991B1B; }
 .event-badge { padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
@@ -325,6 +326,10 @@ code { background: #F1F5F9; padding: 0.15rem 0.4rem; border-radius: 4px; font-si
    ═══════════════════════════════════════════════ */
 .subtitle-muted { font-size: 0.875rem; color: var(--text-secondary); }
 .cell-date { white-space: nowrap; color: #64748B; font-size: 0.85rem; }
+.cell-date.cell-clickable { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.cell-date.cell-clickable:hover { color: var(--primary, #800020); }
+.feedback-detail-readonly p { margin-bottom: 0.75rem; }
+.feedback-detail-message { background: var(--bg-alt, #f8fafc); padding: 0.75rem; border-radius: 8px; white-space: pre-wrap; }
 .cell-muted { color: #64748B; font-size: 0.875rem; }
 .info-label { font-size: 0.875rem; color: var(--text-secondary); }
 .info-value { font-size: 1.25rem; font-weight: 600; }

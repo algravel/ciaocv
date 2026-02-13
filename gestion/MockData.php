@@ -48,7 +48,7 @@ class MockData
             [
                 'id'             => 'designer',
                 'title'          => 'Designer UX/UI',
-                'department'     => 'Design',
+                'department'     => 'Technologie',
                 'location'       => 'Télétravail',
                 'status'         => 'Non actif',
                 'statusClass'    => 'status-paused',
@@ -64,7 +64,7 @@ class MockData
             [
                 'id'             => 'analyst',
                 'title'          => "Analyste d'affaires",
-                'department'     => 'Stratégie',
+                'department'     => 'Marketing',
                 'location'       => 'Vancouver, BC',
                 'status'         => 'Archivé',
                 'statusClass'    => 'status-closed',

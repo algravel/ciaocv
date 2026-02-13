@@ -37,6 +37,12 @@ if ($method === 'POST' && $path === '/feedback') {
     exit;
 }
 
+// ─── POST /feedback/update ─────────────────────────────────────────────────
+if (($method === 'POST' || $method === 'PATCH') && $path === '/feedback/update') {
+    $controller->updateFeedback();
+    exit;
+}
+
 // ─── POST /connexion (authenticate) ───────────────────────────────────────
 if ($method === 'POST' && $path === '/connexion') {
     if (!csrf_verify()) {

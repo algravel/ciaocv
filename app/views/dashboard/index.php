@@ -701,12 +701,10 @@
                 <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur
                         d'activité</label><select class="form-select" name="industry">
                         <option value="" <?= $companyIndustry === '' ? ' selected' : '' ?>>— Sélectionner —</option>
-                        <option value="Technologie" <?= $companyIndustry === 'Technologie' ? ' selected' : '' ?>>
-                            Technologie</option>
-                        <option value="Finance" <?= $companyIndustry === 'Finance' ? ' selected' : '' ?>>Finance</option>
-                        <option value="Santé" <?= $companyIndustry === 'Santé' ? ' selected' : '' ?>>Santé</option>
-                        <option value="Commerce" <?= $companyIndustry === 'Commerce' ? ' selected' : '' ?>>Commerce
-                        </option>
+                        <?php
+                        $industries = ['Technologie', 'Finance', 'Santé', 'Commerce', 'Construction', 'Éducation', 'Restauration et hôtellerie', 'Services professionnels', 'Manufacturier', 'Transport et logistique', 'Immobilier', 'Assurance', 'Médias et communications', 'Marketing et publicité', 'Secteur public', 'Organismes à but non lucratif', 'Agroalimentaire', 'Énergie', 'Automobile', 'Conseil et stratégie', 'Ressources humaines'];
+                        foreach ($industries as $ind):
+                        ?><option value="<?= e($ind) ?>" <?= $companyIndustry === $ind ? ' selected' : '' ?>><?= e($ind) ?></option><?php endforeach; ?>
                     </select></div>
             </div>
             <div class="grid-2col">
@@ -740,7 +738,7 @@
                 </select>
                 <p class="form-help" data-i18n="timezone_help">Les dates sont enregistrées en UTC et affichées selon ce fuseau.</p>
             </div>
-            <div class="form-group">
+            <div class="form-group hidden" style="display: none;"><!-- Couleur marque masquée temporairement -->
                 <label class="form-label" data-i18n="form_brand_color">Couleur de la marque</label>
                 <div class="flex-center gap-4">
                     <input type="color" class="form-input" name="brand_color" id="settings-brand-color" value="#3B82F6"
@@ -816,15 +814,12 @@
             <?= csrf_field() ?>
             <div class="form-group"><label class="form-label" data-i18n="form_department">Département</label><select
                     class="form-select" name="department">
-                    <option value="">— Sélectionner —</option>
-                    <option value="Technologie">Technologie</option>
-                    <option value="Gestion">Gestion</option>
-                    <option value="Design">Design</option>
-                    <option value="Stratégie">Stratégie</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Ressources humaines">Ressources humaines</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Opérations">Opérations</option>
+                    <option value="" data-i18n="option_select">— Sélectionner —</option>
+                    <?php
+                    $deptKeys = ['Technologie' => 'dept_technologie', 'Gestion' => 'dept_gestion', 'Design' => 'dept_design', 'Stratégie' => 'dept_strategie', 'Marketing' => 'dept_marketing', 'Ressources humaines' => 'dept_ressources_humaines', 'Finance' => 'dept_finance', 'Opérations' => 'dept_operations'];
+                    foreach (($departments ?? []) as $d):
+                        $key = $deptKeys[$d] ?? null;
+                    ?><option value="<?= e($d) ?>"<?= $key ? ' data-i18n="' . e($key) . '"' : '' ?>><?= e($d) ?></option><?php endforeach; ?>
                 </select></div>
             <div class="form-group"><label class="form-label" data-i18n="form_title">Titre du poste</label><input
                     type="text" class="form-input" name="title" required placeholder="Ex: Développeur Frontend"></div>

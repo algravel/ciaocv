@@ -105,6 +105,13 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
 
+    $stmt = $pdo->query("SHOW COLUMNS FROM gestion_feedback LIKE 'status'");
+    if ($stmt->rowCount() === 0) {
+        echo "Migration: gestion_feedback.status, internal_note\n";
+        $pdo->exec("ALTER TABLE gestion_feedback ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'new' COMMENT 'new|in_progress|resolved' AFTER created_at");
+        $pdo->exec("ALTER TABLE gestion_feedback ADD COLUMN internal_note TEXT NULL COMMENT 'Note interne admin' AFTER status");
+    }
+
     $stmt = $pdo->query("SHOW COLUMNS FROM gestion_events LIKE 'platform_user_id'");
     if ($stmt->rowCount() === 0) {
          echo "Migration: gestion_events.platform_user_id\n";
@@ -219,6 +226,28 @@ try {
         if ($stmt->rowCount() === 0) {
             echo "Migration: app_entreprises.timezone\n";
             $pdo->exec("ALTER TABLE app_entreprises ADD COLUMN timezone VARCHAR(64) NOT NULL DEFAULT 'America/Montreal' AFTER description");
+        }
+    } catch (Throwable $e) { /* ignorer */ }
+
+    // Migration : retirer Design et Stratégie des départements (app_entreprises)
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM app_entreprises LIKE 'departments'");
+        if ($stmt->rowCount() > 0) {
+            $rows = $pdo->query("SELECT id, platform_user_id, departments FROM app_entreprises WHERE departments IS NOT NULL AND departments != ''")->fetchAll(PDO::FETCH_ASSOC);
+            $excluded = ['Design', 'Stratégie'];
+            $updated = 0;
+            foreach ($rows as $r) {
+                $decoded = json_decode($r['departments'] ?? '[]', true);
+                if (!is_array($decoded)) continue;
+                $filtered = array_values(array_filter($decoded, fn ($d) => !in_array($d, $excluded, true)));
+                if (count($filtered) !== count($decoded)) {
+                    $pdo->prepare("UPDATE app_entreprises SET departments = ? WHERE id = ?")->execute([json_encode($filtered), $r['id']]);
+                    $updated++;
+                }
+            }
+            if ($updated > 0) {
+                echo "Migration: app_entreprises – retrait Design/Stratégie de $updated entreprise(s)\n";
+            }
         }
     } catch (Throwable $e) { /* ignorer */ }
 

@@ -149,6 +149,6 @@ class Poste
 
     public static function getDepartments(): array
     {
-        return ['Technologie', 'Gestion', 'Design', 'Stratégie', 'Marketing', 'Ressources humaines', 'Finance', 'Opérations'];
+        return ['Technologie', 'Gestion', 'Marketing', 'Ressources humaines', 'Finance', 'Opérations'];
     }
 }

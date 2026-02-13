@@ -187,7 +187,8 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             foreach ($plans as $i => $p):
                 $isFree = $p['price_monthly'] == 0 && $p['price_yearly'] == 0;
                 $isFeatured = ($i === $featuredIndex);
-                $videoText = $p['video_limit'] >= 9999 ? ($lang === 'en' ? 'Unlimited video interviews' : 'Entrevues vidéo illimitées') : $p['video_limit'] . ' entrevues vidéo';
+                $videoText = $p['video_limit'] >= 9999 ? ($lang === 'en' ? 'Unlimited video interviews' : 'Entrevues vidéo illimitées') : $p['video_limit'] . ($lang === 'en' ? ' video interviews' : ' entrevues vidéo');
+                $videoTextActive = $p['video_limit'] >= 9999 ? $videoText : $p['video_limit'] . ($lang === 'en' ? ' active video interviews (videos can be archived)' : ' entrevues vidéo actives (possibilité d\'archiver les vidéos)');
             ?>
             <div class="pricing-card<?= $isFeatured ? ' featured' : '' ?>">
                 <?php if ($isFeatured): ?><div class="pricing-badge">Populaire</div><?php endif; ?>
@@ -210,8 +211,13 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
                     <?php
                     $planFeatures = $p['features'] ?? [];
                     if (!empty($planFeatures)):
-                        foreach ($planFeatures as $f): ?>
-                    <li><?= e($f) ?></li>
+                        foreach ($planFeatures as $f):
+                            $displayF = $f;
+                            if (preg_match('/^\d+\s*entrevues\s+vidéo/i', $f) || preg_match('/^\d+\s*video\s+interviews/i', $f)) {
+                                $displayF = (stripos($f, 'actives') !== false || stripos($f, 'archiver') !== false) ? $videoTextActive : $videoText;
+                            }
+                            ?>
+                    <li><?= e($displayF) ?></li>
                     <?php endforeach; else: ?>
                     <li><?= e($videoText) ?></li>
                     <li data-i18n="pricing.card.pro.feat.3">Outils collaboratifs</li>
@@ -244,9 +250,10 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
                 <tr>
                     <td data-i18n="compare.row.video">Entrevues vidéo disponibles</td>
                     <?php foreach ($plans as $p):
-                        $videoCell = $p['video_limit'] >= 9999 ? ($lang === 'en' ? 'Unlimited video interviews' : 'Entrevues vidéo illimitées') : $p['video_limit'] . ' entrevues vidéo';
+                        $videoCell = $p['video_limit'] >= 9999 ? ($lang === 'en' ? 'Unlimited video interviews' : 'Entrevues vidéo illimitées') : $p['video_limit'] . ($lang === 'en' ? ' video interviews' : ' entrevues vidéo');
+                        $videoLimit = $p['video_limit'] >= 9999 ? 'unlimited' : (string) $p['video_limit'];
                     ?>
-                    <td><?= e($videoCell) ?></td>
+                    <td data-i18n-video-limit="<?= e($videoLimit) ?>"><?= e($videoCell) ?></td>
                     <?php endforeach; ?>
                 </tr>
                 <tr>
@@ -294,7 +301,6 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
                 <ul>
                     <li><a href="/confidentialite" data-i18n="footer.privacy">Politique de confidentialité</a></li>
                     <li><a href="/conditions" data-i18n="footer.terms">Conditions d'utilisation</a></li>
-                    <li><a href="#">EFVP</a></li>
                 </ul>
             </div>
             <div class="footer-links">

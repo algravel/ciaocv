@@ -67,6 +67,7 @@ $router->post('/entrevue/submit', 'EntrevueController', 'submit');
 $router->get('/purge-cache', 'PurgeController', 'index');
 
 // Redirections 301 : anciennes URLs → slugs
+$router->get('/index.php',  'RedirectController', 'toConnexion');
 $router->get('/login',      'RedirectController', 'toConnexion');
 $router->get('/tableau-de-bord500', 'RedirectController', 'toTableauDeBord');
 $router->post('/login',     'RedirectController', 'toConnexion');

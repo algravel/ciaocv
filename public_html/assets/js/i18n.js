@@ -472,8 +472,9 @@ function getLanguage() {
 
 function setLanguage(lang) {
     localStorage.setItem('language', lang);
+    document.cookie = 'language=' + lang + '; path=/; max-age=31536000; SameSite=Lax';
     updateContent();
-    updateToggleState();
+    if (typeof updateToggleState === 'function') updateToggleState();
     document.documentElement.lang = lang;
     if (typeof updateCookieBannerText === 'function') updateCookieBannerText();
 }
@@ -505,6 +506,14 @@ function updateContent() {
         if (dict[key]) el.title = dict[key];
     });
 
+    // data-i18n-video-limit → cellules "X video interviews" / "X entrevues vidéo"
+    document.querySelectorAll('[data-i18n-video-limit]').forEach(function (el) {
+        const val = el.getAttribute('data-i18n-video-limit');
+        el.textContent = val === 'unlimited'
+            ? (lang === 'en' ? 'Unlimited video interviews' : 'Entrevues vidéo illimitées')
+            : val + (lang === 'en' ? ' video interviews' : ' entrevues vidéo');
+    });
+
     // Update toggles text
     document.querySelectorAll('.lang-toggle').forEach(function (toggle) {
         toggle.textContent = lang === 'fr' ? 'EN' : 'FR';
@@ -522,6 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial content load
     const lang = getLanguage();
     document.documentElement.lang = lang;
+    document.cookie = 'language=' + lang + '; path=/; max-age=31536000; SameSite=Lax';
     updateContent();
 
     // Add event listeners to all toggle buttons

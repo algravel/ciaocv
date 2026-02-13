@@ -54,14 +54,21 @@ class Plan
         return (int) $this->pdo->query('SELECT COUNT(*) FROM gestion_plans')->fetchColumn();
     }
 
-    public function findById(int $id): ?array
+    /**
+     * Retourne le forfait gratuit (Découverte) : premier plan avec price_monthly=0 et price_yearly=0.
+     */
+    public function findFreePlan(): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT id, name_fr, name_en, video_limit, price_monthly, price_yearly, features_json, is_popular, created_at FROM gestion_plans WHERE id = ?');
-        $stmt->execute([$id]);
-        $r = $stmt->fetch();
+        $stmt = $this->pdo->query('SELECT id, name_fr, name_en, video_limit, price_monthly, price_yearly, features_json, is_popular, created_at FROM gestion_plans WHERE COALESCE(active, 1) = 1 AND price_monthly = 0 AND price_yearly = 0 ORDER BY id ASC LIMIT 1');
+        $r = $stmt ? $stmt->fetch() : null;
         if (!$r) {
             return null;
         }
+        return $this->formatPlanRow($r);
+    }
+
+    private function formatPlanRow(array $r): array
+    {
         $lang = $_COOKIE['language'] ?? 'fr';
         $nameFr = $r['name_fr'] ?? $r['name'] ?? '';
         $nameEn = $r['name_en'] ?? $r['name'] ?? $nameFr;
@@ -73,13 +80,24 @@ class Plan
             'name_en' => $nameEn,
             'name' => ($lang === 'en' ? $nameEn : $nameFr),
             'video_limit' => (int) $r['video_limit'],
-            'price_monthly' => (float) $r['price_monthly'],
-            'price_yearly' => (float) $r['price_yearly'],
+            'price_monthly' => (float) ($r['price_monthly'] ?? 0),
+            'price_yearly' => (float) ($r['price_yearly'] ?? 0),
             'features_json' => $featuresJson,
             'features' => $features,
             'is_popular' => (bool) ($r['is_popular'] ?? false),
-            'created_at' => $r['created_at'],
+            'created_at' => $r['created_at'] ?? '',
         ];
+    }
+
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare('SELECT id, name_fr, name_en, video_limit, price_monthly, price_yearly, features_json, is_popular, created_at FROM gestion_plans WHERE id = ?');
+        $stmt->execute([$id]);
+        $r = $stmt->fetch();
+        if (!$r) {
+            return null;
+        }
+        return $this->formatPlanRow($r);
     }
 
     public function update(int $id, string $nameFr, string $nameEn, int $videoLimit, float $priceMonthly, float $priceYearly, bool $active = true, ?string $featuresJson = null, bool $isPopular = false): bool

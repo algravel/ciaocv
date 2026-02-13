@@ -127,6 +127,8 @@ CREATE TABLE IF NOT EXISTS gestion_feedback (
     user_name VARCHAR(255) NULL,
     platform_user_id INT UNSIGNED NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50) NOT NULL DEFAULT 'new' COMMENT 'new|in_progress|resolved',
+    internal_note TEXT NULL COMMENT 'Note interne admin',
     FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE SET NULL,
     INDEX idx_created (created_at),
     INDEX idx_type (type)

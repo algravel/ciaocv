@@ -604,12 +604,28 @@
                             <th data-i18n="label_message">Message</th>
                             <th data-i18n="feedback_th_source">Source</th>
                             <th data-i18n="feedback_th_user">Utilisateur</th>
+                            <th data-i18n="feedback_th_status">Statut</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($feedback as $f): ?>
-                        <tr>
-                            <td class="cell-date"><?= e(date('d M Y, H:i', strtotime($f['created_at']))) ?></td>
+                        <?php
+                        $statusLabels = ['new' => 'Nouveau', 'in_progress' => 'En cours', 'resolved' => 'Réglé'];
+                        foreach ($feedback as $f):
+                            $st = $f['status'] ?? 'new';
+                            $statusClass = $st === 'resolved' ? 'status-active' : ($st === 'in_progress' ? 'status-pending' : 'status-paused');
+                        ?>
+                        <tr data-feedback-id="<?= (int) $f['id'] ?>" data-feedback-data="<?= e(json_encode([
+                            'id' => $f['id'],
+                            'type' => $f['type'],
+                            'message' => $f['message'],
+                            'source' => $f['source'],
+                            'user_name' => $f['user_name'] ?? null,
+                            'user_email' => $f['user_email'] ?? null,
+                            'created_at' => $f['created_at'],
+                            'status' => $st,
+                            'internal_note' => $f['internal_note'] ?? null
+                        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP)) ?>">
+                            <td class="cell-date cell-clickable" title="Cliquer pour ouvrir"><?= e(date('d M Y, H:i', strtotime($f['created_at']))) ?></td>
                             <td>
                                 <span class="status-badge <?= $f['type'] === 'idea' ? 'status-active' : 'status-paused' ?>">
                                     <?= $f['type'] === 'idea' ? 'Idée' : 'Bug' ?>
@@ -618,6 +634,7 @@
                             <td><?= e($f['message']) ?></td>
                             <td><?= e($f['source'] === 'gestion' ? 'Gestion' : 'App') ?></td>
                             <td><?= e($f['user_name'] ?? $f['user_email'] ?? '—') ?></td>
+                            <td><span class="status-badge <?= $statusClass ?>"><?= e($statusLabels[$st] ?? 'Nouveau') ?></span></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -638,7 +655,7 @@
         <form class="form-vertical">
             <div class="grid-2col">
                 <div class="form-group"><label class="form-label" data-i18n="form_company_name">Nom de l'entreprise</label><input type="text" class="form-input" value="Acme Corporation"></div>
-                <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur d'activité</label><select class="form-select"><option>Technologie</option><option>Finance</option><option>Santé</option><option>Commerce</option></select></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur d'activité</label><select class="form-select" name="industry"><option value="">— Sélectionner —</option><option>Technologie</option><option>Finance</option><option>Santé</option><option>Commerce</option><option>Construction</option><option>Éducation</option><option>Restauration et hôtellerie</option><option>Services professionnels</option><option>Manufacturier</option><option>Transport et logistique</option><option>Immobilier</option><option>Assurance</option><option>Médias et communications</option><option>Marketing et publicité</option><option>Secteur public</option><option>Organismes à but non lucratif</option><option>Agroalimentaire</option><option>Énergie</option><option>Automobile</option><option>Conseil et stratégie</option><option>Ressources humaines</option></select></div>
             </div>
             <div class="grid-2col">
                 <div class="form-group"><label class="form-label" data-i18n="form_email">Email de contact</label><input type="email" class="form-input" value="rh@acme.com"></div>
@@ -721,6 +738,29 @@
             </div>
             <div class="form-group"><label class="form-label" data-i18n="label_message">Votre message</label><textarea name="message" class="form-input" rows="4" style="resize: vertical;" data-i18n-placeholder="feedback_placeholder" placeholder="Dites-nous en plus..." required></textarea></div>
             <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal('feedback')" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_send">Envoyer</button></div>
+        </form>
+    </div>
+</div>
+<div class="modal-overlay" id="feedback-detail-modal">
+    <div class="modal">
+        <div class="modal-header"><h2 class="modal-title" data-i18n="modal_feedback_detail_title">Détail du feedback</h2><button class="btn-icon" onclick="closeModal('feedback-detail')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div id="feedback-detail-content" class="mb-4"></div>
+        <form id="feedback-detail-form" onsubmit="saveFeedbackDetail(event)">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="feedback-detail-id" value="">
+            <div class="form-group">
+                <label class="form-label" data-i18n="feedback_th_status">Statut</label>
+                <select name="status" id="feedback-detail-status" class="form-select">
+                    <option value="new" data-i18n="status_new">Nouveau</option>
+                    <option value="in_progress" data-i18n="status_in_progress">En cours</option>
+                    <option value="resolved" data-i18n="status_resolved">Réglé</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="feedback_internal_note">Note interne</label>
+                <textarea name="internal_note" id="feedback-detail-internal-note" class="form-input" rows="4" style="resize: vertical;" placeholder="Note visible uniquement par les administrateurs..."></textarea>
+            </div>
+            <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal('feedback-detail')" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button></div>
         </form>
     </div>
 </div>

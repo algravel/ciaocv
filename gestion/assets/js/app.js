@@ -521,6 +521,76 @@ function sendFeedback(e) {
     });
 }
 
+// Ouvrir le modal de détail feedback (clic sur la date)
+document.getElementById('feedback-table') && document.getElementById('feedback-table').addEventListener('click', function (e) {
+    var cell = e.target.closest('.cell-date.cell-clickable');
+    if (!cell) return;
+    var row = cell.closest('tr');
+    if (!row || !row.dataset.feedbackData) return;
+    try {
+        var data = JSON.parse(row.dataset.feedbackData);
+        openFeedbackDetailModal(data, row);
+    } catch (_) {}
+});
+
+function openFeedbackDetailModal(data, row) {
+    var statusLabels = { new: 'Nouveau', in_progress: 'En cours', resolved: 'Réglé' };
+    var typeLabel = (data.type === 'idea') ? 'Idée' : 'Bug';
+    var sourceLabel = (data.source === 'gestion') ? 'Gestion' : 'App';
+    var content = document.getElementById('feedback-detail-content');
+    if (content) {
+        content.innerHTML = '<div class="feedback-detail-readonly">' +
+            '<p><strong>' + (typeof translations !== 'undefined' && translations.fr ? 'Date' : 'Date') + ':</strong> ' + escapeHtml(data.created_at || '') + '</p>' +
+            '<p><strong>Type:</strong> ' + escapeHtml(typeLabel) + '</p>' +
+            '<p><strong>Source:</strong> ' + escapeHtml(sourceLabel) + '</p>' +
+            '<p><strong>Utilisateur:</strong> ' + escapeHtml(data.user_name || data.user_email || '—') + '</p>' +
+            '<p><strong>Message:</strong></p><div class="feedback-detail-message">' + escapeHtml(data.message || '') + '</div>' +
+            '</div>';
+    }
+    document.getElementById('feedback-detail-id').value = data.id || '';
+    document.getElementById('feedback-detail-status').value = data.status || 'new';
+    document.getElementById('feedback-detail-internal-note').value = data.internal_note || '';
+    window._feedbackDetailRow = row;
+    openModal('feedback-detail');
+}
+
+function saveFeedbackDetail(e) {
+    e.preventDefault();
+    var form = document.getElementById('feedback-detail-form');
+    if (!form) return;
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enregistrement...'; }
+    var formData = new FormData(form);
+    var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
+    fetch(basePath + '/feedback/update', { method: 'POST', body: formData })
+    .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+    .then(function (res) {
+        if (res.data.ok) {
+            var row = window._feedbackDetailRow;
+            if (row && row.dataset.feedbackData) {
+                try {
+                    var d = JSON.parse(row.dataset.feedbackData);
+                    d.status = form.querySelector('[name="status"]').value;
+                    d.internal_note = form.querySelector('[name="internal_note"]').value;
+                    row.dataset.feedbackData = JSON.stringify(d);
+                    var statusLabels = { new: 'Nouveau', in_progress: 'En cours', resolved: 'Réglé' };
+                    var st = d.status || 'new';
+                    var statusClass = st === 'resolved' ? 'status-active' : (st === 'in_progress' ? 'status-pending' : 'status-paused');
+                    var statusTd = row.querySelector('td:last-child');
+                    if (statusTd) statusTd.innerHTML = '<span class="status-badge ' + statusClass + '">' + escapeHtml(statusLabels[st] || 'Nouveau') + '</span>';
+                } catch (_) {}
+            }
+            closeModal('feedback-detail');
+        } else {
+            alert(res.data.error || 'Erreur lors de l\'enregistrement');
+        }
+    })
+    .catch(function () { alert('Une erreur est survenue.'); })
+    .finally(function () {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = (typeof translations !== 'undefined' && translations.fr ? translations.fr.btn_save : 'Enregistrer'); }
+    });
+}
+
 /* ═══════════════════════════════════════════════
    EMAIL TEMPLATE CRUD
    ═══════════════════════════════════════════════ */

@@ -6,28 +6,69 @@
 class Feedback
 {
     /**
-     * @return array<int, array{id: int, type: string, message: string, source: string, user_email: ?string, user_name: ?string, created_at: string}>
+     * @return array<int, array{id: int, type: string, message: string, source: string, user_email: ?string, user_name: ?string, created_at: string, status: string, internal_note: ?string}>
      */
     public static function all(): array
     {
         try {
             $pdo = Database::get();
-            $stmt = $pdo->query('SELECT id, type, message, source, user_email, user_name, created_at FROM gestion_feedback ORDER BY created_at DESC');
+            $stmt = $pdo->query('SELECT id, type, message, source, user_email, user_name, created_at, COALESCE(status, \'new\') as status, internal_note FROM gestion_feedback ORDER BY created_at DESC');
             $rows = [];
             while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $rows[] = [
-                    'id'         => (int) $r['id'],
-                    'type'       => $r['type'] ?? 'problem',
-                    'message'    => $r['message'] ?? '',
-                    'source'     => $r['source'] ?? 'app',
-                    'user_email' => $r['user_email'] ?: null,
-                    'user_name'  => $r['user_name'] ?: null,
-                    'created_at' => $r['created_at'] ?? '',
+                    'id'            => (int) $r['id'],
+                    'type'          => $r['type'] ?? 'problem',
+                    'message'       => $r['message'] ?? '',
+                    'source'        => $r['source'] ?? 'app',
+                    'user_email'    => $r['user_email'] ?: null,
+                    'user_name'     => $r['user_name'] ?: null,
+                    'created_at'    => $r['created_at'] ?? '',
+                    'status'        => $r['status'] ?? 'new',
+                    'internal_note' => isset($r['internal_note']) && $r['internal_note'] !== '' ? $r['internal_note'] : null,
                 ];
             }
             return $rows;
         } catch (Throwable $e) {
             return [];
+        }
+    }
+
+    /**
+     * Met à jour le statut et la note interne d'un feedback.
+     * @param array{status?: string, internal_note?: ?string} $data
+     */
+    public static function update(int $id, array $data): bool
+    {
+        $allowed = ['new', 'in_progress', 'resolved'];
+        $status = isset($data['status']) && in_array($data['status'], $allowed, true) ? $data['status'] : null;
+        $hasInternalNote = array_key_exists('internal_note', $data);
+        $internalNote = $hasInternalNote ? (trim($data['internal_note'] ?? '') ?: null) : null;
+
+        if ($status === null && !$hasInternalNote) {
+            return false;
+        }
+
+        try {
+            $pdo = Database::get();
+            $updates = [];
+            $params = [];
+            if ($status !== null) {
+                $updates[] = 'status = ?';
+                $params[] = $status;
+            }
+            if ($hasInternalNote) {
+                $updates[] = 'internal_note = ?';
+                $params[] = $internalNote;
+            }
+            if (empty($updates)) {
+                return false;
+            }
+            $params[] = $id;
+            $stmt = $pdo->prepare('UPDATE gestion_feedback SET ' . implode(', ', $updates) . ' WHERE id = ?');
+            $stmt->execute($params);
+            return $stmt->rowCount() > 0;
+        } catch (Throwable $e) {
+            return false;
         }
     }
 

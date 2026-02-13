@@ -796,6 +796,43 @@ class GestionController
         }
     }
 
+    public function updateFeedback(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PATCH') {
+            http_response_code(405);
+            echo json_encode(['ok' => false, 'error' => 'Méthode non autorisée']);
+            return;
+        }
+        if (!csrf_verify()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'CSRF invalide']);
+            return;
+        }
+        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['ok' => false, 'error' => 'ID invalide']);
+            return;
+        }
+        $data = [];
+        if (isset($_POST['status'])) {
+            $data['status'] = $_POST['status'];
+        }
+        if (array_key_exists('internal_note', $_POST)) {
+            $data['internal_note'] = $_POST['internal_note'];
+        }
+        if (empty($data)) {
+            echo json_encode(['ok' => false, 'error' => 'Aucune donnée à mettre à jour']);
+            return;
+        }
+        if (Feedback::update($id, $data)) {
+            echo json_encode(['ok' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'Erreur lors de la mise à jour']);
+        }
+    }
+
     public function debug(): void
     {
         if (!$this->isAuthenticated()) {
