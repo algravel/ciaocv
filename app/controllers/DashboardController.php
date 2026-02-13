@@ -719,6 +719,47 @@ class DashboardController extends Controller
     }
 
     /**
+     * Mettre à jour le statut d'un affichage (actif / terminé / archivé).
+     * POST /affichages/update
+     */
+    public function updateAffichageStatus(): void
+    {
+        try {
+            $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) {
+                return;
+            }
+            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+            if (!$platformUserId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $affichageId = isset($_POST['affichage_id']) ? (string) $_POST['affichage_id'] : '';
+            $frontStatus = isset($_POST['status']) ? trim($_POST['status']) : '';
+            $statusMap = ['actif' => 'active', 'termine' => 'paused', 'archive' => 'closed'];
+            $dbStatus = $statusMap[$frontStatus] ?? null;
+            if ($affichageId === '' || $dbStatus === null) {
+                $this->json(['success' => false, 'error' => 'Paramètres invalides'], 400);
+                return;
+            }
+            $affichage = Affichage::find($affichageId, $platformUserId);
+            if (!$affichage) {
+                $this->json(['success' => false, 'error' => 'Affichage introuvable'], 404);
+                return;
+            }
+            $ok = Affichage::updateStatus($affichageId, $platformUserId, $dbStatus);
+            $this->json(['success' => $ok]);
+        } catch (Throwable $e) {
+            error_log('updateAffichageStatus error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
+
+    /**
      * Retirer un évaluateur d'un affichage.
      * POST /affichages/evaluateur/remove
      */

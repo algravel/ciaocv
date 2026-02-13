@@ -969,23 +969,36 @@ function showAffichageDetail(id) {
         shareUrlEl.textContent = url;
     }
 
-    // Status select (absent pour les évaluateurs)
+    // Status select (absent pour les évaluateurs) — libellés dans la langue courante
     var statusSelect = document.getElementById('affichage-status-select');
     if (statusSelect) {
-        var statusKey = (data.status || 'Actif').toLowerCase().replace(/é/g, 'e');
-        if (statusKey === 'actif') statusSelect.value = 'actif';
-        else if (statusKey === 'termine') statusSelect.value = 'termine';
-        else if (statusKey === 'archive') statusSelect.value = 'archive';
+        var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+        var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : {};
+        for (var o = 0; o < statusSelect.options.length; o++) {
+            var opt = statusSelect.options[o];
+            var key = opt.getAttribute('data-i18n');
+            if (key && t[key]) opt.textContent = t[key];
+        }
+        // Valeur du select depuis la BDD (statusClass reflète le statut en base)
+        var statusClass = data.statusClass || 'status-active';
+        if (statusClass === 'status-closed') statusSelect.value = 'archive';
+        else if (statusClass === 'status-paused' || statusClass === 'status-expired') statusSelect.value = 'termine';
         else statusSelect.value = 'actif';
         applyStatusSelectStyle(statusSelect);
     }
 
-    // Alerte terminé
+    // Alerte terminé + masquer la carte Évaluateurs si statut Terminé
     var alert = document.getElementById('affichage-termine-alert');
-    if (alert) {
-        var statusVal = statusSelect ? statusSelect.value : '';
-        if (statusVal === 'termine') alert.classList.remove('hidden');
-        else alert.classList.add('hidden');
+    var evaluatorsCard = document.getElementById('affichage-evaluateurs-card');
+    if (statusSelect) {
+        var statusVal = statusSelect.value;
+        if (statusVal === 'termine') {
+            if (alert) alert.classList.remove('hidden');
+            if (evaluatorsCard) evaluatorsCard.style.display = 'none';
+        } else {
+            if (alert) alert.classList.add('hidden');
+            if (evaluatorsCard) evaluatorsCard.style.display = '';
+        }
     }
 
     renderAffichageCandidatsTable(id, 'all');
@@ -1079,7 +1092,16 @@ function saveAffichageFromModal(e) {
                     tr.className = 'row-clickable';
                     tr.setAttribute('data-affichage-id', a.id);
                     tr.onclick = function () { showAffichageDetail(a.id); };
-                    tr.innerHTML = '<td><strong>' + escapeHtml(a.title || '') + '</strong></td><td>' + escapeHtml(a.department || '') + '</td><td><span class="status-badge ' + escapeHtml(a.statusClass || 'status-active') + '">' + escapeHtml(a.status || 'Actif') + '</span></td><td><span class="badge-count">0/0</span></td><td class="cell-actions"><button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showAffichageDetail(\'' + escapeHtml(String(a.id)) + '\')" title="Modifier"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deleteAffichage(\'' + escapeHtml(String(a.id)) + '\', this.closest(\'tr\'))" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>';
+                    (function () {
+                        var statusLabel = a.status || 'Actif';
+                        if (typeof getLanguage === 'function' && typeof translations !== 'undefined') {
+                            var dict = translations[getLanguage()] || {};
+                            if (a.statusClass === 'status-active') statusLabel = dict.status_active || statusLabel;
+                            else if (a.statusClass === 'status-closed') statusLabel = dict.status_archived || statusLabel;
+                            else if (a.statusClass === 'status-paused' || a.statusClass === 'status-expired') statusLabel = dict.status_termine || statusLabel;
+                        }
+                        tr.innerHTML = '<td><strong>' + escapeHtml(a.title || '') + '</strong></td><td>' + escapeHtml(a.department || '') + '</td><td><span class="status-badge ' + escapeHtml(a.statusClass || 'status-active') + '">' + escapeHtml(statusLabel) + '</span></td><td><span class="badge-count">0/0</span></td><td class="cell-actions"><button type="button" class="btn-icon btn-icon-edit" onclick="event.stopPropagation(); showAffichageDetail(\'' + escapeHtml(String(a.id)) + '\')" title="Modifier"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-icon btn-icon-delete" onclick="event.stopPropagation(); deleteAffichage(\'' + escapeHtml(String(a.id)) + '\', this.closest(\'tr\'))" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>';
+                    })();
                     tbody.insertBefore(tr, tbody.firstChild);
                 }
                 closeModal('affichage');
@@ -1561,20 +1583,68 @@ function updateAffichageStatus(value) {
     if (!id || !affichagesData[id]) return;
 
     var select = document.getElementById('affichage-status-select');
+    var previousValue = affichagesData[id].statusClass === 'status-closed' ? 'archive' : (affichagesData[id].statusClass === 'status-paused' ? 'termine' : 'actif');
     applyStatusSelectStyle(select);
 
     var alert = document.getElementById('affichage-termine-alert');
+    var evaluatorsCard = document.getElementById('affichage-evaluateurs-card');
     if (value === 'termine') {
-        alert.classList.remove('hidden');
+        if (alert) alert.classList.remove('hidden');
+        if (evaluatorsCard) evaluatorsCard.style.display = 'none';
     } else {
-        alert.classList.add('hidden');
+        if (alert) alert.classList.add('hidden');
+        if (evaluatorsCard) evaluatorsCard.style.display = '';
     }
 
-    // Mettre à jour les données mock
-    var labels = { actif: 'Actif', termine: 'Terminé', archive: 'Archivé' };
+    var t = (typeof translations !== 'undefined' && translations[typeof getLanguage === 'function' ? getLanguage() : 'fr']) || {};
+    var labels = { actif: t.status_active || 'Actif', termine: t.status_termine || 'Terminé', archive: t.status_archived || 'Archivé' };
     var classes = { actif: 'status-active', termine: 'status-paused', archive: 'status-paused' };
-    affichagesData[id].status = labels[value] || 'Actif';
-    affichagesData[id].statusClass = classes[value] || 'status-active';
+    affichagesData[id].status = labels[value] || labels.actif;
+    affichagesData[id].statusClass = value === 'archive' ? 'status-closed' : (value === 'termine' ? 'status-paused' : 'status-active');
+
+    var formData = new FormData();
+    formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    formData.append('affichage_id', String(id));
+    formData.append('status', value);
+    fetch('/affichages/update', { method: 'POST', body: formData })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (!res.success) {
+                select.value = previousValue;
+                applyStatusSelectStyle(select);
+                affichagesData[id].status = labels[previousValue] || labels.actif;
+                affichagesData[id].statusClass = previousValue === 'archive' ? 'status-closed' : (previousValue === 'termine' ? 'status-paused' : 'status-active');
+                if (previousValue === 'termine') { if (alert) alert.classList.remove('hidden'); if (evaluatorsCard) evaluatorsCard.style.display = 'none'; } else { if (alert) alert.classList.add('hidden'); if (evaluatorsCard) evaluatorsCard.style.display = ''; }
+                alert(res.error || 'Erreur lors de l\'enregistrement du statut.');
+            } else {
+                updateAffichageRowInTable(id);
+            }
+        })
+        .catch(function () {
+            select.value = previousValue;
+            applyStatusSelectStyle(select);
+            affichagesData[id].status = labels[previousValue] || labels.actif;
+            affichagesData[id].statusClass = previousValue === 'archive' ? 'status-closed' : (previousValue === 'termine' ? 'status-paused' : 'status-active');
+            if (previousValue === 'termine') { if (alert) alert.classList.remove('hidden'); if (evaluatorsCard) evaluatorsCard.style.display = 'none'; } else { if (alert) alert.classList.add('hidden'); if (evaluatorsCard) evaluatorsCard.style.display = ''; }
+            alert('Erreur réseau. Le statut n\'a pas été enregistré.');
+        });
+}
+
+function updateAffichageRowInTable(affichageId) {
+    var a = affichagesData[affichageId];
+    if (!a) return;
+    var row = document.querySelector('#affichages-table tbody tr[data-affichage-id="' + affichageId + '"]');
+    if (!row || !row.cells[2]) return;
+    var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+    var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : {};
+    var statusLabel = a.statusClass === 'status-closed' ? (t.status_archived || 'Archivé') : (a.statusClass === 'status-paused' ? (t.status_termine || 'Terminé') : (t.status_active || 'Actif'));
+    var badge = row.cells[2].querySelector('.status-badge');
+    if (badge) {
+        badge.textContent = statusLabel;
+        badge.className = 'status-badge ' + (a.statusClass || 'status-active');
+    }
+    var dataStatus = a.statusClass === 'status-closed' ? 'closed' : (a.statusClass === 'status-paused' ? 'paused' : 'active');
+    row.setAttribute('data-status', dataStatus);
 }
 
 function showCommunicationModalFromCandidate(candidateId) {
@@ -1812,8 +1882,10 @@ function renderEvaluateurs() {
     var evaluateurs = affichagesData[id].evaluateurs || [];
     var container = document.getElementById('affichage-evaluateurs-list');
     var countEl = document.getElementById('affichage-evaluateurs-count');
+    var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+    var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : { evaluator: 'évaluateur', evaluators: 'évaluateurs', no_evaluators_assigned: 'Aucun évaluateur assigné.', evaluator_remove: 'Retirer' };
     container.innerHTML = '';
-    countEl.textContent = evaluateurs.length + ' évaluateur' + (evaluateurs.length !== 1 ? 's' : '');
+    countEl.textContent = evaluateurs.length + ' ' + (evaluateurs.length === 1 ? t.evaluator : t.evaluators);
 
     var isEvaluateur = !!(typeof APP_DATA !== 'undefined' && APP_DATA.isEvaluateur);
     evaluateurs.forEach(function (ev, index) {
@@ -1821,8 +1893,9 @@ function renderEvaluateurs() {
         var evId = ev.id != null ? ev.id : '';
         var deleteBtn = '';
         if (!isEvaluateur) {
+            var removeTitle = escapeHtml(t.evaluator_remove || 'Retirer');
             var onclickAttr = evId ? 'onclick="event.preventDefault();event.stopPropagation();deleteEvaluateur(' + index + ', ' + evId + ')"' : 'onclick="event.preventDefault();event.stopPropagation();deleteEvaluateur(' + index + ', null)"';
-            deleteBtn = '<button type="button" class="btn-icon btn-icon--danger" title="Retirer" ' + onclickAttr + '><i class="fa-solid fa-trash"></i></button>';
+            deleteBtn = '<button type="button" class="btn-icon btn-icon--danger" title="' + removeTitle + '" ' + onclickAttr + '><i class="fa-solid fa-trash"></i></button>';
         }
         var div = document.createElement('div');
         div.className = 'evaluateur-item';
@@ -1836,7 +1909,7 @@ function renderEvaluateurs() {
     });
 
     if (evaluateurs.length === 0) {
-        container.innerHTML = '<div style="padding:1rem;text-align:center;color:#94A3B8;font-size:0.85rem;">Aucun évaluateur assigné.</div>';
+        container.innerHTML = '<div style="padding:1rem;text-align:center;color:#94A3B8;font-size:0.85rem;">' + escapeHtml(t.no_evaluators_assigned || 'Aucun évaluateur assigné.') + '</div>';
     }
 }
 
@@ -1902,7 +1975,9 @@ function deleteEvaluateur(index, evaluateurId) {
     var ev = affichagesData[id].evaluateurs[index];
     if (!ev) return;
 
-    if (!confirm('Retirer cet évaluateur de l\'affichage ?')) return;
+    var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+    var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : {};
+    if (!confirm(t.remove_evaluateur_confirm || 'Retirer cet évaluateur de l\'affichage ?')) return;
 
     if (evaluateurId && evaluateurId > 0) {
         var formData = new FormData();
@@ -1926,6 +2001,21 @@ function deleteEvaluateur(index, evaluateurId) {
         renderEvaluateurs();
     }
 }
+
+window.addEventListener('i18n-updated', function () {
+    if (typeof renderEvaluateurs === 'function' && window._currentAffichageId) renderEvaluateurs();
+    // Rafraîchir les libellés du select statut affichage (Active / Completed / Archived)
+    var statusSelect = document.getElementById('affichage-status-select');
+    if (statusSelect) {
+        var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+        var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : {};
+        for (var o = 0; o < statusSelect.options.length; o++) {
+            var opt = statusSelect.options[o];
+            var key = opt.getAttribute('data-i18n');
+            if (key && t[key]) opt.textContent = t[key];
+        }
+    }
+});
 
 function setPlaybackSpeed(speed, btn) {
     var vp = document.getElementById('detail-candidate-video-player');

@@ -361,6 +361,13 @@ try {
                 INDEX idx_platform_user (platform_user_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         }
+        // Mise à jour du contenu des modèles « Invitation » (libellé professionnel avec {{nom_entreprise}})
+        $invitationContent = "Bonjour {{nom_candidat}},\n\nNous avons le plaisir de vous annoncer que votre candidature pour le poste de {{titre_poste}} ({{nom_entreprise}}) a été retenue pour la prochaine étape de notre processus de sélection.\n\nNotre équipe vous contactera sous peu pour convenir d'un rendez-vous (entrevue en personne ou visioconférence).\n\nCordialement,\nL'équipe Recrutement";
+        $stmt = $pdo->prepare("UPDATE app_email_templates SET content = ?, title = 'Invitation à l\'entrevue vidéo' WHERE title IN ('Invitation à l\'entrevue vidéo', 'Invitation 2e entrevue')");
+        $stmt->execute([$invitationContent]);
+        if ($stmt->rowCount() > 0) {
+            echo "Migration: contenu modèles Invitation mis à jour (n=" . $stmt->rowCount() . ")\n";
+        }
     } catch (Throwable $e) {
         // ignorer
     }

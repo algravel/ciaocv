@@ -197,9 +197,9 @@ function _zeptomail_email_logo(): string
         '</div>';
 }
 
-function _zeptomail_email_logo_user(): string
+function _zeptomail_email_logo_user(string $marginBottom = '2rem'): string
 {
-    return '<div style="text-align:center;margin-bottom:2rem;">' .
+    return '<div style="text-align:center;margin-bottom:' . $marginBottom . ';">' .
         '<span style="font-family:\'Montserrat\',sans-serif;font-size:2rem;font-weight:800;color:#2563EB;">ciao</span>' .
         '<span style="font-family:\'Montserrat\',sans-serif;font-size:2rem;font-weight:800;color:#0F172A;">cv</span>' .
         '</div>';
@@ -410,18 +410,22 @@ function zeptomail_send_candidate_notification(string $toEmail, string $toName, 
         return false;
     }
     $auth = (strpos($token, 'Zoho-enczapikey') === 0) ? $token : 'Zoho-enczapikey ' . $token;
-    $subject = 'Mise à jour de votre candidature';
-    $message = preg_replace('/^\s*Bonjour\s*,?\s*\n?\s*/iu', '', trim($message));
+    $subject = 'Votre candidature – message de l\'équipe recrutement';
+    // Retirer la salutation du corps pour éviter le doublon (le HTML ajoute déjà "Bonjour [nom],")
+    $message = preg_replace('/^\s*Bonjour\s+[^,\n]*,\s*\n?/iu', '', trim($message));
+    $message = trim($message);
+    // Un seul saut de ligne entre paragraphes pour réduire l'espace
+    $message = preg_replace('/\n{2,}/', "\n", $message);
     $messageHtml = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
     $payload = [
         'from' => ['address' => $fromAddr, 'name' => $fromName],
         'to' => [['email_address' => ['address' => $toEmail, 'name' => $toName]]],
         'subject' => $subject,
-        'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:2rem 1rem;">' .
-            _zeptomail_email_logo_user() .
-            '<h2 style="color:#2563EB;font-size:1.25rem;margin-bottom:1rem;">Mise à jour de votre candidature</h2>' .
-            '<p>Bonjour ' . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ',</p>' .
-            '<div style="white-space:pre-wrap;">' . $messageHtml . '</div></div>',
+        'htmlbody' => '<div style="font-family:\'Montserrat\',sans-serif;max-width:480px;margin:0 auto;padding:1rem 1rem;text-align:left;">' .
+            _zeptomail_email_logo_user('1rem') .
+            '<h2 style="color:#2563EB;font-size:1.25rem;margin:0 0 1.25rem 0;text-align:center;">Message concernant votre candidature</h2>' .
+            '<p style="margin:0 0 0.5rem 0;line-height:1.4;">Bonjour ' . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ',</p>' .
+            '<div style="white-space:pre-wrap;margin:0;line-height:1.4;">' . $messageHtml . '</div></div>',
     ];
     $r = _zeptomail_post($apiUrl, $auth, $payload);
     if (!$r['success'] && $r['response']) {

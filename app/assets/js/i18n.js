@@ -130,6 +130,8 @@ const translations = {
         status_active: "Actif",
         status_paused: "Pausé",
         status_closed: "Fermé",
+        status_termine: "Terminé",
+        status_archived: "Archivé",
         status_new: "Nouveau",
         status_reviewed: "Évalué",
         status_banque: "Banque",
@@ -257,7 +259,24 @@ const translations = {
         modal_delete_affichage_msg: "Êtes-vous sûr de vouloir supprimer cet affichage ?",
         modal_delete_poste_msg: "Êtes-vous sûr de vouloir supprimer ce poste ?",
         btn_add: "Ajouter",
-        contact_email: "Email"
+        contact_email: "Email",
+        evaluator: "évaluateur",
+        evaluators: "évaluateurs",
+        no_evaluators_assigned: "Aucun évaluateur assigné.",
+        add_evaluateur_title: "Ajouter un évaluateur",
+        remove_evaluateur_confirm: "Retirer cet évaluateur de l'affichage ?",
+        evaluator_remove: "Retirer",
+        evaluator_placeholder_prenom: "Prénom",
+        evaluator_placeholder_nom: "Nom",
+        evaluator_placeholder_email: "Courriel",
+        evaluators_count_zero: "0 évaluateurs",
+        share_link_label: "Lien à partager",
+        notify_candidats_title: "Notifier les candidats",
+        notify_candidats_subtitle: "Sélectionnez les candidats à notifier par courriel.",
+        notify_candidats_list_label: "Candidats à notifier",
+        notify_select_all: "Tout sélectionner",
+        notify_message_label: "Message aux candidats",
+        notify_message_placeholder: "Rédigez votre message..."
     },
 
     en: {
@@ -342,6 +361,7 @@ const translations = {
         th_views: "Views", th_applications: "Applications", th_new_candidates: "Unevaluated",
         th_candidate: "Candidate", th_video: "Video", th_rating: "Rating", th_applied: "Applied",
         status_active: "Active", status_paused: "Paused", status_closed: "Closed",
+        status_termine: "Completed", status_archived: "Archived",
         status_new: "New", status_reviewed: "Reviewed", status_accepted: "Accepted", status_rejected: "Rejected", status_shortlisted: "Favorite",
         stat_active_jobs: "Active postings", stat_total_candidates: "Total candidates",
         stat_pending_review: "Pending review", stat_shortlisted: "Shortlisted",
@@ -426,7 +446,24 @@ const translations = {
         modal_delete_affichage_msg: "Are you sure you want to delete this posting?",
         modal_delete_poste_msg: "Are you sure you want to delete this position?",
         btn_add: "Add",
-        contact_email: "Email"
+        contact_email: "Email",
+        evaluator: "evaluator",
+        evaluators: "evaluators",
+        no_evaluators_assigned: "No evaluators assigned.",
+        add_evaluateur_title: "Add evaluator",
+        remove_evaluateur_confirm: "Remove this evaluator from the posting?",
+        evaluator_remove: "Remove",
+        evaluator_placeholder_prenom: "First name",
+        evaluator_placeholder_nom: "Last name",
+        evaluator_placeholder_email: "Email",
+        evaluators_count_zero: "0 evaluators",
+        share_link_label: "Link to share",
+        notify_candidats_title: "Notify candidates",
+        notify_candidats_subtitle: "Select the candidates to notify by email.",
+        notify_candidats_list_label: "Candidates to notify",
+        notify_select_all: "Select all",
+        notify_message_label: "Message to candidates",
+        notify_message_placeholder: "Write your message..."
     }
 };
 
@@ -482,6 +519,8 @@ function updateContent() {
     document.querySelectorAll('.lang-btn').forEach(function (btn) {
         btn.classList.toggle('active', btn.dataset.lang === lang);
     });
+
+    try { window.dispatchEvent(new CustomEvent('i18n-updated')); } catch (e) {}
 }
 
 function toggleLanguage(e) {

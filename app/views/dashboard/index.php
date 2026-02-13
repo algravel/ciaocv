@@ -221,11 +221,11 @@
         <?php if (empty($isEvaluateur)): ?>
         <div class="action-group">
             <select class="status-select" id="affichage-status-select" onchange="updateAffichageStatus(this.value)">
-                <option value="actif">Actif</option>
-                <option value="termine">Terminé</option>
-                <option value="archive">Archivé</option>
+                <option value="actif" data-i18n="status_active">Actif</option>
+                <option value="termine" data-i18n="status_termine">Terminé</option>
+                <option value="archive" data-i18n="status_archived">Archivé</option>
             </select>
-            <button class="btn-icon" title="Notifier les candidats" onclick="openNotifyCandidatsModal()"><i
+            <button class="btn-icon" title="Notifier les candidats" data-i18n-title="notify_candidats_title" onclick="openNotifyCandidatsModal()"><i
                     class="fa-solid fa-envelope"></i></button>
         </div>
         <?php endif; ?>
@@ -240,15 +240,15 @@
 
     <div class="filters-bar">
         <div class="view-tabs" id="affichage-candidats-filter-tabs">
-            <button class="view-tab active" data-filter="all">Tous</button>
-            <button class="view-tab" data-filter="new">Nouveaux</button>
-            <button class="view-tab" data-filter="reviewed">Évalués</button>
-            <button class="view-tab" data-filter="rejected">Refusés</button>
+            <button class="view-tab active" data-filter="all" data-i18n="filter_all">Tous</button>
+            <button class="view-tab" data-filter="new" data-i18n="filter_new">Nouveaux</button>
+            <button class="view-tab" data-filter="reviewed" data-i18n="filter_reviewed">Évalués</button>
+            <button class="view-tab" data-filter="rejected" data-i18n="filter_rejected">Refusés</button>
         </div>
     </div>
     <?php if (empty($isEvaluateur)): ?>
     <div class="search-row search-row--with-label">
-        <span class="search-row-label">Lien à partager</span>
+        <span class="search-row-label" data-i18n="share_link_label">Lien à partager</span>
         <span class="search-row-url-wrap">
             <?php
             $firstAff = $affichages ? reset($affichages) : null;
@@ -278,17 +278,17 @@
     <!-- Évaluateurs CRUD (caché pour les évaluateurs) -->
     <div class="card mt-6" id="affichage-evaluateurs-card">
         <div class="flex-between mb-4">
-            <h3 class="section-heading mb-0"><i class="fa-solid fa-user-check"></i> Évaluateurs</h3>
-            <span class="subtitle-muted" id="affichage-evaluateurs-count">0 évaluateurs</span>
+            <h3 class="section-heading mb-0"><i class="fa-solid fa-user-check"></i> <span data-i18n="settings_team">Évaluateurs</span></h3>
+            <span class="subtitle-muted" id="affichage-evaluateurs-count" data-i18n="evaluators_count_zero">0 évaluateurs</span>
         </div>
         <div id="affichage-evaluateurs-list" class="evaluateurs-list"></div>
         <?php if (empty($isEvaluateur)): ?>
         <div class="evaluateurs-add-row mt-4" id="evaluateurs-add-row">
-            <input type="text" id="eval-new-prenom" class="form-input" placeholder="Prénom">
-            <input type="text" id="eval-new-nom" class="form-input" placeholder="Nom">
-            <input type="email" id="eval-new-email" class="form-input" placeholder="Courriel"
+            <input type="text" id="eval-new-prenom" class="form-input" placeholder="Prénom" data-i18n-placeholder="evaluator_placeholder_prenom">
+            <input type="text" id="eval-new-nom" class="form-input" placeholder="Nom" data-i18n-placeholder="evaluator_placeholder_nom">
+            <input type="email" id="eval-new-email" class="form-input" placeholder="Courriel" data-i18n-placeholder="evaluator_placeholder_email"
                 onkeydown="if(event.key==='Enter'){addEvaluateur(); event.preventDefault();}">
-            <button type="button" class="btn btn-primary" onclick="addEvaluateur()" style="flex-shrink:0;min-width:44px;min-height:44px;" title="Ajouter un évaluateur"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="btn btn-primary" onclick="addEvaluateur()" style="flex-shrink:0;min-width:44px;min-height:44px;" title="Ajouter un évaluateur" data-i18n-title="add_evaluateur_title"><i class="fa-solid fa-plus"></i></button>
         </div>
         <?php endif; ?>
     </div>
@@ -333,6 +333,9 @@
                     $affRawStatus = 'paused';
                 elseif (($a['statusClass'] ?? '') === 'status-closed')
                     $affRawStatus = 'closed';
+                $statusI18n = 'status_active';
+                if (($a['statusClass'] ?? '') === 'status-closed') $statusI18n = 'status_archived';
+                elseif (($a['statusClass'] ?? '') === 'status-paused' || ($a['statusClass'] ?? '') === 'status-expired') $statusI18n = 'status_termine';
 
                 $cands = $candidatsByAff[$aId] ?? [];
                 $cnt = count($cands);
@@ -346,7 +349,7 @@
                     onclick="showAffichageDetail('<?= e($aId) ?>')" class="row-clickable">
                     <td><strong><?= e($a['title']) ?></strong></td>
                     <td><?= e($a['department'] ?? '') ?></td>
-                    <td><span class="status-badge <?= e($a['statusClass']) ?>"><?= e($a['status']) ?></span></td>
+                    <td><span class="status-badge <?= e($a['statusClass']) ?>" data-i18n="<?= e($statusI18n) ?>"><?= e($a['status']) ?></span></td>
                     <td><span class="badge-count"><?= $newCnt ?>/<?= $cnt ?></span></td>
                     <td class="cell-actions">
                         <button type="button" class="btn-icon btn-icon-edit"
@@ -914,34 +917,33 @@
 <div class="modal-overlay" id="notify-candidats-modal">
     <div class="modal modal--narrow">
         <div class="modal-header">
-            <h2 class="modal-title"><i class="fa-solid fa-envelope"></i> Notifier les candidats</h2><button
+            <h2 class="modal-title"><i class="fa-solid fa-envelope"></i> <span data-i18n="notify_candidats_title">Notifier les candidats</span></h2><button
                 class="btn-icon" onclick="closeModal('notify-candidats')"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="mb-5">
-            <p class="subtitle-muted mb-2">Sélectionnez les candidats à notifier par courriel.</p>
+            <p class="subtitle-muted mb-2" data-i18n="notify_candidats_subtitle">Sélectionnez les candidats à notifier par courriel.</p>
         </div>
         <div class="mb-5">
             <div class="flex-between mb-3">
-                <label class="form-label mb-0 fw-semibold">Candidats à notifier</label>
+                <label class="form-label mb-0 fw-semibold" data-i18n="notify_candidats_list_label">Candidats à notifier</label>
                 <label class="select-all-label">
-                    <input type="checkbox" id="notify-select-all" onchange="toggleSelectAllNotify(this)">Tout
-                    sélectionner
+                    <input type="checkbox" id="notify-select-all" onchange="toggleSelectAllNotify(this)"><span data-i18n="notify_select_all">Tout sélectionner</span>
                 </label>
             </div>
             <div id="notify-candidats-list" class="candidate-list-scroll"></div>
         </div>
         <div class="form-group mb-5">
-            <label class="form-label fw-semibold">Message aux candidats</label>
+            <label class="form-label fw-semibold" data-i18n="notify_message_label">Message aux candidats</label>
             <div id="notify-template-buttons" class="flex-center gap-2 mb-3 flex-wrap">
                 <!-- Boutons générés depuis les modèles Paramètres > Communication -->
             </div>
             <textarea id="notify-candidats-message" class="form-input w-full" rows="4" style="resize: vertical;"
-                placeholder="Rédigez votre message..."></textarea>
+                placeholder="Rédigez votre message..." data-i18n-placeholder="notify_message_placeholder"></textarea>
         </div>
         <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('notify-candidats')">Annuler</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal('notify-candidats')" data-i18n="btn_cancel">Annuler</button>
             <button type="button" class="btn btn-primary" onclick="confirmNotifyCandidats()"><i
-                    class="fa-solid fa-paper-plane"></i> Envoyer</button>
+                    class="fa-solid fa-paper-plane"></i> <span data-i18n="btn_send">Envoyer</span></button>
         </div>
     </div>
 </div>

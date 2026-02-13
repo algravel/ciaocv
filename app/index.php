@@ -54,6 +54,7 @@ $router->post('/postes', 'DashboardController', 'createPoste');
 $router->post('/postes/update', 'DashboardController', 'updatePoste');
 $router->post('/postes/delete', 'DashboardController', 'deletePoste');
 $router->post('/affichages', 'DashboardController', 'createAffichage');
+$router->post('/affichages/update', 'DashboardController', 'updateAffichageStatus');
 $router->post('/affichages/delete', 'DashboardController', 'deleteAffichage');
 $router->post('/affichages/evaluateur/remove', 'DashboardController', 'removeEvaluateur');
 $router->post('/affichages/evaluateur/add', 'DashboardController', 'addEvaluateur');

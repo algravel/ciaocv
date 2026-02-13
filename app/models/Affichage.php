@@ -395,6 +395,24 @@ class Affichage
     }
 
     /**
+     * Mettre à jour le statut d'un affichage.
+     * @param string $id ID affichage
+     * @param int $platformUserId Utilisateur (sécu)
+     * @param string $status 'active' | 'paused' | 'closed'
+     */
+    public static function updateStatus(string $id, int $platformUserId, string $status): bool
+    {
+        if (!in_array($status, ['active', 'paused', 'closed'], true)) {
+            return false;
+        }
+        self::ensureDb();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('UPDATE app_affichages SET status = ? WHERE id = ? AND platform_user_id = ?');
+        $stmt->execute([$status, $id, $platformUserId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
      * Supprimer un affichage.
      */
     public static function delete(string $id, int $platformUserId): bool
