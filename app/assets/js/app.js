@@ -165,9 +165,16 @@ function activateNavItem(item) {
 
 document.querySelectorAll('.nav-item[data-section]').forEach(function (item) {
     item.addEventListener('click', function (e) {
+        var href = item.getAttribute('href');
+        var section = item.dataset.section;
+        // Tableau de bord : rechargement pour rafraîchir les KPIs et tâches restantes
+        if (section === 'statistiques' && href) {
+            e.preventDefault();
+            window.location.href = href;
+            return;
+        }
         e.preventDefault();
         activateNavItem(item);
-        var href = item.getAttribute('href');
         if (href) history.pushState(null, null, href);
     });
 });
@@ -658,6 +665,22 @@ function addPosteQuestion() {
     savePosteToServer({ questions: true });
 }
 
+function addPosteQuestionFromChip(text) {
+    if (!text || !currentPosteId) return;
+    postesData[currentPosteId].questions.push(text);
+    renderPosteQuestions();
+    savePosteToServer({ questions: true });
+}
+
+// Clic sur une question proposée (chips)
+document.addEventListener('click', function (e) {
+    var chip = e.target && e.target.closest && e.target.closest('.question-chip[data-question]');
+    if (chip && currentPosteId) {
+        var q = chip.getAttribute('data-question');
+        if (q) addPosteQuestionFromChip(q);
+    }
+});
+
 function editPosteQuestion(index) {
     var data = postesData[currentPosteId];
     if (!data) return;
@@ -1038,6 +1061,7 @@ function savePosteFromModal(e) {
                 }
                 closeModal('poste');
                 form.reset();
+                if (typeof showPosteDetail === 'function') showPosteDetail(p.id);
             } else {
                 console.error('createPoste: erreur', res);
                 alert(res.error || 'Erreur lors de l\'enregistrement');

@@ -109,6 +109,19 @@
             <span class="subtitle-muted" id="detail-poste-questions-count">0 questions</span>
         </div>
         <div id="detail-poste-questions-list" class="questions-list"></div>
+        <div id="detail-poste-questions-proposed" class="questions-proposed mt-4">
+            <label class="form-label" data-i18n="questions_proposed">Questions proposées</label>
+            <div class="question-chips" id="detail-poste-question-chips">
+                <button type="button" class="question-chip" data-question="Parlez-nous de votre parcours et de vos motivations."><i class="fa-solid fa-plus"></i> Parlez-nous de votre parcours et de vos motivations.</button>
+                <button type="button" class="question-chip" data-question="Décrivez un projet complexe que vous avez géré."><i class="fa-solid fa-plus"></i> Décrivez un projet complexe que vous avez géré.</button>
+                <button type="button" class="question-chip" data-question="Quelles sont vos compétences clés pour ce poste ?"><i class="fa-solid fa-plus"></i> Quelles sont vos compétences clés pour ce poste ?</button>
+                <button type="button" class="question-chip" data-question="Pourquoi souhaitez-vous nous rejoindre ?"><i class="fa-solid fa-plus"></i> Pourquoi souhaitez-vous nous rejoindre ?</button>
+                <button type="button" class="question-chip" data-question="Quel est votre style de leadership ?"><i class="fa-solid fa-plus"></i> Quel est votre style de leadership ?</button>
+                <button type="button" class="question-chip" data-question="Racontez-nous un défi que vous avez surmonté."><i class="fa-solid fa-plus"></i> Racontez-nous un défi que vous avez surmonté.</button>
+                <button type="button" class="question-chip" data-question="Que recherchez-vous comme opportunité ?"><i class="fa-solid fa-plus"></i> Que recherchez-vous comme opportunité ?</button>
+                <button type="button" class="question-chip" data-question="Pourquoi vous et pas un autre ?"><i class="fa-solid fa-plus"></i> Pourquoi vous et pas un autre ?</button>
+            </div>
+        </div>
         <div class="questions-add-row mt-4">
             <input type="text" id="detail-poste-new-question" class="form-input" placeholder="Ajouter une question..."
                 onkeydown="if(event.key==='Enter'){addPosteQuestion(); event.preventDefault();}">
@@ -119,7 +132,7 @@
             <div>
                 <label class="form-label mb-0 fw-semibold"><i class="fa-solid fa-video"></i> Durée
                     d'enregistrement</label>
-                <div class="form-help">Temps maximum par question pour le candidat.</div>
+                <div class="form-help" data-i18n="record_duration_help">Temps maximum pour l'ensemble des questions pour le candidat.</div>
             </div>
             <select class="form-select form-select--auto" id="detail-poste-record-duration"
                 onchange="updatePosteRecordDuration(this.value)">
@@ -702,7 +715,7 @@
                         d'activité</label><select class="form-select" name="industry">
                         <option value="" <?= $companyIndustry === '' ? ' selected' : '' ?>>— Sélectionner —</option>
                         <?php
-                        $industries = ['Technologie', 'Finance', 'Santé', 'Commerce', 'Construction', 'Éducation', 'Restauration et hôtellerie', 'Services professionnels', 'Manufacturier', 'Transport et logistique', 'Immobilier', 'Assurance', 'Médias et communications', 'Marketing et publicité', 'Secteur public', 'Organismes à but non lucratif', 'Agroalimentaire', 'Énergie', 'Automobile', 'Conseil et stratégie', 'Ressources humaines'];
+                        $industries = ['Technologie', 'Finance', 'Santé', 'Commerce', 'Construction', 'Éducation', 'Restauration et hôtellerie', 'Services professionnels', 'Manufacturier', 'Transport et logistique', 'Immobilier', 'Assurance', 'Médias et communications', 'Marketing et publicité', 'Secteur public', 'Organismes à but non lucratif', 'Agroalimentaire', 'Énergie', 'Automobile', 'Conseil et stratégie', 'Ressources humaines', 'Autre'];
                         foreach ($industries as $ind):
                         ?><option value="<?= e($ind) ?>" <?= $companyIndustry === $ind ? ' selected' : '' ?>><?= e($ind) ?></option><?php endforeach; ?>
                     </select></div>
@@ -738,7 +751,7 @@
                 </select>
                 <p class="form-help" data-i18n="timezone_help">Les dates sont enregistrées en UTC et affichées selon ce fuseau.</p>
             </div>
-            <div class="form-group hidden" style="display: none;"><!-- Couleur marque masquée temporairement -->
+            <div class="form-group hidden" style="display: none !important;"><!-- Couleur marque masquée temporairement (FR/EN) -->
                 <label class="form-label" data-i18n="form_brand_color">Couleur de la marque</label>
                 <div class="flex-center gap-4">
                     <input type="color" class="form-input" name="brand_color" id="settings-brand-color" value="#3B82F6"

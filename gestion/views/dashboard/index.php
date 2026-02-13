@@ -655,7 +655,7 @@
         <form class="form-vertical">
             <div class="grid-2col">
                 <div class="form-group"><label class="form-label" data-i18n="form_company_name">Nom de l'entreprise</label><input type="text" class="form-input" value="Acme Corporation"></div>
-                <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur d'activité</label><select class="form-select" name="industry"><option value="">— Sélectionner —</option><option>Technologie</option><option>Finance</option><option>Santé</option><option>Commerce</option><option>Construction</option><option>Éducation</option><option>Restauration et hôtellerie</option><option>Services professionnels</option><option>Manufacturier</option><option>Transport et logistique</option><option>Immobilier</option><option>Assurance</option><option>Médias et communications</option><option>Marketing et publicité</option><option>Secteur public</option><option>Organismes à but non lucratif</option><option>Agroalimentaire</option><option>Énergie</option><option>Automobile</option><option>Conseil et stratégie</option><option>Ressources humaines</option></select></div>
+                <div class="form-group"><label class="form-label" data-i18n="form_industry">Secteur d'activité</label><select class="form-select" name="industry"><option value="">— Sélectionner —</option><option>Technologie</option><option>Finance</option><option>Santé</option><option>Commerce</option><option>Construction</option><option>Éducation</option><option>Restauration et hôtellerie</option><option>Services professionnels</option><option>Manufacturier</option><option>Transport et logistique</option><option>Immobilier</option><option>Assurance</option><option>Médias et communications</option><option>Marketing et publicité</option><option>Secteur public</option><option>Organismes à but non lucratif</option><option>Agroalimentaire</option><option>Énergie</option><option>Automobile</option><option>Conseil et stratégie</option><option>Ressources humaines</option><option>Autre</option></select></div>
             </div>
             <div class="grid-2col">
                 <div class="form-group"><label class="form-label" data-i18n="form_email">Email de contact</label><input type="email" class="form-input" value="rh@acme.com"></div>
@@ -677,7 +677,7 @@
                     <div class="flex-col gap-2"><button type="button" class="btn btn-secondary" data-i18n="btn_upload">Téléverser un logo</button><span class="form-help">JPG, PNG ou SVG. Max 2MB.</span></div>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group hidden" style="display: none !important;"><!-- Couleur marque masquée temporairement (FR/EN) -->
                 <label class="form-label" data-i18n="form_brand_color">Couleur de la marque</label>
                 <div class="flex-center gap-4">
                     <input type="color" class="form-input" value="#800020" style="width: 60px; height: 40px; padding: 0.25rem;">
