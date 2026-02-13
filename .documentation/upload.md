@@ -9,13 +9,14 @@ alwaysApply: true
 
 # Upload FTP
 
+> **IMPORTANT — Méthode unique** : Toujours utiliser `scripts/upload_ftp.sh`. Les anciens scripts (deploy_ftp.py, sync_ftp.py, upload-modified.sh, etc.) ont été supprimés. **Ne pas recréer d'autres méthodes d'upload.**
+
 **Toujours uploader après une action** — après toute modification de fichiers, l'agent effectue l'upload sans attendre que l'utilisateur le demande.
 
 Quand l'utilisateur dit **« upload »** (ou demande un upload), l’agent doit :
 
-1. **Cache busting automatique (site vitrine)** : exécuter `scripts/update-asset-version.sh` pour mettre à jour le paramètre `?v=` dans tous les fichiers `public_html/*.html`. Ainsi chaque upload invalide le cache des assets (CSS/JS) sans intervention manuelle.
-2. **Identifier les fichiers modifiés** (git status après l’étape 1, ou fichiers récemment édités).
-3. **Transférer ces fichiers sur le serveur FTP** en utilisant **curl**.
+1. **Commande** : `bash scripts/upload_ftp.sh` — fait tout : cache busting, fichiers modifiés (git), upload curl, CHMOD 644, purge LSCache.
+2. Pour tout envoyer : `bash scripts/upload_ftp.sh --all`.
 
 ## Configuration FTP
 

@@ -1,0 +1,12 @@
+---
+description: Méthode d'upload FTP — toujours utiliser scripts/upload_ftp.sh
+alwaysApply: true
+---
+
+# Upload FTP
+
+**Méthode unique** : Toujours exécuter `bash scripts/upload_ftp.sh`.
+
+- Fichiers modifiés uniquement (détection via git)
+- Pour tout envoyer : `bash scripts/upload_ftp.sh --all`
+- Ne pas créer d'autres scripts ou méthodes d'upload (deploy_ftp.py, sync_ftp.py, etc. ont été supprimés)
