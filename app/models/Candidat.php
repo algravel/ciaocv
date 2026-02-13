@@ -244,6 +244,7 @@ class Candidat
                     'retakes' => (int) ($row['retakes_count'] ?? 0),
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
                     'lastCommunication' => null,
+                    'comments' => [],
                 ];
             }
 
@@ -339,6 +340,7 @@ class Candidat
                     'retakes' => (int) ($row['retakes_count'] ?? 0),
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
                     'lastCommunication' => null,
+                    'comments' => [],
                 ];
             }
 

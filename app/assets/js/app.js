@@ -1211,6 +1211,7 @@ function showCandidateDetail(id, source) {
         }
     }
     if (!data) return;
+    if (!Array.isArray(data.comments)) data.comments = [];
 
     document.getElementById('detail-candidate-name').textContent = data.name;
     document.getElementById('detail-candidate-role-source').textContent = (data.role || 'Candidat');
@@ -1477,7 +1478,17 @@ function addComment() {
     if (!data) return;
     if (!data.comments) data.comments = [];
     var userName = (typeof APP_DATA !== 'undefined' && APP_DATA.currentUser) ? APP_DATA.currentUser : 'Moi';
-    data.comments.unshift({ user: userName, date: new Date().toISOString(), text: text });
+    var newComment = { user: userName, date: new Date().toISOString(), text: text };
+    data.comments.unshift(newComment);
+    // Synchroniser dans affichageCandidats (objets distincts possiblement)
+    for (var affId in affichageCandidats) {
+        var found = affichageCandidats[affId].find(function (c) { return String(c.id) === String(currentCandidateId); });
+        if (found) {
+            if (!found.comments) found.comments = [];
+            found.comments.unshift(newComment);
+            break;
+        }
+    }
     renderTimeline(data.comments);
     input.value = '';
 }
