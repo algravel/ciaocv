@@ -499,6 +499,10 @@ function sendFeedback(e) {
         submitBtn.textContent = 'Envoi...';
     }
     var formData = new FormData(form);
+    var fbType = form.querySelector('input[name="feedback_type"]:checked');
+    if (fbType && fbType.value === 'problem' && window.location && window.location.href) {
+        formData.append('page_url', window.location.href);
+    }
     var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
     fetch(basePath + '/feedback', { method: 'POST', body: formData })
     .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
@@ -539,11 +543,13 @@ function openFeedbackDetailModal(data, row) {
     var sourceLabel = (data.source === 'gestion') ? 'Gestion' : 'App';
     var content = document.getElementById('feedback-detail-content');
     if (content) {
+        var pageUrlHtml = (data.type === 'problem' && data.page_url) ? '<p><strong>Page:</strong> <a href="' + escapeHtml(data.page_url) + '" target="_blank" rel="noopener">' + escapeHtml(data.page_url) + '</a></p>' : '';
         content.innerHTML = '<div class="feedback-detail-readonly">' +
             '<p><strong>' + (typeof translations !== 'undefined' && translations.fr ? 'Date' : 'Date') + ':</strong> ' + escapeHtml(data.created_at || '') + '</p>' +
             '<p><strong>Type:</strong> ' + escapeHtml(typeLabel) + '</p>' +
             '<p><strong>Source:</strong> ' + escapeHtml(sourceLabel) + '</p>' +
             '<p><strong>Utilisateur:</strong> ' + escapeHtml(data.user_name || data.user_email || '—') + '</p>' +
+            pageUrlHtml +
             '<p><strong>Message:</strong></p><div class="feedback-detail-message">' + escapeHtml(data.message || '') + '</div>' +
             '</div>';
     }

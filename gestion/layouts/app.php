@@ -67,6 +67,11 @@
                     <span data-i18n="nav_bugs_idees">Bugs et idées</span>
                 </a>
 
+                <a href="<?= $base ?>/migrate" class="nav-item" data-section="migrate" data-path="/migrate">
+                    <i class="fa-solid fa-database"></i>
+                    <span data-i18n="nav_migrate">Migration SQL</span>
+                </a>
+
                 <a href="<?= GESTION_BASE_PATH ?>/debug" class="nav-item <?= !empty($isDebugPage) ? 'active' : '' ?>" style="<?= !empty($isDebugPage) ? 'background-color: #F5E6EA; color: var(--primary-color);' : '' ?>">
                     <i class="fa-solid fa-bug"></i>
                     <span>Debug</span>

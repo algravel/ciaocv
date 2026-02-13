@@ -782,6 +782,9 @@ class GestionController
             return;
         }
         $data = ['type' => $type, 'message' => $message, 'source' => 'gestion'];
+        if ($type === 'problem' && !empty(trim($_POST['page_url'] ?? ''))) {
+            $data['page_url'] = trim($_POST['page_url']);
+        }
         if (!empty($_SESSION[self::SESSION_USER_EMAIL])) {
             $data['user_email'] = $_SESSION[self::SESSION_USER_EMAIL];
         }
@@ -831,6 +834,22 @@ class GestionController
             http_response_code(500);
             echo json_encode(['ok' => false, 'error' => 'Erreur lors de la mise à jour']);
         }
+    }
+
+    public function migrate(): void
+    {
+        if (!$this->isAuthenticated()) {
+            $this->redirect(GESTION_BASE_PATH . '/connexion');
+            return;
+        }
+        ob_start();
+        require GESTION_BASE . '/migrate.php';
+        $output = ob_get_clean();
+        $user = [
+            'name'  => $_SESSION[self::SESSION_USER_NAME] ?? 'Admin',
+            'email' => $_SESSION[self::SESSION_USER_EMAIL] ?? '',
+        ];
+        $this->view('migrate', ['output' => $output, 'user' => $user], 'app');
     }
 
     public function debug(): void

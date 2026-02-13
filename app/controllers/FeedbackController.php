@@ -26,6 +26,9 @@ class FeedbackController extends Controller
             'message' => $message,
             'source'  => 'app',
         ];
+        if ($type === 'problem' && !empty(trim($_POST['page_url'] ?? ''))) {
+            $data['page_url'] = trim($_POST['page_url']);
+        }
         if (!empty($_SESSION['user_email'])) {
             $data['user_email'] = $_SESSION['user_email'];
         }

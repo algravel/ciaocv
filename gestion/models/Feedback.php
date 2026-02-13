@@ -12,13 +12,14 @@ class Feedback
     {
         try {
             $pdo = Database::get();
-            $stmt = $pdo->query('SELECT id, type, message, source, user_email, user_name, created_at, COALESCE(status, \'new\') as status, internal_note FROM gestion_feedback ORDER BY created_at DESC');
+            $stmt = $pdo->query('SELECT id, type, message, page_url, source, user_email, user_name, created_at, COALESCE(status, \'new\') as status, internal_note FROM gestion_feedback ORDER BY created_at DESC');
             $rows = [];
             while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $rows[] = [
                     'id'            => (int) $r['id'],
                     'type'          => $r['type'] ?? 'problem',
                     'message'       => $r['message'] ?? '',
+                    'page_url'      => isset($r['page_url']) && $r['page_url'] !== '' ? $r['page_url'] : null,
                     'source'        => $r['source'] ?? 'app',
                     'user_email'    => $r['user_email'] ?: null,
                     'user_name'     => $r['user_name'] ?: null,
@@ -80,17 +81,19 @@ class Feedback
     {
         try {
             $pdo = Database::get();
-            $stmt = $pdo->prepare('INSERT INTO gestion_feedback (type, message, source, user_email, user_name, platform_user_id) VALUES (?, ?, ?, ?, ?, ?)');
+            $stmt = $pdo->prepare('INSERT INTO gestion_feedback (type, message, page_url, source, user_email, user_name, platform_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)');
             $type = in_array($data['type'] ?? '', ['problem', 'idea'], true) ? $data['type'] : 'problem';
             $message = trim($data['message'] ?? '');
             if ($message === '') {
                 return false;
             }
+            $pageUrl = (isset($data['page_url']) && $type === 'problem') ? trim($data['page_url']) : null;
+            $pageUrl = $pageUrl !== '' ? $pageUrl : null;
             $source = $data['source'] ?? 'app';
             $userEmail = isset($data['user_email']) ? trim($data['user_email']) : null;
             $userName = isset($data['user_name']) ? trim($data['user_name']) : null;
             $platformUserId = isset($data['platform_user_id']) && $data['platform_user_id'] > 0 ? (int) $data['platform_user_id'] : null;
-            $stmt->execute([$type, $message, $source, $userEmail ?: null, $userName ?: null, $platformUserId]);
+            $stmt->execute([$type, $message, $pageUrl, $source, $userEmail ?: null, $userName ?: null, $platformUserId]);
             return true;
         } catch (Throwable $e) {
             return false;

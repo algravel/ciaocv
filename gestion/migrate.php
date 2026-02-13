@@ -111,6 +111,11 @@ try {
         $pdo->exec("ALTER TABLE gestion_feedback ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'new' COMMENT 'new|in_progress|resolved' AFTER created_at");
         $pdo->exec("ALTER TABLE gestion_feedback ADD COLUMN internal_note TEXT NULL COMMENT 'Note interne admin' AFTER status");
     }
+    $stmt = $pdo->query("SHOW COLUMNS FROM gestion_feedback LIKE 'page_url'");
+    if ($stmt->rowCount() === 0) {
+        echo "Migration: gestion_feedback.page_url\n";
+        $pdo->exec("ALTER TABLE gestion_feedback ADD COLUMN page_url VARCHAR(512) NULL COMMENT 'URL de la page (bugs)' AFTER message");
+    }
 
     $stmt = $pdo->query("SHOW COLUMNS FROM gestion_events LIKE 'platform_user_id'");
     if ($stmt->rowCount() === 0) {

@@ -222,6 +222,9 @@ switch ($path) {
     case '/debug':
         $controller->debug();
         break;
+    case '/migrate':
+        $controller->migrate();
+        break;
     default:
         http_response_code(404);
         echo '404 Not Found';

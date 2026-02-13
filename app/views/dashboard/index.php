@@ -100,6 +100,12 @@
                 <i class="fa-solid fa-users"></i> Voir les candidats
             </button>
         </div>
+        <div id="detail-poste-share-url-wrap" class="mt-4 pt-4" style="border-top: 1px solid var(--border-color);">
+            <label class="form-label mb-1" data-i18n="poste_share_url_label">Lien pour les candidats</label>
+            <div id="detail-poste-share-url-content" class="search-row-url-wrap flex-center gap-2" style="flex-wrap: wrap;">
+                <span class="subtitle-muted" data-i18n="poste_share_url_empty">Créez un affichage pour ce poste pour obtenir le lien.</span>
+            </div>
+        </div>
     </div>
 
     <!-- Questions CRUD -->

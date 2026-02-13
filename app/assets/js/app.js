@@ -520,10 +520,48 @@ function showPosteDetail(id) {
 
     renderPosteQuestions();
 
+    // Lien pour les candidats (premier affichage lié à ce poste)
+    var shareUrlContent = document.getElementById('detail-poste-share-url-content');
+    if (shareUrlContent) {
+        var baseUrl = (typeof APP_DATA !== 'undefined' && APP_DATA.appUrl) ? APP_DATA.appUrl : 'https://app.ciaocv.com';
+        var aff = null;
+        Object.keys(affichagesData || {}).forEach(function (k) {
+            var a = affichagesData[k];
+            if (a && (String(a.posteId) === String(data.id)) && a.shareLongId) {
+                if (!aff) aff = a;
+            }
+        });
+        if (aff && aff.shareLongId) {
+            var url = baseUrl + '/entrevue/' + aff.shareLongId;
+            shareUrlContent.innerHTML = '<a class="search-row-url" href="' + escapeHtml(url) + '" target="_blank" rel="noopener" style="flex:1; min-width:0;">' + escapeHtml(url) + '</a>' +
+                '<button type="button" class="btn-icon btn-icon--copy" title="Copier le lien" data-copy-url="' + escapeHtml(url) + '" onclick="copyPosteShareUrl(this.getAttribute(\'data-copy-url\'))"><i class="fa-regular fa-copy"></i></button>';
+        } else {
+            var emptyTxt = (typeof translations !== 'undefined' && translations.fr) ? (translations.fr.poste_share_url_empty || 'Créez un affichage pour ce poste pour obtenir le lien.') : 'Créez un affichage pour ce poste pour obtenir le lien.';
+            shareUrlContent.innerHTML = '<span class="subtitle-muted">' + escapeHtml(emptyTxt) + '</span>';
+        }
+    }
+
     document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
     var detailSection = document.getElementById('poste-detail-section');
     if (detailSection) detailSection.classList.add('active');
     window.scrollTo(0, 0);
+}
+
+function copyPosteShareUrl(url) {
+    if (!url) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () {
+            var btn = document.querySelector('#detail-poste-share-url-content .btn-icon--copy');
+            if (btn) { btn.title = 'Copié !'; setTimeout(function () { btn.title = 'Copier le lien'; }, 1500); }
+        });
+    } else {
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    }
 }
 
 // Clic sur une ligne du tableau Postes (délégation sur document)
@@ -1804,6 +1842,10 @@ function sendFeedback(e) {
         submitBtn.textContent = 'Envoi...';
     }
     var formData = new FormData(form);
+    var fbType = form.querySelector('input[name="feedback_type"]:checked');
+    if (fbType && fbType.value === 'problem' && window.location && window.location.href) {
+        formData.append('page_url', window.location.href);
+    }
     fetch('/feedback', {
         method: 'POST',
         body: formData

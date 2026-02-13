@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS gestion_feedback (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     type ENUM('problem', 'idea') NOT NULL DEFAULT 'problem',
     message TEXT NOT NULL,
+    page_url VARCHAR(512) NULL COMMENT 'URL de la page (bugs)',
     source VARCHAR(50) NOT NULL DEFAULT 'app' COMMENT 'app|gestion',
     user_email VARCHAR(255) NULL,
     user_name VARCHAR(255) NULL,

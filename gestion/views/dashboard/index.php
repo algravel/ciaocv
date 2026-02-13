@@ -618,6 +618,7 @@
                             'id' => $f['id'],
                             'type' => $f['type'],
                             'message' => $f['message'],
+                            'page_url' => $f['page_url'] ?? null,
                             'source' => $f['source'],
                             'user_name' => $f['user_name'] ?? null,
                             'user_email' => $f['user_email'] ?? null,
