@@ -374,6 +374,14 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(applyHashFilter, 100);
     if (typeof updateCommentFormUser === 'function') updateCommentFormUser();
 });
+// Délégation : bouton « Sauvegarder les questions » (peut être dans une section masquée au chargement)
+document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest && e.target.closest('#btn-save-questions');
+    if (btn && typeof savePosteQuestionsAndConfirm === 'function') {
+        e.preventDefault();
+        savePosteQuestionsAndConfirm();
+    }
+});
 
 /* Paramètres : visibilité des panneaux (navigation par le menu latéral) */
 document.addEventListener('DOMContentLoaded', function () {
@@ -638,6 +646,46 @@ function savePosteToServer(fields) {
     if (fields.record_duration !== undefined) formData.append('record_duration', String(data.recordDuration || 3));
     fetch('/postes/update', { method: 'POST', body: formData }).then(function (r) { return r.json(); }).catch(function () { });
 }
+
+function savePosteQuestionsAndConfirm() {
+    if (!currentPosteId || !postesData[currentPosteId]) return;
+    var data = postesData[currentPosteId];
+    var statusMap = { actif: 'active', inactif: 'paused', archive: 'closed' };
+    var formData = new FormData();
+    formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    formData.append('id', currentPosteId);
+    formData.append('questions', JSON.stringify(data.questions || []));
+    formData.append('record_duration', String(data.recordDuration || 3));
+    var sel = document.getElementById('detail-poste-status-select');
+    formData.append('status', statusMap[sel ? sel.value : 'actif'] || 'active');
+    var btn = document.getElementById('btn-save-questions');
+    var statusEl = document.getElementById('questions-save-status');
+    var lang = (typeof getLanguage === 'function') ? getLanguage() : 'fr';
+    var savedLabel = (typeof translations !== 'undefined' && translations[lang]) ? (translations[lang].saved || 'Enregistré') : 'Enregistré';
+    var errorLabel = (typeof translations !== 'undefined' && translations[lang]) ? (translations[lang].error_network || 'Erreur') : 'Erreur';
+    if (btn) btn.disabled = true;
+    if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+    fetch('/postes/update', { method: 'POST', body: formData })
+        .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+        .then(function (res) {
+            if (statusEl) {
+                statusEl.style.display = 'inline';
+                statusEl.textContent = res.ok && res.body.success ? savedLabel : (res.body.error || errorLabel);
+                statusEl.style.color = res.ok && res.body.success ? 'var(--primary, #2563eb)' : 'var(--danger-color, #dc2626)';
+                setTimeout(function () { statusEl.style.display = 'none'; }, 3000);
+            }
+        })
+        .catch(function () {
+            if (statusEl) {
+                statusEl.style.display = 'inline';
+                statusEl.textContent = errorLabel;
+                statusEl.style.color = 'var(--danger-color, #dc2626)';
+                setTimeout(function () { statusEl.style.display = 'none'; }, 3000);
+            }
+        })
+        .finally(function () { if (btn) btn.disabled = false; });
+}
+if (typeof window !== 'undefined') { window.savePosteQuestionsAndConfirm = savePosteQuestionsAndConfirm; }
 
 function updatePosteStatus(value) {
     if (!currentPosteId || !postesData[currentPosteId]) return;
@@ -942,8 +990,16 @@ function renderAffichageCandidatsTable(id, filter) {
         tbody.appendChild(row);
     });
 
+    var emptyEl = document.getElementById('affichage-candidats-empty-msg');
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #94A3B8;">' + (candidates.length === 0 ? 'Aucun candidat pour cet affichage.' : 'Aucun candidat pour ce filtre.') + '</td></tr>';
+        var msg = candidates.length === 0 ? 'Aucun candidat pour cet affichage.' : 'Aucun candidat pour ce filtre.';
+        tbody.innerHTML = '';
+        if (emptyEl) {
+            emptyEl.textContent = msg;
+            emptyEl.classList.remove('hidden');
+        }
+    } else {
+        if (emptyEl) emptyEl.classList.add('hidden');
     }
 
     // Mettre à jour l'onglet actif

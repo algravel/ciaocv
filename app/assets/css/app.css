@@ -571,6 +571,7 @@ a {
    ═══════════════════════════════════════════════ */
 .data-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     background-color: white;
     border-radius: 0.5rem;
@@ -596,6 +597,28 @@ a {
 
 .data-table tr:last-child td {
     border-bottom: none;
+}
+
+/* Message vide candidats affichage : bloc pleine largeur sous le tableau */
+.affichage-candidats-table-wrap {
+    position: relative;
+}
+
+.affichage-candidats-empty-msg {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 2rem;
+    color: #94A3B8;
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    box-sizing: border-box;
+}
+
+.affichage-candidats-empty-msg.hidden {
+    display: none !important;
 }
 
 .data-table tr:hover {

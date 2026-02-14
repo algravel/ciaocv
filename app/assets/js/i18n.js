@@ -179,6 +179,8 @@ const translations = {
         form_brand_color: "Couleur de la marque",
         btn_cancel: "Annuler",
         btn_save: "Enregistrer",
+        btn_save_questions: "Sauvegarder les questions",
+        saved: "Enregistré",
         btn_upload: "Téléverser",
         btn_send: "Envoyer",
 
@@ -385,7 +387,8 @@ const translations = {
         form_description: "Company description", form_logo: "Company logo",
         form_timezone: "Timezone", timezone_help: "Dates are stored in UTC and displayed in this timezone.",
         form_brand_color: "Brand Color",
-        btn_cancel: "Cancel", btn_save: "Save", btn_upload: "Upload", btn_send: "Send",
+        btn_cancel: "Cancel", btn_save: "Save", btn_save_questions: "Save questions", saved: "Saved",
+        btn_upload: "Upload", btn_send: "Send",
         settings_company: "Company", settings_branding: "Employer Branding",
         settings_branding_title: "Brand Customization",
         settings_team: "Team",

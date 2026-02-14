@@ -11,15 +11,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <!-- Correct Link to Shared CSS -->
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1771031063">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1771038561">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         /* Specific Styles for Pricing Page */
         .pricing-hero {
             text-align: center;
-            padding: 6rem 5% 3rem;
-            max-width: 900px;
-            margin: 0 auto;
         }
 
         .pricing-hero h1 {
@@ -36,18 +33,38 @@
             line-height: 1.8;
         }
 
+        .pricing-page-wrap {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 5%;
+            box-sizing: border-box;
+        }
+
+        .pricing-hero {
+            padding: 6rem 0 3rem;
+        }
+
+        .pricing-hero p {
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         .pricing-section {
-            display: flex;
+            width: 100%;
+            padding: 0 0 6rem;
+            box-sizing: border-box;
         }
 
         .pricing-grid {
-            flex: 1 1 auto;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1.5rem;
-            max-width: 1400px;
-            margin: 0 auto 6rem;
-            padding: 0 5%;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         .pricing-card {
@@ -236,9 +253,8 @@
         }
 
         @media (max-width: 600px) {
-            .pricing-grid {
-                grid-template-columns: 1fr;
-            }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .pricing-page-wrap { padding: 0 1rem; }
         }
     </style>
 </head>
@@ -293,17 +309,16 @@
         </div>
     </div>
 
-    <div class="pricing-hero">
-        <h1 data-i18n="pricing.title">Identifiez le candidat parfait sans perdre une seconde.</h1>
-        <p data-i18n="pricing.subtitle">Des tarifs simples et transparents pour moderniser votre processus de
-            recrutement. Commencez gratuitement,
-            évoluez selon vos besoins.</p>
-    </div>
+    <div class="pricing-page-wrap">
+        <div class="pricing-hero">
+            <h1 data-i18n="pricing.title">Identifiez le candidat parfait sans perdre une seconde.</h1>
+            <p data-i18n="pricing.subtitle">Des tarifs simples et transparents pour moderniser votre processus de
+                recrutement. Commencez gratuitement,
+                évoluez selon vos besoins.</p>
+        </div>
 
-    <!-- TARIFS -->
-    <!-- TARIFS -->
-    <section class="pricing-section">
-        <div class="pricing-grid">
+        <section class="pricing-section">
+            <div class="pricing-grid">
             <!-- GRATUIT -->
             <div class="pricing-card">
                 <div class="price-header">
@@ -391,7 +406,8 @@
                     maintenant</a>
             </div>
         </div>
-    </section>
+        </section>
+    </div>
 
     <!-- COMPARISON TABLE -->
     <section class="comparison-section">
@@ -540,7 +556,7 @@
             });
         }
     </script>
-    <script src="assets/js/i18n.js?v=1771031063"></script>
+    <script src="assets/js/i18n.js?v=1771038561"></script>
     <script src="assets/js/cookie-consent.js"></script>
 
 </body>

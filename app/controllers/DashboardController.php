@@ -584,8 +584,8 @@ class DashboardController extends Controller
         try {
             $this->requireAuth();
             if (!$this->requireNotEvaluateur()) return;
-            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-            if (!$platformUserId) {
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
                 return;
             }
@@ -614,7 +614,7 @@ class DashboardController extends Controller
                 $this->json(['success' => false, 'error' => 'Aucune donnée à mettre à jour'], 400);
                 return;
             }
-            $ok = Poste::update($id, $platformUserId, $data);
+            $ok = Poste::update($id, $effectiveOwnerId, $data);
             if ($ok) {
                 // Journaliser la modification
                 try {
@@ -622,7 +622,7 @@ class DashboardController extends Controller
                     $event = new Event();
                     $changedFields = implode(', ', array_keys($data));
                     $event->logForPlatformUser(
-                        $platformUserId,
+                        $effectiveOwnerId,
                         'update',
                         'poste',
                         (string) $id,
@@ -651,8 +651,8 @@ class DashboardController extends Controller
             $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
             return;
         }
-        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-        if (!$platformUserId) {
+        $effectiveOwnerId = $this->getEffectiveOwnerId();
+        if (!$effectiveOwnerId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
             return;
         }
@@ -662,14 +662,14 @@ class DashboardController extends Controller
             $this->json(['success' => false, 'error' => 'ID invalide'], 400);
             return;
         }
-        $ok = Poste::delete($id, $platformUserId);
+        $ok = Poste::delete($id, $effectiveOwnerId);
         if ($ok) {
             // Journaliser la suppression
             try {
                 require_once dirname(__DIR__, 2) . '/gestion/config.php';
                 $event = new Event();
                 $event->logForPlatformUser(
-                    $platformUserId,
+                    $effectiveOwnerId,
                     'delete',
                     'poste',
                     (string) $id,
@@ -691,8 +691,8 @@ class DashboardController extends Controller
         try {
             $this->requireAuth();
             if (!$this->requireNotEvaluateur()) return;
-            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-            if (!$platformUserId) {
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
                 return;
             }
@@ -705,14 +705,14 @@ class DashboardController extends Controller
                 $this->json(['success' => false, 'error' => 'Poste requis'], 400);
                 return;
             }
-            $affichage = Affichage::create($platformUserId, ['poste_id' => $posteId]);
+            $affichage = Affichage::create($effectiveOwnerId, ['poste_id' => $posteId]);
             if ($affichage) {
                 // Journaliser la création de l'affichage
                 try {
                     require_once dirname(__DIR__, 2) . '/gestion/config.php';
                     $event = new Event();
                     $event->logForPlatformUser(
-                        $platformUserId,
+                        $effectiveOwnerId,
                         'create',
                         'affichage',
                         (string) ($affichage['id'] ?? ''),
@@ -744,8 +744,8 @@ class DashboardController extends Controller
                 $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
                 return;
             }
-            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-            if (!$platformUserId) {
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
                 return;
             }
@@ -756,7 +756,7 @@ class DashboardController extends Controller
                 return;
             }
 
-            $success = Affichage::delete($id, $platformUserId);
+            $success = Affichage::delete($id, $effectiveOwnerId);
 
             if ($success) {
                 // Journaliser la suppression
@@ -764,7 +764,7 @@ class DashboardController extends Controller
                     require_once dirname(__DIR__, 2) . '/gestion/config.php';
                     $event = new Event();
                     $event->logForPlatformUser(
-                        $platformUserId,
+                        $effectiveOwnerId,
                         'delete',
                         'affichage',
                         $id,
@@ -794,8 +794,8 @@ class DashboardController extends Controller
             if (!$this->requireNotEvaluateur()) {
                 return;
             }
-            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-            if (!$platformUserId) {
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
                 return;
             }
@@ -811,12 +811,12 @@ class DashboardController extends Controller
                 $this->json(['success' => false, 'error' => 'Paramètres invalides'], 400);
                 return;
             }
-            $affichage = Affichage::find($affichageId, $platformUserId);
+            $affichage = Affichage::find($affichageId, $effectiveOwnerId);
             if (!$affichage) {
                 $this->json(['success' => false, 'error' => 'Affichage introuvable'], 404);
                 return;
             }
-            $ok = Affichage::updateStatus($affichageId, $platformUserId, $dbStatus);
+            $ok = Affichage::updateStatus($affichageId, $effectiveOwnerId, $dbStatus);
             $this->json(['success' => $ok]);
         } catch (Throwable $e) {
             error_log('updateAffichageStatus error: ' . $e->getMessage());
@@ -833,8 +833,8 @@ class DashboardController extends Controller
         try {
             $this->requireAuth();
             if (!$this->requireNotEvaluateur()) return;
-            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-            if (!$platformUserId) {
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
                 return;
             }
@@ -848,7 +848,7 @@ class DashboardController extends Controller
                 $this->json(['success' => false, 'error' => 'Paramètres manquants'], 400);
                 return;
             }
-            $affichage = Affichage::find((string) $affichageId, $platformUserId);
+            $affichage = Affichage::find((string) $affichageId, $effectiveOwnerId);
             if (!$affichage) {
                 $this->json(['success' => false, 'error' => 'Affichage introuvable'], 404);
                 return;
@@ -871,8 +871,8 @@ class DashboardController extends Controller
         try {
             $this->requireAuth();
             if (!$this->requireNotEvaluateur()) return;
-            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-            if (!$platformUserId) {
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
                 return;
             }
@@ -888,7 +888,7 @@ class DashboardController extends Controller
                 $this->json(['success' => false, 'error' => 'Prénom, nom et courriel requis'], 400);
                 return;
             }
-            $affichage = Affichage::find((string) $affichageId, $platformUserId);
+            $affichage = Affichage::find((string) $affichageId, $effectiveOwnerId);
             if (!$affichage) {
                 $this->json(['success' => false, 'error' => 'Affichage introuvable'], 404);
                 return;
@@ -898,7 +898,7 @@ class DashboardController extends Controller
 
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             $platformUserModel = new PlatformUser();
-            $owner = $platformUserModel->findById($platformUserId);
+            $owner = $platformUserModel->findById($effectiveOwnerId);
             $ownerPlanId = ($owner !== null && isset($owner['plan_id'])) ? $owner['plan_id'] : null;
 
             $existingUser = $platformUserModel->findByEmail($email);

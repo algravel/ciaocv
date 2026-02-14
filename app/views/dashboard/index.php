@@ -133,6 +133,14 @@
                 onkeydown="if(event.key==='Enter'){addPosteQuestion(); event.preventDefault();}">
             <button class="btn btn-primary" onclick="addPosteQuestion()"><i class="fa-solid fa-plus"></i></button>
         </div>
+        <div class="mt-4 flex-between flex-wrap gap-2">
+            <div class="flex align-center gap-2">
+                <button type="button" class="btn btn-primary" id="btn-save-questions">
+                    <i class="fa-solid fa-check"></i> <span data-i18n="btn_save_questions">Sauvegarder les questions</span>
+                </button>
+                <span id="questions-save-status" class="subtitle-muted" style="display:none;" aria-live="polite"></span>
+            </div>
+        </div>
         <!-- Durée d'enregistrement -->
         <div class="flex-between mt-6" style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
             <div>
@@ -261,19 +269,22 @@
         </span>
     </div>
     <?php endif; ?>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Candidat</th>
-                <th>Statut</th>
-                <th data-i18n="th_rating">Note</th>
-                <th>Favori</th>
-                <th>Postulé le</th>
-                <th>Communication</th>
-            </tr>
-        </thead>
-        <tbody id="affichage-candidats-tbody"></tbody>
-    </table>
+    <div class="affichage-candidats-table-wrap">
+        <table class="data-table" id="affichage-candidats-table">
+            <thead>
+                <tr>
+                    <th>Candidat</th>
+                    <th>Statut</th>
+                    <th data-i18n="th_rating">Note</th>
+                    <th>Favori</th>
+                    <th>Postulé le</th>
+                    <th>Communication</th>
+                </tr>
+            </thead>
+            <tbody id="affichage-candidats-tbody"></tbody>
+        </table>
+        <div class="affichage-candidats-empty-msg hidden" id="affichage-candidats-empty-msg" aria-live="polite"></div>
+    </div>
 
     <!-- Évaluateurs CRUD (caché pour les évaluateurs) -->
     <div class="card mt-6" id="affichage-evaluateurs-card">
