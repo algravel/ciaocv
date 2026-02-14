@@ -199,6 +199,47 @@ class PlatformUser
         return null;
     }
 
+    /**
+     * Active ou désactive les notifications pour un utilisateur.
+     */
+    public function setNotificationsEnabled(int $id, bool $enabled): bool
+    {
+        $this->ensureNotificationsColumn();
+        $stmt = $this->pdo->prepare('UPDATE gestion_platform_users SET notifications_enabled = ? WHERE id = ?');
+        $stmt->execute([$enabled ? 1 : 0, $id]);
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Récupère le statut notifications_enabled pour un utilisateur.
+     */
+    public function getNotificationsEnabled(int $id): bool
+    {
+        $this->ensureNotificationsColumn();
+        $stmt = $this->pdo->prepare('SELECT COALESCE(notifications_enabled, 1) AS notif FROM gestion_platform_users WHERE id = ?');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? (bool) $row['notif'] : true;
+    }
+
+    /**
+     * Ajoute la colonne notifications_enabled si elle n'existe pas.
+     */
+    private function ensureNotificationsColumn(): void
+    {
+        static $checked = false;
+        if ($checked) return;
+        $checked = true;
+        try {
+            $stmt = $this->pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'notifications_enabled'");
+            if ($stmt->rowCount() === 0) {
+                $this->pdo->exec("ALTER TABLE gestion_platform_users ADD COLUMN notifications_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER active");
+            }
+        } catch (Throwable $e) {
+            // ignorer
+        }
+    }
+
     public function resetPassword(int $id, string $plainPassword): bool
     {
         $passHash = password_hash($plainPassword, PASSWORD_DEFAULT);

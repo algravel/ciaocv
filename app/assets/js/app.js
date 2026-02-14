@@ -297,8 +297,7 @@ function filterTable(tableSelector, status) {
 /* Map each tab-group ID → its table selector */
 var filterTabMap = {
     'postes-filter-tabs': '#postes-table',
-    'affichages-filter-tabs': '#affichages-table',
-    'candidats-filter-tabs': '#candidats-table'
+    'affichages-filter-tabs': '#affichages-table'
 };
 
 /* Attach click listeners on all filter tab groups */
@@ -348,10 +347,14 @@ var hashFilterMap = {
     'affichages-actifs': { section: 'affichages', filter: 'active' },
     'affichages-expires': { section: 'affichages', filter: 'expired' },
     /* Candidats */
+    'candidats-all': { section: 'candidats', filter: 'all' },
+    'candidats-new': { section: 'candidats', filter: 'new' },
+    'candidats-shortlisted': { section: 'candidats', filter: 'shortlisted' },
+    'candidats-reviewed': { section: 'candidats', filter: 'reviewed' },
+    'candidats-rejected': { section: 'candidats', filter: 'rejected' },
+    /* Legacy hash compat */
     'candidats-tous': { section: 'candidats', filter: 'all' },
-    'candidats-nouveaux': { section: 'candidats', filter: 'new' },
-    'candidats-evalues': { section: 'candidats', filter: 'reviewed' },
-    'candidats-shortlistes': { section: 'candidats', filter: 'shortlisted' }
+    'candidats-nouveaux': { section: 'candidats', filter: 'new' }
 };
 
 function applyHashFilter() {
@@ -460,6 +463,7 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Filtres affichage-candidats
     var tabs = document.getElementById('affichage-candidats-filter-tabs');
     if (tabs) {
         tabs.addEventListener('click', function (e) {
@@ -471,6 +475,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+    // Filtres candidats global
+    var globalTabs = document.getElementById('candidats-filter-tabs');
+    if (globalTabs) {
+        globalTabs.addEventListener('click', function (e) {
+            var tab = e.target.closest('.view-tab[data-filter]');
+            if (tab) {
+                renderGlobalCandidats(tab.getAttribute('data-filter'));
+            }
+        });
+    }
+    // Rendu initial du tableau candidats global
+    renderGlobalCandidats();
 });
 
 function saveCompanySettings(e) {
@@ -943,11 +959,114 @@ var _affichageCandidatsFilter = 'all';
 
 function candidateMatchesFilter(c, filter) {
     if (filter === 'all') return true;
-    var s = (c.status || '').toLowerCase();
-    if (filter === 'new') return s === 'new' || s.includes('nouveau');
-    if (filter === 'reviewed') return s === 'reviewed' || s.includes('accept') || s === 'shortlisted' || s.includes('favori') || s.includes('banque') || s.includes('évalué');
-    if (filter === 'rejected') return s === 'rejected' || s.includes('refus');
+    var s = (c.status || 'new').toLowerCase();
+    if (filter === 'new') return s === 'new';
+    if (filter === 'shortlisted') return s === 'shortlisted';
+    if (filter === 'reviewed') return s === 'reviewed';
+    if (filter === 'rejected') return s === 'rejected';
     return true;
+}
+
+/* ═══════════════════════════════════════════════
+   CANDIDATS — TABLEAU GLOBAL
+   ═══════════════════════════════════════════════ */
+var _globalCandidatsFilter = 'all';
+
+function renderGlobalCandidats(filter) {
+    filter = filter || _globalCandidatsFilter;
+    _globalCandidatsFilter = filter;
+    var tbody = document.getElementById('candidats-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Construire un tableau plat depuis candidatsData
+    var allCandidats = [];
+    for (var cId in candidatsData) {
+        allCandidats.push(candidatsData[cId]);
+    }
+
+    // Peupler le select des postes (une seule fois ou si vide)
+    var posteSelect = document.getElementById('candidats-poste-filter');
+    if (posteSelect && posteSelect.options.length <= 1) {
+        var postes = {};
+        allCandidats.forEach(function (c) { if (c.role) postes[c.role] = true; });
+        Object.keys(postes).sort().forEach(function (p) {
+            var opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            posteSelect.appendChild(opt);
+        });
+    }
+
+    // Filtre par poste
+    var selectedPoste = posteSelect ? posteSelect.value : '';
+    var filtered = allCandidats.filter(function (c) {
+        if (!candidateMatchesFilter(c, filter)) return false;
+        if (selectedPoste && c.role !== selectedPoste) return false;
+        return true;
+    });
+
+    filtered.forEach(function (c) {
+        var row = document.createElement('tr');
+        row.style.cursor = 'pointer';
+        row.setAttribute('data-status', c.status || '');
+        row.onclick = function (e) {
+            if (e.target.closest('.inline-edit')) return;
+            showCandidateDetail(c.id);
+        };
+
+        // Statut inline
+        var statusOptions = [
+            { val: 'new', label: 'Nouveau' },
+            { val: 'shortlisted', label: 'Banque' },
+            { val: 'reviewed', label: 'Accepté' },
+            { val: 'rejected', label: 'Refusé' }
+        ];
+        var statusSelect = '<select class="inline-edit inline-status-select status-select--inline status-' + (c.status || 'new') + '" ' +
+            'onchange="saveCandidateInline(\'' + escapeHtml(String(c.id)) + '\', {status: this.value}); this.className=\'inline-edit inline-status-select status-select--inline status-\'+this.value;">';
+        statusOptions.forEach(function (opt) {
+            statusSelect += '<option value="' + opt.val + '"' + ((c.status || 'new') === opt.val ? ' selected' : '') + '>' + opt.label + '</option>';
+        });
+        statusSelect += '</select>';
+
+        // Note inline
+        var rating = c.rating || c.stars || 0;
+        var starsHtml = '<div class="inline-edit inline-stars">';
+        for (var i = 1; i <= 5; i++) {
+            starsHtml += '<i class="fa-' + (i <= rating ? 'solid' : 'regular') + ' fa-star" data-val="' + i + '" ' +
+                'onclick="event.stopPropagation(); saveCandidateInline(\'' + escapeHtml(String(c.id)) + '\', {rating: ' + i + '}, this.parentNode);" ' +
+                'style="cursor:pointer;"></i>';
+        }
+        starsHtml += '</div>';
+
+        // Favori inline
+        var favHtml = '<span class="inline-edit inline-fav" onclick="event.stopPropagation(); toggleFavoriteInline(\'' + escapeHtml(String(c.id)) + '\', this);" style="cursor:pointer;">' +
+            (c.isFavorite ? '<i class="fa-solid fa-heart" style="color:#EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color:#D1D5DB;"></i>') +
+            '</span>';
+
+        row.innerHTML =
+            '<td><div class="candidate-cell">' +
+            '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
+            '<div class="candidate-cell-info"><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
+            '</div></td>' +
+            '<td>' + escapeHtml(c.role || '') + '</td>' +
+            '<td>' + statusSelect + '</td>' +
+            '<td>' + starsHtml + '</td>' +
+            '<td>' + favHtml + '</td>' +
+            '<td>' + escapeHtml(formatUtcToLocal(c.date)) + '</td>';
+        tbody.appendChild(row);
+    });
+
+    var emptyEl = document.getElementById('candidats-empty-msg');
+    if (filtered.length === 0) {
+        if (emptyEl) { emptyEl.textContent = allCandidats.length === 0 ? 'Aucun candidat.' : 'Aucun candidat pour ce filtre.'; emptyEl.classList.remove('hidden'); }
+    } else {
+        if (emptyEl) emptyEl.classList.add('hidden');
+    }
+
+    document.querySelectorAll('#candidats-filter-tabs .view-tab').forEach(function (tab) {
+        tab.classList.toggle('active', tab.getAttribute('data-filter') === filter);
+    });
 }
 
 function renderAffichageCandidatsTable(id, filter) {
@@ -962,14 +1081,41 @@ function renderAffichageCandidatsTable(id, filter) {
     filtered.forEach(function (c) {
         var row = document.createElement('tr');
         row.style.cursor = 'pointer';
-        row.onclick = function () { if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id); };
+        row.onclick = function (e) {
+            // Ne pas naviguer si on clique sur un contrôle inline
+            if (e.target.closest('.inline-edit')) return;
+            if (typeof showCandidateDetail === 'function') showCandidateDetail(c.id);
+        };
         var statusLabel = statusToLabel(c.status);
 
-        var stars = '';
+        // Statut inline : select
+        var statusOptions = [
+            { val: 'new', label: 'Nouveau' },
+            { val: 'shortlisted', label: 'Banque' },
+            { val: 'reviewed', label: 'Accepté' },
+            { val: 'rejected', label: 'Refusé' }
+        ];
+        var statusSelect = '<select class="inline-edit inline-status-select status-select--inline status-' + (c.status || 'new') + '" ' +
+            'onchange="saveCandidateInline(\'' + escapeHtml(String(c.id)) + '\', {status: this.value}); this.className=\'inline-edit inline-status-select status-select--inline status-\'+this.value;">';
+        statusOptions.forEach(function (opt) {
+            statusSelect += '<option value="' + opt.val + '"' + ((c.status || 'new') === opt.val ? ' selected' : '') + '>' + opt.label + '</option>';
+        });
+        statusSelect += '</select>';
+
+        // Note inline : étoiles cliquables
         var rating = c.rating || c.stars || 0;
+        var starsHtml = '<div class="inline-edit inline-stars">';
         for (var i = 1; i <= 5; i++) {
-            stars += '<i class="fa-' + (i <= rating ? 'solid' : 'regular') + ' fa-star"></i>';
+            starsHtml += '<i class="fa-' + (i <= rating ? 'solid' : 'regular') + ' fa-star" data-val="' + i + '" ' +
+                'onclick="event.stopPropagation(); saveCandidateInline(\'' + escapeHtml(String(c.id)) + '\', {rating: ' + i + '}, this.parentNode);" ' +
+                'style="cursor:pointer;"></i>';
         }
+        starsHtml += '</div>';
+
+        // Favori inline : cœur cliquable
+        var favHtml = '<span class="inline-edit inline-fav" onclick="event.stopPropagation(); toggleFavoriteInline(\'' + escapeHtml(String(c.id)) + '\', this);" style="cursor:pointer;">' +
+            (c.isFavorite ? '<i class="fa-solid fa-heart" style="color:#EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color:#D1D5DB;"></i>') +
+            '</span>';
 
         var commCell = '';
         if (c.lastCommunication && c.lastCommunication.message) {
@@ -978,13 +1124,13 @@ function renderAffichageCandidatsTable(id, filter) {
             commCell = '<td class="cell-communication" title="Aucune communication envoyée">—</td>';
         }
         row.innerHTML =
-            '<td><div style="display: flex; align-items: center; gap: 0.75rem;">' +
+            '<td><div class="candidate-cell">' +
             '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff" class="avatar" alt="">' +
-            '<div><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
+            '<div class="candidate-cell-info"><strong>' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
             '</div></td>' +
-            '<td><span class="status-badge" style="background:' + (c.statusBg || '#DBEAFE') + '; color:' + (c.statusColor || '#1D4ED8') + ';">' + escapeHtml(statusLabel) + '</span></td>' +
-            '<td><div class="star-color">' + stars + '</div></td>' +
-            '<td>' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color: #EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color: #D1D5DB;"></i>') + '</td>' +
+            '<td>' + statusSelect + '</td>' +
+            '<td>' + starsHtml + '</td>' +
+            '<td>' + favHtml + '</td>' +
             '<td>' + escapeHtml(formatUtcToLocal(c.date)) + '</td>' +
             commCell;
         tbody.appendChild(row);
@@ -1338,14 +1484,30 @@ function showCandidateDetail(id, source) {
         }
     }
 
+    // Referrer (source du candidat)
+    var refLink = document.getElementById('detail-candidate-referrer-link');
+    var refMissing = document.getElementById('detail-candidate-referrer-missing');
+    if (refLink && refMissing) {
+        if (data.referrer) {
+            refLink.href = data.referrer;
+            refLink.title = data.referrer;
+            refLink.classList.remove('hidden');
+            refMissing.classList.add('hidden');
+        } else {
+            refLink.classList.add('hidden');
+            refMissing.classList.remove('hidden');
+        }
+    }
+
     var ss = document.getElementById('detail-candidate-status-select');
     if (ss) {
-        // Map status localized to value
+        // Map status to select value
         var rawStatus = (data.status || 'new').toLowerCase();
-        var val = 'shortlisted'; // Banque par défaut pour "new"
+        var val = 'new';
         if (rawStatus.includes('accept') || rawStatus === 'reviewed') val = 'reviewed';
         else if (rawStatus.includes('refus') || rawStatus === 'rejected') val = 'rejected';
         else if (rawStatus.includes('banque') || rawStatus.includes('favori') || rawStatus === 'shortlisted') val = 'shortlisted';
+        else if (rawStatus === 'new' || rawStatus.includes('nouveau')) val = 'new';
 
         ss.value = val;
         ss.className = 'status-select status-select--candidate status-' + val;
@@ -1439,6 +1601,50 @@ function getCurrentCandidateData() {
     return null;
 }
 
+// ─── Inline edit (depuis le tableau, sans ouvrir la fiche) ───────────
+function saveCandidateInline(candidateId, updates, starsContainer) {
+    // Sync données locales
+    syncCandidateUpdatesToAllSources(candidateId, updates);
+
+    // Update UI étoiles si rating
+    if (updates.rating !== undefined && starsContainer) {
+        var stars = starsContainer.querySelectorAll('i');
+        stars.forEach(function (s) {
+            var v = parseInt(s.getAttribute('data-val'), 10);
+            s.className = (v <= updates.rating ? 'fa-solid' : 'fa-regular') + ' fa-star';
+        });
+    }
+
+    // Enregistrer en BD
+    var params = new URLSearchParams();
+    params.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+    params.append('id', candidateId);
+    if (updates.status !== undefined) params.append('status', updates.status);
+    if (updates.isFavorite !== undefined) params.append('is_favorite', updates.isFavorite ? '1' : '0');
+    if (updates.rating !== undefined) params.append('rating', String(updates.rating));
+
+    fetch('/candidats/update', { method: 'POST', body: params })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (!res.success) console.error('Inline save error:', res.error);
+        })
+        .catch(function (e) { console.error('Inline save network error:', e); });
+}
+
+function toggleFavoriteInline(candidateId, el) {
+    // Déterminer l'état actuel
+    var heart = el.querySelector('i');
+    var isFav = heart && heart.classList.contains('fa-solid');
+    var newState = !isFav;
+
+    // Update UI
+    el.innerHTML = newState
+        ? '<i class="fa-solid fa-heart" style="color:#EC4899;"></i>'
+        : '<i class="fa-regular fa-heart" style="color:#D1D5DB;"></i>';
+
+    saveCandidateInline(candidateId, { isFavorite: newState });
+}
+
 function syncCandidateUpdatesToAllSources(candidateId, updates) {
     function apply(o) {
         if (!o) return;
@@ -1522,6 +1728,7 @@ function goBackToCandidates() {
         renderAffichageCandidatsTable(window._currentAffichageId);
         document.getElementById('affichage-candidats-section').classList.add('active');
     } else {
+        renderGlobalCandidats();
         document.getElementById('candidats-section').classList.add('active');
     }
 }
@@ -1732,7 +1939,7 @@ function openNotifyCandidatsModal() {
         div.style.cssText = 'display:flex;align-items:center;gap:0.75rem;padding:0.6rem 1rem;border-bottom:1px solid var(--border-color);';
         if (i === candidates.length - 1) div.style.borderBottom = 'none';
         div.innerHTML =
-            '<input type="checkbox" class="notify-candidate-cb" value="' + escapeHtml(c.id) + '" checked style="accent-color:var(--primary-color);flex-shrink:0;">' +
+            '<input type="checkbox" class="notify-candidate-cb" value="' + escapeHtml(c.id) + '" style="accent-color:var(--primary-color);flex-shrink:0;">' +
             '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=' + escapeHtml(c.color) + '&color=fff&size=32" style="width:32px;height:32px;border-radius:50%;flex-shrink:0;" alt="">' +
             '<div style="flex:1;min-width:0;"><strong style="font-size:0.875rem;">' + escapeHtml(c.name) + '</strong><div class="subtitle-muted">' + escapeHtml(c.email) + '</div></div>' +
             '<span class="notify-row-favorite" style="display:inline-flex;align-items:center;justify-content:center;width:1.25rem;flex-shrink:0;">' + (c.isFavorite ? '<i class="fa-solid fa-heart" style="color:#EC4899;"></i>' : '<i class="fa-regular fa-heart" style="color:#D1D5DB;"></i>') + '</span>' +
@@ -1745,7 +1952,7 @@ function openNotifyCandidatsModal() {
     }
 
     var selectAll = document.getElementById('notify-select-all');
-    if (selectAll) selectAll.checked = true;
+    if (selectAll) selectAll.checked = false;
     document.getElementById('notify-candidats-message').value = '';
 
     var btnContainer = document.getElementById('notify-template-buttons');
@@ -2147,9 +2354,15 @@ function renderTeamMembers() {
         var isOwner = (m.role === 'owner');
         var isSelf = (String(m.id) === currentUserId);
         var canDelete = !isOwner && !isSelf;
+        var notifEnabled = m.notifications_enabled !== false;
 
         var badgeLabel = isOwner ? 'Propriétaire' : 'Accès complet';
         var badgeClass = isOwner ? 'team-member-role-badge team-member-role-badge--owner' : 'team-member-role-badge';
+
+        var notifToggle = '<label class="team-member-notif-toggle" title="Notifications par courriel">' +
+            '<input type="checkbox"' + (notifEnabled ? ' checked' : '') + ' onchange="toggleTeamMemberNotif(' + index + ', this.checked)">' +
+            '<i class="fa-solid fa-bell' + (notifEnabled ? '' : '-slash') + '" style="font-size:0.85rem;color:' + (notifEnabled ? 'var(--primary-color, #3b82f6)' : '#94a3b8') + '"></i>' +
+            '</label>';
 
         var div = document.createElement('div');
         div.className = 'team-member-item';
@@ -2161,6 +2374,7 @@ function renderTeamMembers() {
             '<div class="team-member-email">' + escapeHtml(m.email || '') + '</div>' +
             '</div>' +
             '<span class="' + badgeClass + '">' + badgeLabel + '</span>' +
+            notifToggle +
             (canDelete ? '<button class="btn-icon btn-icon--danger" title="Retirer" onclick="deleteTeamMember(' + index + ')"><i class="fa-solid fa-trash"></i></button>' : '');
         container.appendChild(div);
     });
@@ -2170,7 +2384,19 @@ function renderTeamMembers() {
     }
 }
 
-function addTeamMember() {
+function openAddTeamMemberModal() {
+    var prenom = document.getElementById('team-new-prenom');
+    var nom = document.getElementById('team-new-nom');
+    var email = document.getElementById('team-new-email');
+    if (prenom) prenom.value = '';
+    if (nom) nom.value = '';
+    if (email) email.value = '';
+    openModal('add-team-member');
+    setTimeout(function () { if (prenom) prenom.focus(); }, 100);
+}
+
+function submitAddTeamMember(e) {
+    e.preventDefault();
     var prenom = document.getElementById('team-new-prenom').value.trim();
     var nom = document.getElementById('team-new-nom').value.trim();
     var email = document.getElementById('team-new-email').value.trim();
@@ -2185,7 +2411,7 @@ function addTeamMember() {
     formData.append('email', email);
     formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
 
-    var btn = document.querySelector('#settings-team-add-row .btn-primary');
+    var btn = document.getElementById('add-team-member-submit');
     if (btn) { btn.disabled = true; }
 
     fetch('/parametres/company-members/add', {
@@ -2200,7 +2426,7 @@ function addTeamMember() {
         .then(function (res) {
             if (res.ok && res.data.success && res.data.member) {
                 teamMembersData.push(res.data.member);
-                clearTeamMemberForm();
+                closeModal('add-team-member');
                 renderTeamMembers();
             } else {
                 alert(res.data.error || 'Erreur lors de l\'ajout');
@@ -2210,16 +2436,6 @@ function addTeamMember() {
         .finally(function () {
             if (btn) { btn.disabled = false; }
         });
-}
-
-function clearTeamMemberForm() {
-    var prenom = document.getElementById('team-new-prenom');
-    var nom = document.getElementById('team-new-nom');
-    var email = document.getElementById('team-new-email');
-    if (prenom) prenom.value = '';
-    if (nom) nom.value = '';
-    if (email) email.value = '';
-    if (prenom) prenom.focus();
 }
 
 function deleteTeamMember(index) {
@@ -2244,6 +2460,35 @@ function deleteTeamMember(index) {
             }
         })
         .catch(function () { alert('Erreur réseau'); });
+}
+
+function toggleTeamMemberNotif(index, enabled) {
+    if (index < 0 || index >= teamMembersData.length) return;
+    var member = teamMembersData[index];
+    var params = new FormData();
+    params.append('member_id', member.id);
+    params.append('enabled', enabled ? '1' : '0');
+    params.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+
+    fetch('/parametres/company-members/toggle-notifications', {
+        method: 'POST',
+        body: params
+    })
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+            if (res.ok && res.data.success) {
+                teamMembersData[index].notifications_enabled = enabled;
+                renderTeamMembers();
+            } else {
+                // Rétablir l'état précédent en cas d'erreur
+                teamMembersData[index].notifications_enabled = !enabled;
+                renderTeamMembers();
+            }
+        })
+        .catch(function () {
+            teamMembersData[index].notifications_enabled = !enabled;
+            renderTeamMembers();
+        });
 }
 
 /* ═══════════════════════════════════════════════

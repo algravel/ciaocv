@@ -366,7 +366,7 @@ const translations = {
         th_candidate: "Candidate", th_video: "Video", th_rating: "Rating", th_applied: "Applied",
         status_active: "Active", status_paused: "Paused", status_closed: "Closed",
         status_termine: "Completed", status_archived: "Archived",
-        status_new: "New", status_reviewed: "Reviewed", status_accepted: "Accepted", status_rejected: "Rejected", status_shortlisted: "Favorite",
+        status_new: "New", status_reviewed: "Reviewed", status_banque: "Pool", status_accepted: "Accepted", status_rejected: "Rejected", status_shortlisted: "Favorite",
         stat_active_jobs: "Active postings", stat_total_candidates: "Total candidates",
         stat_pending_review: "Pending review", stat_shortlisted: "Shortlisted",
         chart_applications: "Applications by month",

@@ -27,8 +27,10 @@ class DashboardController extends Controller
         $userRole = $_SESSION['user_role'] ?? 'client';
         $isEvaluateur = ($userRole === 'evaluateur');
 
-        // Fallback : si role=client mais l'utilisateur est dans app_affichage_evaluateurs sans posséder d'affichage, le traiter comme évaluateur
-        if (!$isEvaluateur && $platformUserId && $userRole === 'client') {
+        // Fallback : si role=client mais l'utilisateur est dans app_affichage_evaluateurs sans posséder d'affichage,
+        // le traiter comme évaluateur — SAUF s'il est membre d'une entreprise (accès partagé).
+        $isCompanyMember = isset($_SESSION['company_owner_id']);
+        if (!$isEvaluateur && !$isCompanyMember && $platformUserId && $userRole === 'client') {
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             $pdo = Database::get();
             $stmt = $pdo->prepare('SELECT 1 FROM app_affichages WHERE platform_user_id = ? LIMIT 1');
@@ -329,19 +331,21 @@ class DashboardController extends Controller
                 'name' => $owner['name'] ?? '',
                 'email' => $owner['email'] ?? '',
                 'role' => 'owner',
+                'notifications_enabled' => $platformUserModel->getNotificationsEnabled($ownerPlatformUserId),
             ];
         }
 
-        // Puis les membres ajoutés
-        $memberIds = CompanyMember::getMemberIdsByOwner($ownerPlatformUserId);
-        foreach ($memberIds as $id) {
-            $pu = $platformUserModel->findById($id);
+        // Puis les membres ajoutés (avec statut notifications)
+        $membersWithNotif = CompanyMember::getMembersWithNotifications($ownerPlatformUserId);
+        foreach ($membersWithNotif as $mInfo) {
+            $pu = $platformUserModel->findById($mInfo['member_platform_user_id']);
             if ($pu) {
                 $list[] = [
                     'id' => (string) $pu['id'],
                     'name' => $pu['name'] ?? '',
                     'email' => $pu['email'] ?? '',
                     'role' => 'member',
+                    'notifications_enabled' => $mInfo['notifications_enabled'],
                 ];
             }
         }
@@ -1268,6 +1272,7 @@ class DashboardController extends Controller
                 'name' => $pu['name'] ?? '',
                 'email' => $pu['email'] ?? '',
                 'role' => 'member',
+                'notifications_enabled' => true,
             ];
             $this->json(['success' => true, 'member' => $member]);
         } catch (Throwable $e) {
@@ -1316,6 +1321,46 @@ class DashboardController extends Controller
             $this->json(['success' => $ok]);
         } catch (Throwable $e) {
             error_log('removeCompanyMember error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
+
+    /**
+     * Active ou désactive les notifications pour un membre d'équipe.
+     */
+    public function toggleCompanyMemberNotifications(): void
+    {
+        try {
+            $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            $memberId = (int) ($_POST['member_id'] ?? 0);
+            $enabled = filter_var($_POST['enabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
+            if ($memberId <= 0) {
+                $this->json(['success' => false, 'error' => 'ID membre invalide'], 400);
+                return;
+            }
+            require_once __DIR__ . '/../models/CompanyMember.php';
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+
+            // Si c'est le propriétaire, mettre à jour gestion_platform_users
+            if ($memberId === $effectiveOwnerId) {
+                $platformUserModel = new PlatformUser();
+                $ok = $platformUserModel->setNotificationsEnabled($memberId, $enabled);
+            } else {
+                $ok = CompanyMember::toggleNotifications($effectiveOwnerId, $memberId, $enabled);
+            }
+            $this->json(['success' => $ok, 'notifications_enabled' => $enabled]);
+        } catch (Throwable $e) {
+            error_log('toggleCompanyMemberNotifications error: ' . $e->getMessage());
             $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
         }
     }

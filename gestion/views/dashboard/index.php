@@ -626,7 +626,11 @@
                             'status' => $st,
                             'internal_note' => $f['internal_note'] ?? null
                         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP)) ?>">
-                            <td class="cell-date cell-clickable" title="Cliquer pour ouvrir"><?= e(date('d M Y, H:i', strtotime($f['created_at']))) ?></td>
+                            <td class="cell-date cell-clickable" title="Cliquer pour ouvrir"><?php
+                                $dtFb = new DateTime($f['created_at'], new DateTimeZone('UTC'));
+                                $dtFb->setTimezone(new DateTimeZone('America/Montreal'));
+                                echo e($dtFb->format('d M Y, H:i'));
+                            ?></td>
                             <td>
                                 <span class="status-badge <?= $f['type'] === 'idea' ? 'status-active' : 'status-paused' ?>">
                                     <?= $f['type'] === 'idea' ? 'Idée' : 'Bug' ?>

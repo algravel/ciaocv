@@ -209,6 +209,24 @@ class AuthController extends Controller
         $_SESSION['company_name'] = $companyName;
         if ($companyOwnerId !== null) {
             $_SESSION['company_owner_id'] = $companyOwnerId;
+            // Un membre d'entreprise doit être traité comme client, pas évaluateur
+            if ($_SESSION['user_role'] === 'evaluateur') {
+                $_SESSION['user_role'] = 'client';
+                // Rétablir le rôle dans la base de données
+                $platformUserModel = new PlatformUser();
+                $pu = $platformUserModel->findById($user['id']);
+                if ($pu) {
+                    $platformUserModel->update($user['id'], [
+                        'prenom' => $pu['prenom'] ?? '',
+                        'nom'    => $pu['nom'] ?? $pu['name'] ?? '',
+                        'email'  => $pu['email'] ?? '',
+                        'role'   => 'client',
+                        'plan_id'  => $pu['plan_id'] ?? null,
+                        'billable' => $pu['billable'] ?? false,
+                        'active'   => $pu['active'] ?? true,
+                    ]);
+                }
+            }
         }
 
         $this->redirect($_SESSION['user_role'] === 'evaluateur' ? '/affichages' : '/tableau-de-bord');
@@ -293,6 +311,27 @@ class AuthController extends Controller
         $_SESSION['company_name'] = $companyName;
         if ($companyOwnerId !== null) {
             $_SESSION['company_owner_id'] = $companyOwnerId;
+            // Un membre d'entreprise doit être traité comme client, pas évaluateur
+            if ($_SESSION['user_role'] === 'evaluateur') {
+                $_SESSION['user_role'] = 'client';
+                try {
+                    $platformUserModel = new PlatformUser();
+                    $pu = $platformUserModel->findById($userId);
+                    if ($pu) {
+                        $platformUserModel->update($userId, [
+                            'prenom'   => $pu['prenom'] ?? '',
+                            'nom'      => $pu['nom'] ?? $pu['name'] ?? '',
+                            'email'    => $pu['email'] ?? '',
+                            'role'     => 'client',
+                            'plan_id'  => $pu['plan_id'] ?? null,
+                            'billable' => $pu['billable'] ?? false,
+                            'active'   => $pu['active'] ?? true,
+                        ]);
+                    }
+                } catch (Throwable $e) {
+                    // ignorer
+                }
+            }
         }
 
         $this->clearOtpSession();

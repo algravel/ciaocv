@@ -56,7 +56,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs et forfaits - CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1771038561">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1771048020">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         .pricing-page-wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 5%; box-sizing: border-box; }
@@ -94,6 +94,14 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
         .x-icon { color: #cbd5e1; }
         @media (max-width: 1100px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } .pricing-page-wrap { padding: 0 1rem; } }
+        /* ─── Billing Toggle ─── */
+        .billing-toggle-wrap { display: flex; align-items: center; justify-content: center; margin-top: 2rem; }
+        .billing-toggle { display: flex; align-items: center; background: var(--bg-alt, #1e293b); border: 1px solid var(--border-dark, #334155); border-radius: 999px; padding: 0.3rem; cursor: pointer; user-select: none; }
+        .billing-toggle-option { padding: 0.55rem 1.4rem; font-size: 0.9rem; font-weight: 600; color: var(--text-gray, #94a3b8); border-radius: 999px; transition: all 0.25s ease; z-index: 1; position: relative; white-space: nowrap; text-align: center; }
+        .billing-toggle-option.active { background: var(--primary, #2563eb); color: #fff; }
+        .billing-toggle-option .toggle-sub { display: block; font-size: 0.65rem; font-weight: 400; opacity: 0.8; margin-top: 0.1rem; }
+        .billing-toggle-option.active .toggle-sub { opacity: 1; }
+        .price-amount { transition: opacity 0.2s; }
         /* Modal */
         .plan-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
         .plan-modal-overlay.active { display: flex; }
@@ -177,6 +185,19 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
         <div class="pricing-hero">
             <h1 data-i18n="pricing.title">Identifiez le candidat parfait sans perdre une seconde.</h1>
             <p data-i18n="pricing.subtitle">Des tarifs simples et transparents pour moderniser votre processus de recrutement. Commencez gratuitement, évoluez selon vos besoins.</p>
+
+            <div class="billing-toggle-wrap">
+                <div class="billing-toggle" id="billingToggle">
+                    <div class="billing-toggle-option" data-billing="monthly" id="toggle-monthly">
+                        <?= $lang === 'en' ? 'Monthly' : 'Mensuel' ?>
+                        <span class="toggle-sub"><?= $lang === 'en' ? 'Cancel anytime' : 'Annuler en tout temps' ?></span>
+                    </div>
+                    <div class="billing-toggle-option active" data-billing="annual" id="toggle-annual">
+                        <?= $lang === 'en' ? 'Annual' : 'Annuel' ?>
+                        <span class="toggle-sub"><?= $lang === 'en' ? 'Save 30%' : 'Économisez 30%' ?></span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <section class="pricing-section">
@@ -196,18 +217,18 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
                 <?php if ($isFeatured): ?><div class="pricing-badge">Populaire</div><?php endif; ?>
                 <div class="price-header">
                     <h3><?= e($p['name']) ?></h3>
-                    <div class="price-amount">
-                        <?php if ($isFree): ?>
-                            <?= $lang === 'en' ? 'Free' : 'Gratuit' ?>
-                        <?php elseif ($p['price_monthly'] > 0 && $p['price_yearly'] > 0): ?>
-                            <?= e($formatPrice($p['price_yearly'] / 12)) ?>$ <span class="price-period">/mois</span>
-                            <div class="price-desc"><?= $lang === 'en' ? 'Billed annually' : 'Facturé annuellement' ?></div>
-                            <div class="price-desc" style="font-size:0.85rem;">ou <?= e($formatPrice($p['price_monthly'])) ?>$ <?= $lang === 'en' ? 'if monthly' : 'si mensuel' ?></div>
-                        <?php else: ?>
-                            <?= e($formatPrice($p['price_monthly'])) ?>$
-                            <div class="price-desc"><?= $lang === 'en' ? 'one-time payment' : 'paiement unique' ?></div>
-                        <?php endif; ?>
+                    <?php if ($isFree): ?>
+                    <div class="price-amount"><?= $lang === 'en' ? 'Free' : 'Gratuit' ?></div>
+                    <div class="price-desc"><?= $lang === 'en' ? 'Try risk-free' : 'Pour essayer sans risque' ?></div>
+                    <?php elseif ($p['price_monthly'] > 0 && $p['price_yearly'] > 0): ?>
+                    <div class="price-amount price-dynamic" data-monthly="<?= e($formatPrice($p['price_monthly'])) ?>" data-annual="<?= e($formatPrice(round($p['price_yearly'] / 12))) ?>">
+                        <?= e($formatPrice(round($p['price_yearly'] / 12))) ?>$ <span class="price-period">/<?= $lang === 'en' ? 'mo' : 'mois' ?></span>
                     </div>
+                    <div class="price-desc price-billing-note" style="color:var(--primary); font-weight:600;"><?= $lang === 'en' ? 'Billed annually' : 'Facturé annuellement' ?></div>
+                    <?php else: ?>
+                    <div class="price-amount"><?= e($formatPrice($p['price_monthly'])) ?>$</div>
+                    <div class="price-desc"><?= $lang === 'en' ? 'one-time payment' : 'paiement unique' ?></div>
+                    <?php endif; ?>
                 </div>
                 <ul class="features-list">
                     <?php
@@ -357,7 +378,44 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             });
         });
     </script>
-    <script src="assets/js/i18n.js?v=1771038561"></script>
+    <script>
+        // Billing Toggle
+        (function () {
+            var toggleMonthly = document.getElementById('toggle-monthly');
+            var toggleAnnual = document.getElementById('toggle-annual');
+            if (!toggleMonthly || !toggleAnnual) return;
+
+            var periodLabel = <?= json_encode($lang === 'en' ? 'mo' : 'mois') ?>;
+            var annualNote = <?= json_encode($lang === 'en' ? 'Billed annually' : 'Facturé annuellement') ?>;
+            var monthlyNote = <?= json_encode($lang === 'en' ? 'Billed monthly' : 'Facturation mensuelle') ?>;
+
+            function setBilling(billing) {
+                toggleMonthly.classList.toggle('active', billing === 'monthly');
+                toggleAnnual.classList.toggle('active', billing === 'annual');
+
+                document.querySelectorAll('.price-dynamic').forEach(function (el) {
+                    var price = billing === 'monthly' ? el.getAttribute('data-monthly') : el.getAttribute('data-annual');
+                    el.style.opacity = '0';
+                    setTimeout(function () {
+                        el.innerHTML = price + '$ <span class="price-period">/' + periodLabel + '</span>';
+                        el.style.opacity = '1';
+                    }, 150);
+                });
+
+                document.querySelectorAll('.price-billing-note').forEach(function (el) {
+                    el.textContent = billing === 'annual' ? annualNote : monthlyNote;
+                });
+
+                // Sync modal default billing
+                var billingHidden = document.getElementById('planModalBilling');
+                if (billingHidden) billingHidden.value = billing === 'annual' ? 'yearly' : 'monthly';
+            }
+
+            toggleMonthly.addEventListener('click', function () { setBilling('monthly'); });
+            toggleAnnual.addEventListener('click', function () { setBilling('annual'); });
+        })();
+    </script>
+    <script src="assets/js/i18n.js?v=1771048020"></script>
     <script src="assets/js/cookie-consent.js"></script>
 </body>
 </html>

@@ -74,6 +74,7 @@ class EntrevueController extends Controller
         $cvPath = trim($input['cvPath'] ?? '');
         $retakes = (int) ($input['retakes'] ?? 0);
         $timeSpent = (int) ($input['timeSpent'] ?? 0);
+        $referrer = trim($input['referrer'] ?? '');
 
         // Validations
         if (!preg_match('/^[a-f0-9]{16}$/', $longId)) {
@@ -108,11 +109,21 @@ class EntrevueController extends Controller
         require_once dirname(__DIR__, 2) . '/gestion/config.php';
         $pdo = Database::get();
 
+        // S'assurer que la colonne referrer_url existe
+        try {
+            $cols = $pdo->query("SHOW COLUMNS FROM app_candidatures LIKE 'referrer_url'")->fetchAll();
+            if (empty($cols)) {
+                $pdo->exec("ALTER TABLE app_candidatures ADD COLUMN referrer_url VARCHAR(1024) DEFAULT NULL AFTER ip_address");
+            }
+        } catch (Throwable $e) {
+            // ignorer
+        }
+
         $stmt = $pdo->prepare("
-            INSERT INTO app_candidatures (affichage_id, nom, prenom, email, telephone, video_path, cv_path, retakes_count, time_spent_seconds, ip_address)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO app_candidatures (affichage_id, nom, prenom, email, telephone, video_path, cv_path, retakes_count, time_spent_seconds, ip_address, referrer_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$affichageId, $nom, $prenom, $email, $telephone ?: null, $videoPath, $cvPath ?: null, $retakes, $timeSpent, $ipAddress]);
+        $stmt->execute([$affichageId, $nom, $prenom, $email, $telephone ?: null, $videoPath, $cvPath ?: null, $retakes, $timeSpent, $ipAddress, $referrer ?: null]);
 
         $posteTitle = $affichage['title'] ?? 'Poste';
         $candidatName = trim($prenom . ' ' . $nom) ?: $nom;

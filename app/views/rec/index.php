@@ -158,6 +158,9 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
         // Données du formulaire conservées en JS
         let formData = {};
 
+        // ─── Referrer Tracking ──────────────────────────────────────────────
+        const candidateReferrer = document.referrer || '';
+
         // ─── Stats Tracking ────────────────────────────────────────────────
         let retakesCount = 0;
         let recordingStepStartTime = 0;
@@ -405,7 +408,8 @@ $recordDuration = (int) ($poste['recordDuration'] ?? 3);
                         videoPath: urlData.fileName,
                         cvPath: cvPath || undefined,
                         retakes: retakesCount,
-                        timeSpent: timeSpentSeconds
+                        timeSpent: timeSpentSeconds,
+                        referrer: candidateReferrer || undefined
                     })
                 });
                 const submitData = await submitRes.json();

@@ -49,6 +49,7 @@ $router->get('/historique', 'DashboardController', 'history');
 $router->post('/parametres/entreprise', 'DashboardController', 'saveCompany');
 $router->post('/parametres/company-members/add', 'DashboardController', 'addCompanyMember');
 $router->post('/parametres/company-members/remove', 'DashboardController', 'removeCompanyMember');
+$router->post('/parametres/company-members/toggle-notifications', 'DashboardController', 'toggleCompanyMemberNotifications');
 $router->get('/parametres/email-templates', 'DashboardController', 'getEmailTemplates');
 $router->post('/parametres/email-templates', 'DashboardController', 'saveEmailTemplate');
 $router->post('/parametres/email-templates/delete', 'DashboardController', 'deleteEmailTemplate');

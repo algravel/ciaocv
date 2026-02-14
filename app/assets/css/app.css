@@ -1128,6 +1128,27 @@ code {
     color: var(--text-secondary);
 }
 
+/* Empêcher le débordement du nom/email dans les lignes candidat */
+.data-table td .candidate-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.data-table td .candidate-cell-info {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.data-table td .candidate-cell-info strong,
+.data-table td .candidate-cell-info .subtitle-muted {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .cell-date {
     white-space: nowrap;
     color: #64748B;
@@ -2122,6 +2143,56 @@ code {
     color: #F59E0B;
 }
 
+/* ─── Inline edit controls (dans les tableaux candidats) ─── */
+.inline-status-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    padding-right: 1.5rem;
+    transition: border-color 0.15s;
+}
+
+.inline-status-select:hover {
+    border-color: var(--border-color);
+}
+
+.inline-status-select.status-new { background-color: #DBEAFE; color: #1D4ED8; }
+.inline-status-select.status-shortlisted { background-color: #FEF3C7; color: #92400E; }
+.inline-status-select.status-reviewed { background-color: #D1FAE5; color: #065F46; }
+.inline-status-select.status-rejected { background-color: #FEE2E2; color: #991B1B; }
+
+.inline-stars {
+    display: inline-flex;
+    gap: 0.15rem;
+    color: #F59E0B;
+    font-size: 0.95rem;
+}
+
+.inline-stars i:hover,
+.inline-stars i:hover ~ i {
+    opacity: 0.7;
+}
+
+.inline-fav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: transform 0.15s;
+}
+
+.inline-fav:hover {
+    transform: scale(1.2);
+}
+
 /* ═══════════════════════════════════════════════
    SETTINGS – Extensions
    ═══════════════════════════════════════════════ */
@@ -2668,6 +2739,20 @@ code {
     color: var(--primary-color, #3b82f6);
     background: #eff6ff;
     font-weight: 600;
+}
+
+.team-member-item .team-member-notif-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.team-member-item .team-member-notif-toggle input[type="checkbox"] {
+    accent-color: var(--primary-color);
+    cursor: pointer;
 }
 
 .team-member-item .btn-icon--danger:hover {

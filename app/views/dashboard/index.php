@@ -249,9 +249,10 @@
     <div class="filters-bar">
         <div class="view-tabs" id="affichage-candidats-filter-tabs">
             <button class="view-tab active" data-filter="all" data-i18n="filter_all">Tous</button>
-            <button class="view-tab" data-filter="new" data-i18n="filter_new">Nouveaux</button>
-            <button class="view-tab" data-filter="reviewed" data-i18n="filter_reviewed">Évalués</button>
-            <button class="view-tab" data-filter="rejected" data-i18n="filter_rejected">Refusés</button>
+            <button class="view-tab" data-filter="new" data-i18n="status_new">Nouveau</button>
+            <button class="view-tab" data-filter="shortlisted" data-i18n="status_banque">Banque</button>
+            <button class="view-tab" data-filter="reviewed" data-i18n="status_accepted">Accepté</button>
+            <button class="view-tab" data-filter="rejected" data-i18n="status_rejected">Refusé</button>
         </div>
     </div>
     <?php if (empty($isEvaluateur)): ?>
@@ -390,15 +391,13 @@
     <div class="filters-bar">
         <div class="view-tabs" id="candidats-filter-tabs">
             <button class="view-tab active" data-filter="all" data-i18n="filter_all">Tous</button>
-            <button class="view-tab" data-filter="new" data-i18n="filter_new">Nouveaux</button>
-            <button class="view-tab" data-filter="reviewed" data-i18n="filter_reviewed">Évalués</button>
-            <button class="view-tab" data-filter="rejected" data-i18n="filter_rejected">Refusés</button>
+            <button class="view-tab" data-filter="new" data-i18n="status_new">Nouveau</button>
+            <button class="view-tab" data-filter="shortlisted" data-i18n="status_banque">Banque</button>
+            <button class="view-tab" data-filter="reviewed" data-i18n="status_accepted">Accepté</button>
+            <button class="view-tab" data-filter="rejected" data-i18n="status_rejected">Refusé</button>
         </div>
-        <div><select class="form-select form-select--auto">
-                <option data-i18n="filter_all_jobs">Tous les postes</option>
-                <option>Développeur Frontend</option>
-                <option>Chef de projet</option>
-                <option>Designer UX/UI</option>
+        <div><select class="form-select form-select--auto" id="candidats-poste-filter" onchange="renderGlobalCandidats()">
+                <option value="" data-i18n="filter_all_jobs">Tous les postes</option>
             </select></div>
     </div>
     <div class="search-row">
@@ -412,43 +411,13 @@
                 <th data-i18n="th_poste">Poste</th>
                 <th data-i18n="th_status">Statut</th>
                 <th data-i18n="th_rating">Note</th>
+                <th data-i18n="th_favorite">Favori</th>
                 <th data-i18n="th_applied">Postulé le</th>
             </tr>
         </thead>
-        <tbody>
-            <?php foreach ($candidats as $cId => $c): ?>
-                <tr onclick="showCandidateDetail('<?= e($cId) ?>')" class="row-clickable"
-                    data-status="<?= e($c['status']) ?>">
-                    <td>
-                        <div class="flex-center gap-3">
-                            <img src="https://ui-avatars.com/api/?name=<?= urlencode($c['name']) ?>&background=<?= e($c['color']) ?>&color=fff"
-                                class="avatar" alt="">
-                            <div><strong><?= e($c['name']) ?></strong>
-                                <div class="subtitle-muted"><?= e($c['email']) ?></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><?= e($c['role']) ?></td>
-                    <td><?php
-                    $statusMap = [
-                        'new' => ['label' => 'Nouveau', 'class' => 'status-new'],
-                        'reviewed' => ['label' => 'Évalué', 'class' => 'status-active'],
-                        'rejected' => ['label' => 'Refusé', 'class' => 'status-rejected'],
-                        'shortlisted' => ['label' => 'Banque', 'class' => 'status-shortlisted'],
-                    ];
-                    $st = $c['status'];
-                    $badge = $statusMap[$st] ?? ['label' => $st, 'class' => ''];
-                    ?><span class="status-badge <?= $badge['class'] ?>"><?= e($badge['label']) ?></span></td>
-                    <td>
-                        <div class="star-color"><?php for ($i = 1; $i <= 5; $i++): ?><i
-                                    class="fa-<?= $i <= $c['rating'] ? 'solid' : 'regular' ?> fa-star"></i><?php endfor; ?>
-                        </div>
-                    </td>
-                    <td>2026-02-01</td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
+        <tbody id="candidats-tbody"></tbody>
     </table>
+    <p class="text-center text-muted py-4 hidden" id="candidats-empty-msg">Aucun candidat.</p>
 </div>
 
 <!-- ─── CANDIDAT DÉTAIL Section ─── -->
@@ -471,6 +440,7 @@
                 title="Mettre en favori"><i class="fa-regular fa-heart"></i></button>
             <select class="status-select status-select--candidate" id="detail-candidate-status-select"
                 onchange="updateCandidateStatus(this.value)">
+                <option value="new" data-i18n="status_new">Nouveau</option>
                 <option value="shortlisted" data-i18n="status_banque">Banque</option>
                 <option value="reviewed" data-i18n="status_accepted">Accepté</option>
                 <option value="rejected" data-i18n="status_rejected">Refusé</option>
@@ -530,6 +500,15 @@
                     </a>
                     <span id="detail-candidate-cv-missing" class="text-muted text-sm">
                         <span data-i18n="cv_missing">CV manquant</span>
+                    </span>
+                </div>
+                <h3 class="contact-heading mt-2"><i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Source</span></h3>
+                <div id="detail-candidate-referrer-wrap" class="mt-1">
+                    <a id="detail-candidate-referrer-link" href="#" target="_blank" rel="noopener" class="btn btn-secondary btn-sm hidden" title="">
+                        <i class="fa-solid fa-globe"></i> <span>Voir la source</span>
+                    </a>
+                    <span id="detail-candidate-referrer-missing" class="text-muted text-sm">
+                        Aucune source
                     </span>
                 </div>
             </div>
@@ -809,11 +788,8 @@
         </div>
         <p class="form-help mb-3" data-i18n="settings_company_access_help">Les personnes ajoutées ici auront le même accès que vous : postes, affichages, candidats et paramètres.</p>
         <div id="settings-team-list" class="team-members-list"></div>
-        <div class="team-members-add-row mt-4" id="settings-team-add-row">
-            <input type="text" id="team-new-prenom" class="form-input" placeholder="Prénom">
-            <input type="text" id="team-new-nom" class="form-input" placeholder="Nom">
-            <input type="email" id="team-new-email" class="form-input" placeholder="Courriel" required>
-            <button class="btn btn-primary" onclick="addTeamMember()" style="flex-shrink:0;" title="Ajouter"><i class="fa-solid fa-plus"></i></button>
+        <div class="mt-4">
+            <button class="btn btn-primary" onclick="openAddTeamMemberModal()"><i class="fa-solid fa-user-plus"></i> Ajouter un membre</button>
         </div>
     </div>
 
@@ -999,6 +975,36 @@
                 <button type="button" class="btn btn-secondary" onclick="closeModal('add-candidat')">Annuler</button>
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> <span
                         data-i18n="btn_add">Ajouter</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ajouter un membre d'équipe -->
+<div class="modal-overlay" id="add-team-member-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title"><i class="fa-solid fa-user-plus"></i> Ajouter un membre</h2>
+            <button class="btn-icon" onclick="closeModal('add-team-member')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form onsubmit="submitAddTeamMember(event)">
+            <?= csrf_field() ?>
+            <p class="form-help mb-4">Cette personne aura le même accès que vous : postes, affichages, candidats et paramètres.</p>
+            <div class="form-group mb-4">
+                <label class="form-label" for="team-new-prenom">Prénom</label>
+                <input type="text" id="team-new-prenom" class="form-input" placeholder="Prénom">
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label" for="team-new-nom">Nom</label>
+                <input type="text" id="team-new-nom" class="form-input" placeholder="Nom">
+            </div>
+            <div class="form-group mb-5">
+                <label class="form-label" for="team-new-email">Courriel</label>
+                <input type="email" id="team-new-email" class="form-input" placeholder="Courriel" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-team-member')">Annuler</button>
+                <button type="submit" class="btn btn-primary" id="add-team-member-submit"><i class="fa-solid fa-plus"></i> Ajouter</button>
             </div>
         </form>
     </div>

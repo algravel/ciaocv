@@ -115,4 +115,65 @@ class CompanyMember
             return false;
         }
     }
+
+    /**
+     * Active ou désactive les notifications pour un membre.
+     */
+    public static function toggleNotifications(int $ownerPlatformUserId, int $memberPlatformUserId, bool $enabled): bool
+    {
+        try {
+            self::ensureTable();
+            self::ensureNotificationsColumn();
+            $pdo = Database::get();
+            $stmt = $pdo->prepare('UPDATE app_company_members SET notifications_enabled = ? WHERE owner_platform_user_id = ? AND member_platform_user_id = ?');
+            $stmt->execute([$enabled ? 1 : 0, $ownerPlatformUserId, $memberPlatformUserId]);
+            return $stmt->rowCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Récupère les membres avec leur statut de notifications.
+     * @return array<array{member_platform_user_id: int, notifications_enabled: bool}>
+     */
+    public static function getMembersWithNotifications(int $ownerPlatformUserId): array
+    {
+        try {
+            self::ensureTable();
+            self::ensureNotificationsColumn();
+            $pdo = Database::get();
+            $stmt = $pdo->prepare('SELECT member_platform_user_id, notifications_enabled FROM app_company_members WHERE owner_platform_user_id = ? ORDER BY created_at ASC');
+            $stmt->execute([$ownerPlatformUserId]);
+            $members = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $members[] = [
+                    'member_platform_user_id' => (int) $row['member_platform_user_id'],
+                    'notifications_enabled' => (bool) ($row['notifications_enabled'] ?? 1),
+                ];
+            }
+            return $members;
+        } catch (Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Ajoute la colonne notifications_enabled si elle n'existe pas.
+     */
+    private static function ensureNotificationsColumn(): void
+    {
+        static $checked = false;
+        if ($checked) return;
+        $checked = true;
+        try {
+            $pdo = Database::get();
+            $stmt = $pdo->query("SHOW COLUMNS FROM app_company_members LIKE 'notifications_enabled'");
+            if ($stmt->rowCount() === 0) {
+                $pdo->exec("ALTER TABLE app_company_members ADD COLUMN notifications_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER member_platform_user_id");
+            }
+        } catch (Throwable $e) {
+            // ignorer
+        }
+    }
 }

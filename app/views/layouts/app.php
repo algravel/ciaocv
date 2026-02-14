@@ -75,12 +75,11 @@
                 </a>
                 <div class="nav-submenu" data-parent="candidats">
                     <div class="nav-submenu-inner">
-                        <a href="/candidats#candidats-tous" class="nav-subitem" data-i18n="filter_all">Tous</a>
-                        <a href="/candidats#candidats-nouveaux" class="nav-subitem" data-i18n="filter_new">Nouveaux</a>
-                        <a href="/candidats#candidats-evalues" class="nav-subitem"
-                            data-i18n="filter_reviewed">Évalués</a>
-                        <a href="/candidats#candidats-shortlistes" class="nav-subitem"
-                            data-i18n="filter_shortlisted">Shortlistés</a>
+                        <a href="/candidats#candidats-all" class="nav-subitem" data-i18n="filter_all">Tous</a>
+                        <a href="/candidats#candidats-new" class="nav-subitem" data-i18n="status_new">Nouveau</a>
+                        <a href="/candidats#candidats-shortlisted" class="nav-subitem" data-i18n="status_banque">Banque</a>
+                        <a href="/candidats#candidats-reviewed" class="nav-subitem" data-i18n="status_accepted">Accepté</a>
+                        <a href="/candidats#candidats-rejected" class="nav-subitem" data-i18n="status_rejected">Refusé</a>
                     </div>
                 </div>
 

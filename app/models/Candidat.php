@@ -92,6 +92,7 @@ class Candidat
                     'statusColor' => $style['color'],
                     'retakes' => (int) ($row['retakes_count'] ?? 0),
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
+                    'referrer' => $row['referrer_url'] ?? null,
                 ];
             }
             $allCandIds = array_map(function ($id) { return (int) str_replace('c', '', $id); }, array_keys($result));
@@ -171,6 +172,7 @@ class Candidat
                     'statusColor' => $style['color'],
                     'retakes' => (int) ($row['retakes_count'] ?? 0),
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
+                    'referrer' => $row['referrer_url'] ?? null,
                 ];
             }
             $allCandIds = array_map(function ($id) { return (int) str_replace('c', '', $id); }, array_keys($result));
@@ -257,6 +259,7 @@ class Candidat
                     'statusColor' => $style['color'],
                     'retakes' => (int) ($row['retakes_count'] ?? 0),
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
+                    'referrer' => $row['referrer_url'] ?? null,
                     'lastCommunication' => null,
                     'comments' => [],
                 ];
@@ -357,6 +360,7 @@ class Candidat
                     'statusColor' => $style['color'],
                     'retakes' => (int) ($row['retakes_count'] ?? 0),
                     'timeSpent' => (int) ($row['time_spent_seconds'] ?? 0),
+                    'referrer' => $row['referrer_url'] ?? null,
                     'lastCommunication' => null,
                     'comments' => [],
                 ];
@@ -422,17 +426,9 @@ class Candidat
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             $pdo = Database::get();
 
-            // Vérifier que le candidat appartient à un affichage de l'entreprise ou que l'utilisateur est évaluateur invité
-            $stmt = $pdo->prepare("
-                SELECT c.id 
-                FROM app_candidatures c
-                JOIN app_affichages a ON a.id = c.affichage_id
-                LEFT JOIN app_affichage_evaluateurs ae ON ae.affichage_id = a.id AND ae.platform_user_id = ?
-                WHERE c.id = ? AND (a.platform_user_id = ? OR ae.platform_user_id IS NOT NULL)
-                LIMIT 1
-            ");
-            $stmt->execute([$platformUserId, $candidatId, $platformUserId]);
-            if (!$stmt->fetch()) {
+            // Vérifier que le candidat appartient à un affichage de l'entreprise,
+            // que l'utilisateur est évaluateur invité, ou membre d'équipe
+            if (!self::userCanAccessCandidature($candidatId, $platformUserId)) {
                 return false;
             }
 
@@ -446,57 +442,6 @@ class Candidat
                 $fields[] = 'status = ?';
                 $params[] = $data['status'];
             }
-
-            // Note: 'is_favorite' concept might be 'shortlisted' status or a separate field? 
-            // The frontend treats them somewhat separately but 'shortlisted' is also a status.
-            // If the DB has 'is_favorite', use it. If not, maybe use 'status'.
-            // Based on earlier view code, 'shortlisted' IS the favorite status?
-            // "if (data.status === 'Favori' || data.status === 'shortlisted') isFav = true;"
-            // But the user asked for a star AND a status dropdown.
-            // Let's assume for now we only update 'status'. If 'is_favorite' is passed, 
-            // we might need a dedicated column or just rely on 'shortlisted'.
-            // HOWEVER, the UI has a star button separate from status select.
-            // If the user clicks star, it should likely just toggle a visual state OR update a column.
-            // Let's check if 'is_favorite' exists in `app_candidatures`.
-            // The `getAll` method didn't select it, it just set `'isFavorite' => false`. 
-            // So arguably, it's NOT in the DB yet.
-            // I will add a `is_favorite` column check or just update `status` if `shortlisted`.
-            // User request: "le statut... ainsi que l'étoile pour favoris soit enregistrer".
-            // If I can't modify DB schema easily, I might have to map Star -> Status='shortlisted'.
-            // But if Status is 'Refusé' and Star is On? 
-            // Standard ATS: Star is separate.
-            // I'll try to update `is_favorite` if column exists, else ignore (or log).
-            // Actually, I'll attempt to set it. If it fails, I'll know.
-            // Wait, I can't see the schema. Safest is to stick to what I see in `getAll`.
-            // `getAll` had `'isFavorite' => false`.
-            // This suggests it wasn't implemented backend-side.
-            // I should probably add it to the schema? 
-            // I don't have migrations content.
-            // I'll assume for this task I should use `status = 'shortlisted'` as the "Favorite" state?
-            // But the dropdown exists.
-            // Let's look at `app/assets/js/app.js`:
-            // `if (data.status === 'Favori' || data.status === 'shortlisted') isFav = true;`
-            // So if I set status to 'shortlisted', the star lights up?
-            // BUT the user might want a separate favorite flag.
-            // If I look at the `getAll` query: `SELECT c.* ...`.
-            // If `is_favorite` column exists, it would be in `$row`.
-            // I'll check `app/models/Candidat.php` `getAll` method again (Step 153).
-            // It selects `c.*`.
-            // It returns `'isFavorite' => false`. Hardcoded?
-            // Yes: `'isFavorite'  => false,`.
-            // So existing code DOES NOT support favorites from DB.
-            // I should probably implement it properly by checking for the column or adding it.
-            // Since I can't migrate, I might have to map Star -> Status 'shortlisted'.
-            // But duplicate logic: Status Dropdown has 'Favori' (value 'shortlisted').
-            // If I select 'Favori' in dropdown -> Status becomes 'shortlisted' -> Star on.
-            // If I click Star -> Status becomes 'shortlisted'.
-            // If I click Star off -> Status becomes ?? 'reviewed'?
-            // This seems plausible for now without schema change.
-            // The UI logic `toggleFavorite` (JS) sends `isFavorite`.
-            // If `isFavorite` is true, I update status to `shortlisted`.
-            // If `isFavorite` is false, update status to `reviewed` (if it was shortlisted) or keep as is?
-            // Let's assume Star == Status 'shortlisted'.
-            // And Dropdown can also set 'shortlisted'.
 
             if (isset($data['is_favorite'])) {
                 $isFav = (bool) $data['is_favorite'];
@@ -701,10 +646,11 @@ class Candidat
                 SELECT 1 FROM app_candidatures c
                 JOIN app_affichages a ON a.id = c.affichage_id
                 LEFT JOIN app_affichage_evaluateurs ae ON ae.affichage_id = a.id AND ae.platform_user_id = ?
-                WHERE c.id = ? AND (a.platform_user_id = ? OR ae.platform_user_id IS NOT NULL)
+                LEFT JOIN app_company_members cm ON cm.owner_platform_user_id = a.platform_user_id AND cm.member_platform_user_id = ?
+                WHERE c.id = ? AND (a.platform_user_id = ? OR ae.platform_user_id IS NOT NULL OR cm.id IS NOT NULL)
                 LIMIT 1
             ");
-            $stmt->execute([$platformUserId, $candidatureId, $platformUserId]);
+            $stmt->execute([$platformUserId, $platformUserId, $candidatureId, $platformUserId]);
             return (bool) $stmt->fetch();
         } catch (Throwable $e) {
             return false;

@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <!-- Correct Link to Shared CSS -->
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1771038561">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1771048020">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         /* Specific Styles for Pricing Page */
@@ -49,6 +49,71 @@
             max-width: 720px;
             margin-left: auto;
             margin-right: auto;
+        }
+
+        /* ─── Billing Toggle ─── */
+        .billing-toggle-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .billing-toggle {
+            display: flex;
+            align-items: center;
+            background: var(--bg-alt, #1e293b);
+            border: 1px solid var(--border-dark, #334155);
+            border-radius: 999px;
+            padding: 0.3rem;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+        }
+
+        .billing-toggle-option {
+            padding: 0.55rem 1.4rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-gray, #94a3b8);
+            border-radius: 999px;
+            transition: all 0.25s ease;
+            z-index: 1;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .billing-toggle-option.active {
+            background: var(--primary, #2563eb);
+            color: #fff;
+        }
+
+        .billing-toggle-option .toggle-sub {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 400;
+            opacity: 0.8;
+            margin-top: 0.1rem;
+        }
+
+        .billing-toggle-option.active .toggle-sub {
+            opacity: 1;
+        }
+
+        .billing-save-badge {
+            background: #10b981;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            margin-left: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        /* Price transition */
+        .price-amount {
+            transition: opacity 0.2s;
         }
 
         .pricing-section {
@@ -315,6 +380,19 @@
             <p data-i18n="pricing.subtitle">Des tarifs simples et transparents pour moderniser votre processus de
                 recrutement. Commencez gratuitement,
                 évoluez selon vos besoins.</p>
+
+            <div class="billing-toggle-wrap">
+                <div class="billing-toggle" id="billingToggle">
+                    <div class="billing-toggle-option" data-billing="monthly" id="toggle-monthly">
+                        Mensuel
+                        <span class="toggle-sub" data-i18n="pricing.toggle.monthly_sub">Annuler en tout temps</span>
+                    </div>
+                    <div class="billing-toggle-option active" data-billing="annual" id="toggle-annual">
+                        Annuel
+                        <span class="toggle-sub" data-i18n="pricing.toggle.annual_sub">Économisez 30%</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <section class="pricing-section">
@@ -363,12 +441,8 @@
                 <div class="pricing-badge">Populaire</div>
                 <div class="price-header">
                     <h3 data-i18n="pricing.card.pro.title">Pro</h3>
-                    <div class="price-amount">99$ <span class="price-period"
-                            data-i18n="pricing.card.pro.period">/mois</span></div>
-                    <div class="price-desc" style="color:var(--primary); font-weight:600;"
-                        data-i18n="pricing.card.pro.desc.1">Facturé annuellement</div>
-                    <div class="price-desc" style="font-size:0.85rem;" data-i18n="pricing.card.pro.desc.2">ou 139$ si
-                        mensuel</div>
+                    <div class="price-amount" id="price-pro" data-monthly="139" data-annual="99">99$ <span class="price-period">/mois</span></div>
+                    <div class="price-desc price-billing-note" id="price-pro-note" style="color:var(--primary); font-weight:600;">Facturé annuellement</div>
                 </div>
                 <ul class="features-list">
                     <li data-i18n="pricing.card.pro.feat.1">Affichages illimités</li>
@@ -386,12 +460,8 @@
             <div class="pricing-card">
                 <div class="price-header">
                     <h3 data-i18n="pricing.card.expert.title">Expert</h3>
-                    <div class="price-amount">149$ <span class="price-period"
-                            data-i18n="pricing.card.expert.period">/mois</span></div>
-                    <div class="price-desc" style="color:var(--primary); font-weight:600;"
-                        data-i18n="pricing.card.expert.desc.1">Facturé annuellement</div>
-                    <div class="price-desc" style="font-size:0.85rem;" data-i18n="pricing.card.expert.desc.2">ou 199$ si
-                        mensuel</div>
+                    <div class="price-amount" id="price-expert" data-monthly="199" data-annual="149">149$ <span class="price-period">/mois</span></div>
+                    <div class="price-desc price-billing-note" id="price-expert-note" style="color:var(--primary); font-weight:600;">Facturé annuellement</div>
                 </div>
                 <ul class="features-list">
                     <li data-i18n="pricing.card.expert.feat.1">Affichages illimités</li>
@@ -556,7 +626,47 @@
             });
         }
     </script>
-    <script src="assets/js/i18n.js?v=1771038561"></script>
+    <script>
+        // Billing Toggle
+        (function () {
+            var currentBilling = 'annual';
+            var toggleMonthly = document.getElementById('toggle-monthly');
+            var toggleAnnual = document.getElementById('toggle-annual');
+
+            function setBilling(billing) {
+                currentBilling = billing;
+                toggleMonthly.classList.toggle('active', billing === 'monthly');
+                toggleAnnual.classList.toggle('active', billing === 'annual');
+
+                // Update prices
+                var priceEls = document.querySelectorAll('.price-amount[data-monthly]');
+                priceEls.forEach(function (el) {
+                    var price = billing === 'monthly' ? el.getAttribute('data-monthly') : el.getAttribute('data-annual');
+                    el.style.opacity = '0';
+                    setTimeout(function () {
+                        el.innerHTML = price + '$ <span class="price-period">/mois</span>';
+                        el.style.opacity = '1';
+                    }, 150);
+                });
+
+                // Update billing notes
+                var noteEls = document.querySelectorAll('.price-billing-note');
+                noteEls.forEach(function (el) {
+                    if (billing === 'annual') {
+                        el.textContent = 'Facturé annuellement';
+                        el.style.display = '';
+                    } else {
+                        el.textContent = 'Facturation mensuelle';
+                        el.style.display = '';
+                    }
+                });
+            }
+
+            toggleMonthly.addEventListener('click', function () { setBilling('monthly'); });
+            toggleAnnual.addEventListener('click', function () { setBilling('annual'); });
+        })();
+    </script>
+    <script src="assets/js/i18n.js?v=1771048020"></script>
     <script src="assets/js/cookie-consent.js"></script>
 
 </body>

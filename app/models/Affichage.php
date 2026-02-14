@@ -121,10 +121,18 @@ class Affichage
         $recipients = [];
         $seenEmails = [];
 
-        $platformUserStmt = $pdo->prepare("SELECT id, prenom_encrypted, name_encrypted, email_encrypted FROM gestion_platform_users WHERE id = ?");
+        // Vérifier si la colonne notifications_enabled existe sur gestion_platform_users
+        $hasOwnerNotif = $pdo->query("SHOW COLUMNS FROM gestion_platform_users LIKE 'notifications_enabled'")->rowCount() > 0;
+        $ownerCols = 'id, prenom_encrypted, name_encrypted, email_encrypted';
+        if ($hasOwnerNotif) {
+            $ownerCols .= ', COALESCE(notifications_enabled, 1) AS notifications_enabled';
+        }
+        $platformUserStmt = $pdo->prepare("SELECT {$ownerCols} FROM gestion_platform_users WHERE id = ?");
         $platformUserStmt->execute([$ownerId]);
         $owner = $platformUserStmt->fetch(PDO::FETCH_ASSOC);
         if ($owner) {
+            // Respecter le choix du propriétaire
+            $ownerNotifEnabled = $hasOwnerNotif ? (bool) ($owner['notifications_enabled'] ?? 1) : true;
             $email = $encryption->decrypt($owner['email_encrypted'] ?? '');
             $nom = $encryption->decrypt($owner['name_encrypted'] ?? '');
             $prenom = '';
@@ -135,7 +143,9 @@ class Affichage
             if ($email !== false && $nom !== false && $email !== '') {
                 $emailNorm = strtolower(trim($email));
                 $seenEmails[$emailNorm] = true;
-                $recipients[] = ['email' => $email, 'name' => trim($prenom . ' ' . $nom) ?: $nom];
+                if ($ownerNotifEnabled) {
+                    $recipients[] = ['email' => $email, 'name' => trim($prenom . ' ' . $nom) ?: $nom];
+                }
             }
         }
 
@@ -170,6 +180,46 @@ class Affichage
             }
             $seenEmails[$emailNorm] = true;
             $recipients[] = ['email' => $email, 'name' => trim($prenom . ' ' . $nom) ?: $nom];
+        }
+
+        // ── Membres d'équipe (company members) ayant accès à l'entreprise ──
+        require_once __DIR__ . '/CompanyMember.php';
+        $membersWithNotif = CompanyMember::getMembersWithNotifications($ownerId);
+        if (!empty($membersWithNotif)) {
+            // Filtrer les membres avec notifications activées
+            $notifMemberIds = [];
+            foreach ($membersWithNotif as $mInfo) {
+                if ($mInfo['notifications_enabled']) {
+                    $notifMemberIds[] = $mInfo['member_platform_user_id'];
+                }
+            }
+            if (!empty($notifMemberIds)) {
+                $placeholders = implode(',', array_fill(0, count($notifMemberIds), '?'));
+                $memberStmt = $pdo->prepare("
+                    SELECT id, prenom_encrypted, name_encrypted, email_encrypted
+                    FROM gestion_platform_users
+                    WHERE id IN ($placeholders) AND COALESCE(active, 1) = 1
+                ");
+                $memberStmt->execute($notifMemberIds);
+                while ($m = $memberStmt->fetch(PDO::FETCH_ASSOC)) {
+                    $email = $encryption->decrypt($m['email_encrypted'] ?? '');
+                    $nom = $encryption->decrypt($m['name_encrypted'] ?? '');
+                    $prenom = '';
+                    if (!empty($m['prenom_encrypted'])) {
+                        $dec = $encryption->decrypt($m['prenom_encrypted']);
+                        $prenom = $dec !== false ? $dec : '';
+                    }
+                    if ($email === false || $nom === false || $email === '') {
+                        continue;
+                    }
+                    $emailNorm = strtolower(trim($email));
+                    if (!empty($seenEmails[$emailNorm])) {
+                        continue;
+                    }
+                    $seenEmails[$emailNorm] = true;
+                    $recipients[] = ['email' => $email, 'name' => trim($prenom . ' ' . $nom) ?: $nom];
+                }
+            }
         }
 
         return $recipients;
