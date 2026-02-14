@@ -118,6 +118,18 @@ CREATE TABLE IF NOT EXISTS app_entreprises (
     FOREIGN KEY (platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT 'Infos entreprise par utilisateur plateforme';
 
+CREATE TABLE IF NOT EXISTS app_company_members (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    owner_platform_user_id INT UNSIGNED NOT NULL,
+    member_platform_user_id INT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY idx_owner_member (owner_platform_user_id, member_platform_user_id),
+    INDEX idx_owner (owner_platform_user_id),
+    INDEX idx_member (member_platform_user_id),
+    FOREIGN KEY (owner_platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE,
+    FOREIGN KEY (member_platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT 'Membres avec accès entreprise (même périmètre que le propriétaire)';
+
 CREATE TABLE IF NOT EXISTS gestion_feedback (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     type ENUM('problem', 'idea') NOT NULL DEFAULT 'problem',

@@ -2081,31 +2081,36 @@ function renderTeamMembers() {
     var countEl = document.getElementById('settings-team-count');
     if (!container) return;
 
+    var currentUserId = (typeof APP_DATA !== 'undefined' && APP_DATA.currentUserId) ? String(APP_DATA.currentUserId) : '';
+    var effectiveOwnerId = (typeof APP_DATA !== 'undefined' && APP_DATA.effectiveOwnerId) ? String(APP_DATA.effectiveOwnerId) : '';
     container.innerHTML = '';
     countEl.textContent = teamMembersData.length + ' utilisateur' + (teamMembersData.length !== 1 ? 's' : '');
 
     teamMembersData.forEach(function (m, index) {
-        var initials = m.name.split(' ').map(function (w) { return w.charAt(0).toUpperCase(); }).join('').substring(0, 2);
-        var roleLabel = m.role === 'administrateur' ? 'Administrateur' : 'Évaluateur';
+        var initials = (m.name || '').split(' ').map(function (w) { return w.charAt(0).toUpperCase(); }).join('').substring(0, 2) || '?';
+        var isOwner = (m.role === 'owner');
+        var isSelf = (String(m.id) === currentUserId);
+        var canDelete = !isOwner && !isSelf;
+
+        var badgeLabel = isOwner ? 'Propriétaire' : 'Accès complet';
+        var badgeClass = isOwner ? 'team-member-role-badge team-member-role-badge--owner' : 'team-member-role-badge';
 
         var div = document.createElement('div');
         div.className = 'team-member-item';
+        div.setAttribute('data-member-id', String(m.id));
         div.innerHTML =
             '<div class="team-member-avatar">' + escapeHtml(initials) + '</div>' +
             '<div class="team-member-info">' +
-            '<div class="team-member-name">' + escapeHtml(m.name) + '</div>' +
-            '<div class="team-member-email">' + escapeHtml(m.email) + '</div>' +
+            '<div class="team-member-name">' + escapeHtml(m.name || '') + (isSelf ? ' <span style="color:#94a3b8;font-size:0.8em">(vous)</span>' : '') + '</div>' +
+            '<div class="team-member-email">' + escapeHtml(m.email || '') + '</div>' +
             '</div>' +
-            '<select class="form-select form-select--role team-member-role" onchange="updateTeamMemberRole(' + index + ', this.value)" title="Rôle">' +
-            '<option value="evaluateur"' + (m.role === 'evaluateur' ? ' selected' : '') + '>Évaluateur</option>' +
-            '<option value="administrateur"' + (m.role === 'administrateur' ? ' selected' : '') + '>Administrateur</option>' +
-            '</select>' +
-            '<button class="btn-icon btn-icon--danger" title="Retirer" onclick="deleteTeamMember(' + index + ')"><i class="fa-solid fa-trash"></i></button>';
+            '<span class="' + badgeClass + '">' + badgeLabel + '</span>' +
+            (canDelete ? '<button class="btn-icon btn-icon--danger" title="Retirer" onclick="deleteTeamMember(' + index + ')"><i class="fa-solid fa-trash"></i></button>' : '');
         container.appendChild(div);
     });
 
     if (teamMembersData.length === 0) {
-        container.innerHTML = '<div class="team-members-empty">Aucun utilisateur. Ajoutez-en un ci-dessous.</div>';
+        container.innerHTML = '<div class="team-members-empty">Aucun utilisateur avec accès entreprise. Ajoutez-en un ci-dessous.</div>';
     }
 }
 
@@ -2113,40 +2118,76 @@ function addTeamMember() {
     var prenom = document.getElementById('team-new-prenom').value.trim();
     var nom = document.getElementById('team-new-nom').value.trim();
     var email = document.getElementById('team-new-email').value.trim();
-    var role = document.getElementById('team-new-role').value;
-    if (!prenom || !nom || !email) return;
+    if (!email || email.indexOf('@') === -1) {
+        alert('Veuillez entrer un courriel valide.');
+        return;
+    }
 
-    var name = prenom + ' ' + nom;
-    teamMembersData.push({ id: String(Date.now()), name: name, email: email, role: role });
+    var formData = new FormData();
+    formData.append('prenom', prenom);
+    formData.append('nom', nom);
+    formData.append('email', email);
+    formData.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
 
-    document.getElementById('team-new-prenom').value = '';
-    document.getElementById('team-new-nom').value = '';
-    document.getElementById('team-new-email').value = '';
-    document.getElementById('team-new-prenom').focus();
-    renderTeamMembers();
+    var btn = document.querySelector('#settings-team-add-row .btn-primary');
+    if (btn) { btn.disabled = true; }
+
+    fetch('/parametres/company-members/add', {
+        method: 'POST',
+        body: formData
+    })
+        .then(function (r) {
+            return r.json().catch(function () {
+                return { success: false, error: 'Erreur serveur (code ' + r.status + ')' };
+            }).then(function (data) { return { ok: r.ok, data: data }; });
+        })
+        .then(function (res) {
+            if (res.ok && res.data.success && res.data.member) {
+                teamMembersData.push(res.data.member);
+                clearTeamMemberForm();
+                renderTeamMembers();
+            } else {
+                alert(res.data.error || 'Erreur lors de l\'ajout');
+            }
+        })
+        .catch(function (err) { alert('Erreur réseau : ' + (err.message || err)); })
+        .finally(function () {
+            if (btn) { btn.disabled = false; }
+        });
 }
 
 function clearTeamMemberForm() {
     var prenom = document.getElementById('team-new-prenom');
     var nom = document.getElementById('team-new-nom');
     var email = document.getElementById('team-new-email');
-    var role = document.getElementById('team-new-role');
     if (prenom) prenom.value = '';
     if (nom) nom.value = '';
     if (email) email.value = '';
-    if (role) role.value = 'evaluateur';
     if (prenom) prenom.focus();
-}
-
-function updateTeamMemberRole(index, role) {
-    if (index < 0 || index >= teamMembersData.length) return;
-    teamMembersData[index].role = role;
 }
 
 function deleteTeamMember(index) {
     if (index < 0 || index >= teamMembersData.length) return;
-    teamMembersData.splice(index, 1);
-    renderTeamMembers();
+    var member = teamMembersData[index];
+    var memberId = member.id;
+    var params = new FormData();
+    params.append('member_id', memberId);
+    params.append('_csrf_token', (document.querySelector('input[name="_csrf_token"]') || {}).value || '');
+
+    fetch('/parametres/company-members/remove', {
+        method: 'POST',
+        body: params
+    })
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+            if (res.ok && res.data.success) {
+                teamMembersData.splice(index, 1);
+                renderTeamMembers();
+            } else {
+                alert(res.data.error || 'Erreur lors du retrait');
+            }
+        })
+        .catch(function () { alert('Erreur réseau'); });
 }
 
 /* ═══════════════════════════════════════════════

@@ -184,17 +184,32 @@ class AuthController extends Controller
         $_SESSION['user_name'] = $user['name'] ?? 'Utilisateur';
         $_SESSION['user_role'] = $user['role'] ?? 'client';
         $companyName = '';
+        $companyOwnerId = null;
         try {
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             $entrepriseModel = new Entreprise();
             $ent = $entrepriseModel->getByPlatformUserId($user['id']);
             if ($ent && !empty($ent['name'])) {
                 $companyName = $ent['name'];
+            } else {
+                // Pas de propre entreprise : vérifier si l'utilisateur est membre d'une entreprise (accès partagé)
+                require_once __DIR__ . '/../models/CompanyMember.php';
+                $ownerId = CompanyMember::getOwnerForMember($user['id']);
+                if ($ownerId !== null) {
+                    $companyOwnerId = $ownerId;
+                    $ent = $entrepriseModel->getByPlatformUserId($ownerId);
+                    if ($ent && !empty($ent['name'])) {
+                        $companyName = $ent['name'];
+                    }
+                }
             }
         } catch (Throwable $e) {
             // table pas encore créée
         }
         $_SESSION['company_name'] = $companyName;
+        if ($companyOwnerId !== null) {
+            $_SESSION['company_owner_id'] = $companyOwnerId;
+        }
 
         $this->redirect($_SESSION['user_role'] === 'evaluateur' ? '/affichages' : '/tableau-de-bord');
     }
@@ -254,17 +269,31 @@ class AuthController extends Controller
         $_SESSION['user_role'] = $userRole;
         // Récupérer le nom d'entreprise depuis la DB (pas d'auto-génération)
         $companyName = '';
+        $companyOwnerId = null;
         try {
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             $entrepriseModel = new Entreprise();
             $ent = $entrepriseModel->getByPlatformUserId($userId);
             if ($ent && !empty($ent['name'])) {
                 $companyName = $ent['name'];
+            } else {
+                require_once __DIR__ . '/../models/CompanyMember.php';
+                $ownerId = CompanyMember::getOwnerForMember($userId);
+                if ($ownerId !== null) {
+                    $companyOwnerId = $ownerId;
+                    $ent = $entrepriseModel->getByPlatformUserId($ownerId);
+                    if ($ent && !empty($ent['name'])) {
+                        $companyName = $ent['name'];
+                    }
+                }
             }
         } catch (Throwable $e) {
             // table pas encore créée
         }
         $_SESSION['company_name'] = $companyName;
+        if ($companyOwnerId !== null) {
+            $_SESSION['company_owner_id'] = $companyOwnerId;
+        }
 
         $this->clearOtpSession();
         $this->redirect($_SESSION['user_role'] === 'evaluateur' ? '/affichages' : '/tableau-de-bord');

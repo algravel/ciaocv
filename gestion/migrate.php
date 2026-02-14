@@ -372,6 +372,27 @@ try {
         // ignorer
     }
 
+    // Migration : membres avec accès entreprise (même accès que le propriétaire)
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'app_company_members'");
+        if ($stmt->rowCount() === 0) {
+            echo "Migration: table app_company_members\n";
+            $pdo->exec("CREATE TABLE app_company_members (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                owner_platform_user_id INT UNSIGNED NOT NULL,
+                member_platform_user_id INT UNSIGNED NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY idx_owner_member (owner_platform_user_id, member_platform_user_id),
+                INDEX idx_owner (owner_platform_user_id),
+                INDEX idx_member (member_platform_user_id),
+                FOREIGN KEY (owner_platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE,
+                FOREIGN KEY (member_platform_user_id) REFERENCES gestion_platform_users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        }
+    } catch (Throwable $e) {
+        // ignorer
+    }
+
     // ─── Auto-seed si nécessaire ─────────────────────────────────────────────
     
     // Seed PlatformUser id=1 (Demo)

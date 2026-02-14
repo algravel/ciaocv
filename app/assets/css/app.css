@@ -2632,6 +2632,21 @@ code {
     font-size: 0.8rem;
 }
 
+.team-member-item .team-member-role-badge {
+    flex-shrink: 0;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    color: var(--muted-color, #64748b);
+    background: var(--bg-secondary, #f1f5f9);
+    border-radius: 6px;
+}
+
+.team-member-item .team-member-role-badge--owner {
+    color: var(--primary-color, #3b82f6);
+    background: #eff6ff;
+    font-weight: 600;
+}
+
 .team-member-item .btn-icon--danger:hover {
     color: var(--danger-color);
 }

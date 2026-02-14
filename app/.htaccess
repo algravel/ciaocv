@@ -35,7 +35,6 @@ RewriteEngine On
     <FilesMatch "\.(css|js|png|jpe?g|gif|svg|webp|woff2?|ico)$">
         Header set Cache-Control "public, max-age=2592000"
     </FilesMatch>
-    </FilesMatch>
 </IfModule>
 
 # ─── Disable caching for dynamic content ───

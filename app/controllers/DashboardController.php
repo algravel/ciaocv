@@ -67,19 +67,24 @@ class DashboardController extends Controller
             }
         }
 
-        // Charger les données depuis les modèles
+        // Propriétaire effectif pour les données (client = lui-même ou entreprise dont il est membre)
+        $effectiveOwnerId = $isEvaluateur
+            ? $platformUserId
+            : (isset($_SESSION['company_owner_id']) ? (int) $_SESSION['company_owner_id'] : (int) $platformUserId);
+
+        // Charger les données depuis les modèles (par propriétaire effectif pour les clients)
         if ($isEvaluateur) {
             $postes = [];
             $affichages = Affichage::getAllForEvaluateur($platformUserId);
             $candidats = Candidat::getAllForEvaluateur($platformUserId);
             $candidatsByAff = Candidat::getByAffichageForEvaluateur($platformUserId);
         } else {
-            $postes = Poste::getAll($platformUserId);
-            $affichages = Affichage::getAll($platformUserId);
-            $candidats = Candidat::getAll($platformUserId);
-            $candidatsByAff = Candidat::getByAffichage($platformUserId);
+            $postes = Poste::getAll($effectiveOwnerId);
+            $affichages = Affichage::getAll($effectiveOwnerId);
+            $candidats = Candidat::getAll($effectiveOwnerId);
+            $candidatsByAff = Candidat::getByAffichage($effectiveOwnerId);
         }
-        $emailTemplates = EmailTemplate::getAll($platformUserId);
+        $emailTemplates = EmailTemplate::getAll($effectiveOwnerId);
 
         // ?demo=new_org simule une nouvelle organisation (tests)
         $forceNewOrg = ($_GET['demo'] ?? '') === 'new_org';
@@ -91,7 +96,12 @@ class DashboardController extends Controller
         }
         $departments = Poste::getDepartments();
 
-        $teamMembers = User::getAll();
+        // Membres avec accès entreprise (liste depuis app_company_members + PlatformUser)
+        try {
+            $teamMembers = self::loadCompanyMembers($effectiveOwnerId);
+        } catch (Throwable $e) {
+            $teamMembers = [];
+        }
 
         $user = [
             'name' => $_SESSION['user_name'] ?? 'Utilisateur',
@@ -99,11 +109,11 @@ class DashboardController extends Controller
         ];
 
         $entreprise = null;
-        if ($platformUserId) {
+        if ($effectiveOwnerId) {
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             try {
                 $entrepriseModel = new Entreprise();
-                $entreprise = $entrepriseModel->getByPlatformUserId($platformUserId);
+                $entreprise = $entrepriseModel->getByPlatformUserId($effectiveOwnerId);
                 // Pour les évaluateurs (pas d'entreprise propre), récupérer celle du propriétaire du premier affichage
                 if (!$entreprise && $isEvaluateur && !empty($affichages)) {
                     $firstAff = reset($affichages);
@@ -140,12 +150,12 @@ class DashboardController extends Controller
         $kpiAffichagesActifsPrev = 0;
         $kpiTachesRestantes = 2;
 
-        if ($platformUserId) {
+        if ($effectiveOwnerId) {
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             try {
                 $planModel = new Plan();
                 $platformUserModel = new PlatformUser();
-                $platformUser = $platformUserModel->findById($platformUserId);
+                $platformUser = $platformUserModel->findById($effectiveOwnerId);
                 if ($platformUser && $platformUser['plan_id']) {
                     $plan = $planModel->findById($platformUser['plan_id']);
                     if ($plan) {
@@ -163,10 +173,10 @@ class DashboardController extends Controller
                     }
                 }
                 $entrevueModel = new Entrevue();
-                $kpiForfaitUsed = $entrevueModel->countUsed($platformUserId);
-                $chartMonths = $entrevueModel->countByMonth($platformUserId, 6);
+                $kpiForfaitUsed = $entrevueModel->countUsed($effectiveOwnerId);
+                $chartMonths = $entrevueModel->countByMonth($effectiveOwnerId, 6);
                 $eventModel = new Event();
-                $events = $eventModel->recentByPlatformUser($platformUserId, 100);
+                $events = $eventModel->recentByPlatformUser($effectiveOwnerId, 100);
             } catch (Throwable $e) {
                 // $chartMonths remains []
                 $chartMonths = [];
@@ -280,7 +290,62 @@ class DashboardController extends Controller
             'hasPoste' => $hasPoste,
             'hasAffichage' => $hasAffichage,
             'billingPlans' => $billingPlans,
+            'canManageMembers' => !$isEvaluateur,
+            'currentUserId' => $platformUserId,
+            'effectiveOwnerId' => $effectiveOwnerId,
         ]);
+    }
+
+    /**
+     * Propriétaire effectif pour les données (utilisateur courant ou entreprise dont il est membre).
+     * À utiliser dans les actions POST pour créer/modifier les données au nom du bon compte.
+     */
+    private function getEffectiveOwnerId(): ?int
+    {
+        if (($_SESSION['user_role'] ?? 'client') === 'evaluateur') {
+            return isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        }
+        return isset($_SESSION['user_id'])
+            ? (int) (($_SESSION['company_owner_id'] ?? $_SESSION['user_id']))
+            : null;
+    }
+
+    /**
+     * Charge la liste des membres avec accès entreprise (id, name, email, role).
+     * @return array<int, array{id: string, name: string, email: string, role: string}>
+     */
+    private static function loadCompanyMembers(int $ownerPlatformUserId): array
+    {
+        require_once __DIR__ . '/../models/CompanyMember.php';
+        require_once dirname(__DIR__, 2) . '/gestion/config.php';
+        $platformUserModel = new PlatformUser();
+        $list = [];
+
+        // Inclure le propriétaire en premier
+        $owner = $platformUserModel->findById($ownerPlatformUserId);
+        if ($owner) {
+            $list[] = [
+                'id' => (string) $owner['id'],
+                'name' => $owner['name'] ?? '',
+                'email' => $owner['email'] ?? '',
+                'role' => 'owner',
+            ];
+        }
+
+        // Puis les membres ajoutés
+        $memberIds = CompanyMember::getMemberIdsByOwner($ownerPlatformUserId);
+        foreach ($memberIds as $id) {
+            $pu = $platformUserModel->findById($id);
+            if ($pu) {
+                $list[] = [
+                    'id' => (string) $pu['id'],
+                    'name' => $pu['name'] ?? '',
+                    'email' => $pu['email'] ?? '',
+                    'role' => 'member',
+                ];
+            }
+        }
+        return $list;
     }
 
     /**
@@ -328,7 +393,7 @@ class DashboardController extends Controller
             $this->redirect('/affichages');
             return;
         }
-        $platformUserId = (int) $_SESSION['user_id'];
+        $effectiveOwnerId = $this->getEffectiveOwnerId();
 
         $user = [
             'name' => $_SESSION['user_name'] ?? 'Utilisateur',
@@ -341,7 +406,7 @@ class DashboardController extends Controller
         try {
             require_once dirname(__DIR__, 2) . '/gestion/config.php';
             $eventModel = new Event();
-            $events = $eventModel->recentByPlatformUser($platformUserId, 100);
+            $events = $effectiveOwnerId ? $eventModel->recentByPlatformUser($effectiveOwnerId, 100) : [];
         } catch (Throwable $e) {
             error_log('DashboardController::history error: ' . $e->getMessage());
             $events = [];
@@ -365,8 +430,8 @@ class DashboardController extends Controller
             $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
             return;
         }
-        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-        if (!$platformUserId) {
+        $effectiveOwnerId = $this->getEffectiveOwnerId();
+        if (!$effectiveOwnerId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
             return;
         }
@@ -381,7 +446,7 @@ class DashboardController extends Controller
             'timezone' => trim($_POST['timezone'] ?? '') ?: 'America/Montreal',
         ];
         $entrepriseModel = new Entreprise();
-        $ok = $entrepriseModel->upsert($platformUserId, $data);
+        $ok = $entrepriseModel->upsert($effectiveOwnerId, $data);
         $_SESSION['company_name'] = $data['name'];
         $timezone = $data['timezone'] ?? 'America/Montreal';
         $this->json(['success' => $ok, 'company_name' => $data['name'], 'timezone' => $timezone]);
@@ -394,12 +459,12 @@ class DashboardController extends Controller
     {
         $this->requireAuth();
         if (!$this->requireNotEvaluateur()) return;
-        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-        if (!$platformUserId) {
+        $effectiveOwnerId = $this->getEffectiveOwnerId();
+        if (!$effectiveOwnerId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
             return;
         }
-        $templates = EmailTemplate::getAll($platformUserId);
+        $templates = EmailTemplate::getAll($effectiveOwnerId);
         $this->json(['success' => true, 'templates' => $templates]);
     }
 
@@ -414,8 +479,8 @@ class DashboardController extends Controller
             $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
             return;
         }
-        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-        if (!$platformUserId) {
+        $effectiveOwnerId = $this->getEffectiveOwnerId();
+        if (!$effectiveOwnerId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
             return;
         }
@@ -426,7 +491,7 @@ class DashboardController extends Controller
             $this->json(['success' => false, 'error' => 'Titre requis'], 400);
             return;
         }
-        $result = EmailTemplate::save($platformUserId, $id > 0 ? $id : null, $title, $content);
+        $result = EmailTemplate::save($effectiveOwnerId, $id > 0 ? $id : null, $title, $content);
         if ($result) {
             $this->json(['success' => true, 'template' => $result]);
         } else {
@@ -445,8 +510,8 @@ class DashboardController extends Controller
             $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
             return;
         }
-        $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-        if (!$platformUserId) {
+        $effectiveOwnerId = $this->getEffectiveOwnerId();
+        if (!$effectiveOwnerId) {
             $this->json(['success' => false, 'error' => 'Non connecté'], 401);
             return;
         }
@@ -455,7 +520,7 @@ class DashboardController extends Controller
             $this->json(['success' => false, 'error' => 'ID invalide'], 400);
             return;
         }
-        $ok = EmailTemplate::delete($platformUserId, $id);
+        $ok = EmailTemplate::delete($effectiveOwnerId, $id);
         $this->json(['success' => $ok]);
     }
 
@@ -471,8 +536,8 @@ class DashboardController extends Controller
                 $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
                 return;
             }
-            $platformUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-            if (!$platformUserId) {
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
                 $this->json(['success' => false, 'error' => 'Non connecté'], 401);
                 return;
             }
@@ -484,14 +549,14 @@ class DashboardController extends Controller
                 'description' => trim($_POST['description'] ?? '') ?: null,
                 'record_duration' => (int) ($_POST['record_duration'] ?? 3) ?: 3,
             ];
-            $poste = Poste::create($platformUserId, $data);
+            $poste = Poste::create($effectiveOwnerId, $data);
             if ($poste) {
                 // Journaliser la création
                 try {
                     require_once dirname(__DIR__, 2) . '/gestion/config.php';
                     $event = new Event();
                     $event->logForPlatformUser(
-                        $platformUserId,
+                        $effectiveOwnerId,
                         'create',
                         'poste',
                         (string) ($poste['id'] ?? ''),
@@ -1123,6 +1188,134 @@ class DashboardController extends Controller
             ]);
         } catch (Throwable $e) {
             error_log('notifyCandidats error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
+
+    /**
+     * Ajouter un membre avec accès entreprise (même accès que le propriétaire).
+     * Accessible au propriétaire ET aux membres existants.
+     * POST /parametres/company-members/add
+     */
+    public function addCompanyMember(): void
+    {
+        try {
+            $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            if (!$effectiveOwnerId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            $prenom = trim($_POST['prenom'] ?? '');
+            $nom = trim($_POST['nom'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            if ($email === '' || strpos($email, '@') === false) {
+                $this->json(['success' => false, 'error' => 'Courriel requis et valide'], 400);
+                return;
+            }
+            require_once dirname(__DIR__, 2) . '/gestion/config.php';
+            require_once __DIR__ . '/../models/CompanyMember.php';
+            $platformUserModel = new PlatformUser();
+            $owner = $platformUserModel->findById($effectiveOwnerId);
+            $ownerPlanId = ($owner !== null && isset($owner['plan_id'])) ? $owner['plan_id'] : null;
+
+            $existingUser = $platformUserModel->findByEmail($email);
+            $memberId = null;
+
+            if ($existingUser) {
+                $memberId = (int) $existingUser['id'];
+                if ($memberId === $effectiveOwnerId) {
+                    $this->json(['success' => false, 'error' => 'Ce compte est déjà le propriétaire'], 400);
+                    return;
+                }
+                if (CompanyMember::getOwnerForMember($memberId) !== null && CompanyMember::getOwnerForMember($memberId) !== $effectiveOwnerId) {
+                    $this->json(['success' => false, 'error' => 'Cet utilisateur a déjà accès à une autre entreprise'], 400);
+                    return;
+                }
+            } else {
+                $nom = $nom !== '' ? $nom : explode('@', $email)[0];
+                $prenom = $prenom !== '' ? $prenom : $nom;
+                $newPassword = bin2hex(random_bytes(8));
+                $memberId = $platformUserModel->create([
+                    'prenom' => $prenom,
+                    'nom' => $nom,
+                    'email' => $email,
+                    'role' => 'client',
+                    'plan_id' => $ownerPlanId,
+                    'billable' => false,
+                    'active' => true,
+                    'password' => $newPassword,
+                ]);
+                $fullName = trim($prenom . ' ' . $nom);
+                if (function_exists('zeptomail_send_new_platform_user_credentials')) {
+                    zeptomail_send_new_platform_user_credentials($email, $fullName, $newPassword);
+                }
+            }
+
+            $added = CompanyMember::add($effectiveOwnerId, $memberId);
+            if (!$added) {
+                $this->json(['success' => false, 'error' => 'Cet utilisateur a déjà accès à votre entreprise'], 400);
+                return;
+            }
+            $pu = $platformUserModel->findById($memberId);
+            $member = [
+                'id' => (string) $memberId,
+                'name' => $pu['name'] ?? '',
+                'email' => $pu['email'] ?? '',
+                'role' => 'member',
+            ];
+            $this->json(['success' => true, 'member' => $member]);
+        } catch (Throwable $e) {
+            error_log('addCompanyMember error: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
+        }
+    }
+
+    /**
+     * Retirer un membre de l'accès entreprise.
+     * Accessible au propriétaire ET aux membres. On ne peut pas se retirer soi-même ni retirer le propriétaire.
+     * POST /parametres/company-members/remove
+     */
+    public function removeCompanyMember(): void
+    {
+        try {
+            $this->requireAuth();
+            if (!$this->requireNotEvaluateur()) return;
+            if (!csrf_verify()) {
+                $this->json(['success' => false, 'error' => 'Token CSRF invalide'], 403);
+                return;
+            }
+            $effectiveOwnerId = $this->getEffectiveOwnerId();
+            $currentUserId = (int) $_SESSION['user_id'];
+            if (!$effectiveOwnerId) {
+                $this->json(['success' => false, 'error' => 'Non connecté'], 401);
+                return;
+            }
+            $memberId = (int) ($_POST['member_id'] ?? 0);
+            if ($memberId <= 0) {
+                $this->json(['success' => false, 'error' => 'ID membre invalide'], 400);
+                return;
+            }
+            // On ne peut pas retirer le propriétaire
+            if ($memberId === $effectiveOwnerId) {
+                $this->json(['success' => false, 'error' => 'Impossible de retirer le propriétaire du compte'], 400);
+                return;
+            }
+            // On ne peut pas se retirer soi-même
+            if ($memberId === $currentUserId) {
+                $this->json(['success' => false, 'error' => 'Vous ne pouvez pas retirer votre propre accès'], 400);
+                return;
+            }
+            require_once __DIR__ . '/../models/CompanyMember.php';
+            $ok = CompanyMember::remove($effectiveOwnerId, $memberId);
+            $this->json(['success' => $ok]);
+        } catch (Throwable $e) {
+            error_log('removeCompanyMember error: ' . $e->getMessage());
             $this->json(['success' => false, 'error' => 'Erreur serveur'], 500);
         }
     }

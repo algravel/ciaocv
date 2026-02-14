@@ -790,23 +790,19 @@
         </div>
     </div>
 
-    <!-- Équipe -->
+    <!-- Accès entreprise (membres avec même accès que le propriétaire) -->
     <div class="card settings-pane hidden" id="settings-team">
         <div class="card-header card-header--bordered">
-            <h2 class="card-title" data-i18n="settings_team">Équipe</h2>
+            <h2 class="card-title" data-i18n="settings_company_access">Accès entreprise</h2>
             <span class="subtitle-muted" id="settings-team-count">0 utilisateurs</span>
         </div>
+        <p class="form-help mb-3" data-i18n="settings_company_access_help">Les personnes ajoutées ici auront le même accès que vous : postes, affichages, candidats et paramètres.</p>
         <div id="settings-team-list" class="team-members-list"></div>
-        <div class="team-members-add-row mt-4">
+        <div class="team-members-add-row mt-4" id="settings-team-add-row">
             <input type="text" id="team-new-prenom" class="form-input" placeholder="Prénom">
             <input type="text" id="team-new-nom" class="form-input" placeholder="Nom">
-            <input type="email" id="team-new-email" class="form-input" placeholder="Courriel">
-            <select class="form-select form-select--role" id="team-new-role">
-                <option value="evaluateur">Évaluateur</option>
-                <option value="administrateur">Administrateur</option>
-            </select>
+            <input type="email" id="team-new-email" class="form-input" placeholder="Courriel" required>
             <button class="btn btn-primary" onclick="addTeamMember()" style="flex-shrink:0;" title="Ajouter"><i class="fa-solid fa-plus"></i></button>
-            <button class="btn btn-secondary" onclick="clearTeamMemberForm()" style="flex-shrink:0;" title="Effacer"><i class="fa-solid fa-eraser"></i></button>
         </div>
     </div>
 

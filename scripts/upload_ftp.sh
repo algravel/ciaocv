@@ -59,14 +59,18 @@ upload() {
   if ! curl -s -T "$local_path" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/$remote_path" --ftp-create-dirs; then
     echo "  ERREUR upload"; return 1
   fi
-  # CHMOD 644 après upload (éviter 403 Forbidden)
+  # CHMOD 644 après upload (éviter 403 Forbidden) — essayer 644 puis 0644 selon serveur FTP
   local parent="${remote_path%/*}"
   local name="${remote_path##*/}"
+  local chmod_ok=0
   if [[ "$parent" != "$remote_path" ]]; then
-    curl -s -Q "CWD $parent" -Q "SITE CHMOD 644 $name" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/" >/dev/null && echo "  CHMOD 644 OK" || echo "  CHMOD 644 (ignoré)"
+    curl -s -Q "CWD /$parent" -Q "SITE CHMOD 644 $name" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/" >/dev/null && chmod_ok=1
+    [[ $chmod_ok -eq 0 ]] && curl -s -Q "CWD /$parent" -Q "SITE CHMOD 0644 $name" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/" >/dev/null && chmod_ok=1
   else
-    curl -s -Q "SITE CHMOD 644 $name" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/" >/dev/null && echo "  CHMOD 644 OK" || echo "  CHMOD 644 (ignoré)"
+    curl -s -Q "SITE CHMOD 644 $name" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/" >/dev/null && chmod_ok=1
+    [[ $chmod_ok -eq 0 ]] && curl -s -Q "SITE CHMOD 0644 $name" --user "$FTP_USER:$FTP_PASS" "ftp://$FTP_HOST/" >/dev/null && chmod_ok=1
   fi
+  [[ $chmod_ok -eq 1 ]] && echo "  CHMOD 644 OK" || echo "  CHMOD 644 (ignoré)"
 }
 
 for f in "${files[@]}"; do

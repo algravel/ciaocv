@@ -97,7 +97,7 @@
                         <a href="/parametres#parametres-departments" class="nav-subitem settings-subitem"
                             data-target="settings-departments" data-i18n="settings_departments">Départements</a>
                         <a href="/parametres#parametres-team" class="nav-subitem settings-subitem"
-                            data-target="settings-team" data-i18n="settings_team">Évaluateurs</a>
+                            data-target="settings-team" data-i18n="settings_company_access">Accès entreprise</a>
                         <a href="/parametres#parametres-billing" class="nav-subitem settings-subitem"
                             data-target="settings-billing" data-i18n="settings_billing">Facturation</a>
                         <a href="/parametres#parametres-communications" class="nav-subitem settings-subitem"
@@ -178,6 +178,9 @@
             emailTemplates: <?= json_encode($emailTemplates ?? [], JSON_UNESCAPED_UNICODE) ?>,
             departments: <?= json_encode($departments ?? [], JSON_UNESCAPED_UNICODE) ?>,
             teamMembers: <?= json_encode($teamMembers ?? [], JSON_UNESCAPED_UNICODE) ?>,
+            canManageMembers: <?= json_encode(!empty($canManageMembers)) ?>,
+            currentUserId: <?= json_encode((string) ($currentUserId ?? ''), JSON_UNESCAPED_UNICODE) ?>,
+            effectiveOwnerId: <?= json_encode((string) ($effectiveOwnerId ?? ''), JSON_UNESCAPED_UNICODE) ?>,
             events: <?= json_encode($events ?? [], JSON_UNESCAPED_UNICODE) ?>,
             isEvaluateur: <?= json_encode(!empty($isEvaluateur)) ?>
         };
