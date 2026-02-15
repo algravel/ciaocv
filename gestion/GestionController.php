@@ -749,6 +749,13 @@ class GestionController
             // Garder [] par défaut
         }
 
+        $devTasks = [];
+        try {
+            $devTasks = DevTask::all();
+        } catch (Throwable $e) {
+            // Garder [] par défaut
+        }
+
         $this->view('dashboard/index', [
             'pageTitle'      => 'Tableau de bord',
             'user'           => $user,
@@ -764,6 +771,7 @@ class GestionController
             'flashSuccess'     => $_SESSION['gestion_flash_success'] ?? '',
             'flashError'       => $_SESSION['gestion_flash_error'] ?? '',
             'feedback'         => $feedback,
+            'devTasks'         => $devTasks,
             'isDebugPage'      => false,
         ], 'app');
         unset($_SESSION['gestion_flash_success'], $_SESSION['gestion_flash_error']);
@@ -836,20 +844,177 @@ class GestionController
         }
     }
 
+    public function deleteFeedback(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['ok' => false, 'error' => 'Méthode non autorisée']);
+            return;
+        }
+        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['ok' => false, 'error' => 'ID invalide']);
+            return;
+        }
+        if (Feedback::delete($id)) {
+            echo json_encode(['ok' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'Erreur lors de la suppression']);
+        }
+    }
+
+    public function createDevTask(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false, 'error' => 'Méthode non autorisée']);
+            return;
+        }
+        if (!$this->isAuthenticated()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Non authentifié']);
+            return;
+        }
+        if (!csrf_verify()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'CSRF invalide']);
+            return;
+        }
+        $title = trim($_POST['title'] ?? '');
+        if ($title === '') {
+            echo json_encode(['ok' => false, 'error' => 'Titre requis']);
+            return;
+        }
+        $data = ['title' => $title, 'description' => trim($_POST['description'] ?? '') ?: null, 'priority' => (int) ($_POST['priority'] ?? 0), 'status' => $_POST['status'] ?? DevTask::STATUS_TODO];
+        $id = DevTask::create($data);
+        if ($id !== null) {
+            $task = ['id' => $id, 'title' => $title, 'description' => $data['description'], 'priority' => $data['priority'], 'status' => $data['status'], 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')];
+            echo json_encode(['ok' => true, 'task' => $task]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'Erreur lors de la création']);
+        }
+    }
+
+    public function updateDevTask(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PATCH') {
+            echo json_encode(['ok' => false, 'error' => 'Méthode non autorisée']);
+            return;
+        }
+        if (!$this->isAuthenticated()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Non authentifié']);
+            return;
+        }
+        if (!csrf_verify()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'CSRF invalide']);
+            return;
+        }
+        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['ok' => false, 'error' => 'ID invalide']);
+            return;
+        }
+        $data = [];
+        if (array_key_exists('title', $_POST)) {
+            $data['title'] = trim($_POST['title'] ?? '') ?: 'Sans titre';
+        }
+        if (array_key_exists('description', $_POST)) {
+            $data['description'] = trim($_POST['description'] ?? '') ?: null;
+        }
+        if (array_key_exists('priority', $_POST)) {
+            $data['priority'] = (int) $_POST['priority'];
+        }
+        if (array_key_exists('status', $_POST)) {
+            $data['status'] = $_POST['status'];
+        }
+        if (empty($data)) {
+            echo json_encode(['ok' => false, 'error' => 'Aucune donnée à mettre à jour']);
+            return;
+        }
+        if (DevTask::update($id, $data)) {
+            echo json_encode(['ok' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'Erreur lors de la mise à jour']);
+        }
+    }
+
+    public function deleteDevTask(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false, 'error' => 'Méthode non autorisée']);
+            return;
+        }
+        if (!$this->isAuthenticated()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Non authentifié']);
+            return;
+        }
+        if (!csrf_verify()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'CSRF invalide']);
+            return;
+        }
+        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['ok' => false, 'error' => 'ID invalide']);
+            return;
+        }
+        if (DevTask::delete($id)) {
+            echo json_encode(['ok' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'Erreur lors de la suppression']);
+        }
+    }
+
     public function migrate(): void
     {
         if (!$this->isAuthenticated()) {
             $this->redirect(GESTION_BASE_PATH . '/connexion');
             return;
         }
-        ob_start();
-        require GESTION_BASE . '/migrate.php';
-        $output = ob_get_clean();
         $user = [
             'name'  => $_SESSION[self::SESSION_USER_NAME] ?? 'Admin',
             'email' => $_SESSION[self::SESSION_USER_EMAIL] ?? '',
         ];
-        $this->view('migrate', ['output' => $output, 'user' => $user], 'app');
+        $this->view('migrate', ['output' => '', 'user' => $user], 'app');
+    }
+
+    public function runMigrations(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['ok' => false, 'error' => 'Méthode non autorisée']);
+            return;
+        }
+        if (!$this->isAuthenticated()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Non authentifié']);
+            return;
+        }
+        if (!csrf_verify()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'CSRF invalide']);
+            return;
+        }
+        ob_start();
+        try {
+            require GESTION_BASE . '/migrate.php';
+            $output = ob_get_clean();
+            echo json_encode(['ok' => true, 'output' => $output]);
+        } catch (Throwable $e) {
+            ob_end_clean();
+            echo json_encode(['ok' => false, 'error' => $e->getMessage(), 'output' => '']);
+        }
     }
 
     public function debug(): void

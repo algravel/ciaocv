@@ -31,10 +31,11 @@
             <input type="text" placeholder="Rechercher..." data-i18n-placeholder="search">
         </div>
     </div>
-    <table class="data-table" id="postes-table">
-        <thead>
-            <tr>
-                <th data-i18n="th_title">Titre</th>
+    <div class="data-table-wrapper">
+        <table class="data-table" id="postes-table">
+            <thead>
+                <tr>
+                    <th data-i18n="th_title">Titre</th>
                 <th data-i18n="th_department">Département</th>
                 <th data-i18n="th_location">Lieu</th>
                 <th data-i18n="th_status">Statut</th>
@@ -69,7 +70,8 @@
                 </tr>
             <?php endforeach; ?>
         </tbody>
-    </table>
+        </table>
+    </div>
 </div>
 
 <!-- ─── POSTE DÉTAIL Section ─── -->
@@ -271,19 +273,21 @@
     </div>
     <?php endif; ?>
     <div class="affichage-candidats-table-wrap">
-        <table class="data-table" id="affichage-candidats-table">
-            <thead>
-                <tr>
-                    <th>Candidat</th>
-                    <th>Statut</th>
-                    <th data-i18n="th_rating">Note</th>
-                    <th>Favori</th>
-                    <th>Postulé le</th>
-                    <th>Communication</th>
-                </tr>
-            </thead>
-            <tbody id="affichage-candidats-tbody"></tbody>
-        </table>
+        <div class="data-table-wrapper">
+            <table class="data-table" id="affichage-candidats-table">
+                <thead>
+                    <tr>
+                        <th>Candidat</th>
+                        <th>Statut</th>
+                        <th data-i18n="th_rating">Note</th>
+                        <th>Favori</th>
+                        <th>Postulé le</th>
+                        <th>Communication</th>
+                    </tr>
+                </thead>
+                <tbody id="affichage-candidats-tbody"></tbody>
+            </table>
+        </div>
         <div class="affichage-candidats-empty-msg hidden" id="affichage-candidats-empty-msg" aria-live="polite"></div>
     </div>
 
@@ -326,17 +330,18 @@
         <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text"
                 placeholder="Rechercher..." data-i18n-placeholder="search"></div>
     </div>
-    <table class="data-table" id="affichages-table">
-        <thead>
-            <tr>
-                <th data-i18n="th_poste">Poste</th>
-                <th data-i18n="th_department">Département</th>
-                <th data-i18n="th_status">Statut</th>
-                <th data-i18n="th_new_candidates">Non évalué</th>
-                <th class="th-actions" data-i18n="th_actions">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="data-table-wrapper">
+        <table class="data-table" id="affichages-table">
+            <thead>
+                <tr>
+                    <th data-i18n="th_poste">Poste</th>
+                    <th data-i18n="th_department">Département</th>
+                    <th data-i18n="th_status">Statut</th>
+                    <th data-i18n="th_new_candidates">Non évalué</th>
+                    <th class="th-actions" data-i18n="th_actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
             <?php foreach ($affichages as $aId => $a):
                 $affRawStatus = 'active';
                 if (($a['statusClass'] ?? '') === 'status-expired')
@@ -380,7 +385,8 @@
                 </tr>
             <?php endforeach; ?>
         </tbody>
-    </table>
+        </table>
+    </div>
 </div>
 
 <!-- ─── CANDIDATS Section ─── -->
@@ -404,19 +410,21 @@
         <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text"
                 placeholder="Rechercher..." data-i18n-placeholder="search"></div>
     </div>
-    <table class="data-table" id="candidats-table">
-        <thead>
-            <tr>
-                <th data-i18n="th_candidate">Candidat</th>
-                <th data-i18n="th_poste">Poste</th>
-                <th data-i18n="th_status">Statut</th>
-                <th data-i18n="th_rating">Note</th>
-                <th data-i18n="th_favorite">Favori</th>
-                <th data-i18n="th_applied">Postulé le</th>
-            </tr>
-        </thead>
-        <tbody id="candidats-tbody"></tbody>
-    </table>
+    <div class="data-table-wrapper">
+        <table class="data-table" id="candidats-table">
+            <thead>
+                <tr>
+                    <th data-i18n="th_candidate">Candidat</th>
+                    <th data-i18n="th_poste">Poste</th>
+                    <th data-i18n="th_status">Statut</th>
+                    <th data-i18n="th_rating">Note</th>
+                    <th data-i18n="th_favorite">Favori</th>
+                    <th data-i18n="th_applied">Postulé le</th>
+                </tr>
+            </thead>
+            <tbody id="candidats-tbody"></tbody>
+        </table>
+    </div>
     <p class="text-center text-muted py-4 hidden" id="candidats-empty-msg">Aucun candidat.</p>
 </div>
 
@@ -657,19 +665,21 @@
         <div class="card-header">
             <h2 class="card-title" data-i18n="events_title">Journalisation des événements</h2>
         </div>
-        <table class="data-table" id="events-table">
-            <thead>
-                <tr>
-                    <th data-i18n="th_date">Date</th>
-                    <th data-i18n="th_user">Utilisateur</th>
-                    <th data-i18n="th_action">Action</th>
-                    <th data-i18n="th_details">Détails</th>
-                </tr>
-            </thead>
-            <tbody id="events-tbody">
-                <!-- Rempli par JS (pagination) -->
-            </tbody>
-        </table>
+        <div class="data-table-wrapper">
+            <table class="data-table" id="events-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="th_date">Date</th>
+                        <th data-i18n="th_user">Utilisateur</th>
+                        <th data-i18n="th_action">Action</th>
+                        <th data-i18n="th_details">Détails</th>
+                    </tr>
+                </thead>
+                <tbody id="events-tbody">
+                    <!-- Rempli par JS (pagination) -->
+                </tbody>
+            </table>
+        </div>
         <div class="card-footer events-pagination" id="events-pagination" style="display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1rem;">
             <button type="button" class="btn btn-sm btn-secondary" id="events-prev" disabled title="Page précédente">
                 <i class="fa-solid fa-chevron-left"></i>

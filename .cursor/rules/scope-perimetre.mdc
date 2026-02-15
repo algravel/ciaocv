@@ -1,0 +1,14 @@
+---
+description: Demander le périmètre (app, gestion, public_html) avant de modifier du code
+alwaysApply: true
+---
+
+# Périmètre du projet
+
+Avant de proposer des modifications de code ou de fichiers, **demander à l'utilisateur dans quel périmètre il travaille** si ce n'est pas déjà précisé :
+
+- **`app/`** — Application principale (app.ciaocv.com) : candidats, recrutement, tableau de bord entreprise
+- **`gestion/`** — Module d'administration / back-office
+- **`public_html/`** — Site vitrine (www.ciaocv.com) : landing, pages statiques, tarifs, etc.
+
+Ne pas supposer le périmètre. Si la demande ne mentionne pas explicitement `app`, `gestion` ou `public_html`, poser la question : *« Dans quel périmètre travaillons-nous : app/, gestion/ ou public_html/ ? »*

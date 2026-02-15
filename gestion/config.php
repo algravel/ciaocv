@@ -37,6 +37,7 @@ require_once $gestionBase . '/models/PlatformUser.php';
 require_once $gestionBase . '/models/StripeSale.php';
 require_once $gestionBase . '/models/Event.php';
 require_once $gestionBase . '/models/Feedback.php';
+require_once $gestionBase . '/models/DevTask.php';
 require_once $gestionBase . '/models/Entrevue.php';
 require_once $gestionBase . '/models/Entreprise.php';
 

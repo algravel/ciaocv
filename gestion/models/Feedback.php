@@ -99,4 +99,19 @@ class Feedback
             return false;
         }
     }
+
+    /**
+     * Supprimer un feedback par ID.
+     */
+    public static function delete(int $id): bool
+    {
+        try {
+            $pdo = Database::get();
+            $stmt = $pdo->prepare('DELETE FROM gestion_feedback WHERE id = ?');
+            $stmt->execute([$id]);
+            return $stmt->rowCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
 }

@@ -43,6 +43,44 @@ if (($method === 'POST' || $method === 'PATCH') && $path === '/feedback/update')
     exit;
 }
 
+// ─── POST /migrate/run ─────────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/migrate/run') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'error' => 'CSRF invalide']);
+        exit;
+    }
+    $controller->runMigrations();
+    exit;
+}
+
+// ─── POST /feedback/delete ─────────────────────────────────────────────────
+if ($method === 'POST' && $path === '/feedback/delete') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'error' => 'CSRF invalide']);
+        exit;
+    }
+    $controller->deleteFeedback();
+    exit;
+}
+
+// ─── Développement / Backlog Kanban ────────────────────────────────────────
+if (($method === 'POST' || $method === 'PATCH') && $path === '/developpement/tasks/update') {
+    $controller->updateDevTask();
+    exit;
+}
+if ($method === 'POST' && $path === '/developpement/tasks/delete') {
+    $controller->deleteDevTask();
+    exit;
+}
+if ($method === 'POST' && $path === '/developpement/tasks') {
+    $controller->createDevTask();
+    exit;
+}
+
 // ─── POST /connexion (authenticate) ───────────────────────────────────────
 if ($method === 'POST' && $path === '/connexion') {
     if (!csrf_verify()) {
@@ -210,13 +248,16 @@ switch ($path) {
     case '/tableau-de-bord':
         header('Location: ' . (GESTION_BASE_PATH ?: '') . '/dashboard', true, 301);
         exit;
+    case '/configuration':
+        header('Location: ' . (GESTION_BASE_PATH ?: '') . '/utilisateurs', true, 301);
+        exit;
     case '/dashboard':
     case '/sales':
     case '/forfaits':
     case '/utilisateurs':
     case '/synchronisation':
-    case '/configuration':
     case '/bugs-idees':
+    case '/developpement':
         $controller->index();
         break;
     case '/debug':

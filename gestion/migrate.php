@@ -393,6 +393,23 @@ try {
         // ignorer
     }
 
+    // Table backlog / kanban développement
+    $stmt = $pdo->query("SHOW TABLES LIKE 'gestion_dev_tasks'");
+    if ($stmt->rowCount() === 0) {
+        echo "Migration: table gestion_dev_tasks\n";
+        $pdo->exec("CREATE TABLE gestion_dev_tasks (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            priority INT NOT NULL DEFAULT 0,
+            status VARCHAR(50) NOT NULL DEFAULT 'todo',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_status (status),
+            INDEX idx_priority (priority)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
+
     // ─── Auto-seed si nécessaire ─────────────────────────────────────────────
     
     // Seed PlatformUser id=1 (Demo)

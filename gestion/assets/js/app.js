@@ -326,6 +326,28 @@ document.querySelectorAll('.view-tabs').forEach(function (tabGroup) {
         tab.addEventListener('click', function () {
             tabGroup.querySelectorAll('.view-tab').forEach(function (t) { t.classList.remove('active'); });
             tab.classList.add('active');
+            if (tabGroup.id === 'feedback-filter-tabs') {
+                var filter = tab.getAttribute('data-filter');
+                var tbody = document.querySelector('#feedback-table tbody');
+                if (tbody) {
+                    tbody.querySelectorAll('tr').forEach(function (row) {
+                        var type = row.getAttribute('data-feedback-type');
+                        var show = filter === 'all' || type === filter;
+                        row.style.display = show ? '' : 'none';
+                    });
+                }
+            }
+            if (tabGroup.id === 'utilisateurs-filter-tabs') {
+                var tabValue = tab.getAttribute('data-tab');
+                var paneUsers = document.getElementById('utilisateurs-pane-users');
+                var paneAdmins = document.getElementById('utilisateurs-pane-admins');
+                var btnAddUser = document.getElementById('utilisateurs-btn-add-user');
+                var btnAddAdmin = document.getElementById('utilisateurs-btn-add-admin');
+                if (paneUsers) paneUsers.classList.toggle('hidden', tabValue !== 'users');
+                if (paneAdmins) paneAdmins.classList.toggle('hidden', tabValue !== 'admins');
+                if (btnAddUser) btnAddUser.style.display = tabValue === 'users' ? '' : 'none';
+                if (btnAddAdmin) btnAddAdmin.style.display = tabValue === 'admins' ? '' : 'none';
+            }
         });
     });
 });
@@ -513,7 +535,7 @@ function sendFeedback(e) {
         if (res.data.ok) {
             closeModal('feedback');
             form.reset();
-            if (typeof refreshFeedbackList === 'function') refreshFeedbackList();
+            window.location.reload();
         }
     })
     .catch(function () { alert('Une erreur est survenue. Réessayez plus tard.'); })
@@ -525,16 +547,54 @@ function sendFeedback(e) {
     });
 }
 
-// Ouvrir le modal de détail feedback (clic sur la date)
+// Ouvrir le modal de détail feedback (bouton Modifier)
 document.getElementById('feedback-table') && document.getElementById('feedback-table').addEventListener('click', function (e) {
-    var cell = e.target.closest('.cell-date.cell-clickable');
-    if (!cell) return;
-    var row = cell.closest('tr');
-    if (!row || !row.dataset.feedbackData) return;
-    try {
-        var data = JSON.parse(row.dataset.feedbackData);
-        openFeedbackDetailModal(data, row);
-    } catch (_) {}
+    var editBtn = e.target.closest('.feedback-edit-btn');
+    if (editBtn) {
+        e.preventDefault();
+        var id = parseInt(editBtn.getAttribute('data-feedback-id'), 10);
+        var row = document.querySelector('tr[data-feedback-id="' + id + '"]');
+        if (row && row.dataset.feedbackData) {
+            try {
+                var data = JSON.parse(row.dataset.feedbackData);
+                openFeedbackDetailModal(data, row);
+            } catch (_) {}
+        }
+        return;
+    }
+    var deleteBtn = e.target.closest('.feedback-delete-btn');
+    if (deleteBtn) {
+        e.preventDefault();
+        var id = parseInt(deleteBtn.getAttribute('data-feedback-id'), 10);
+        var row = document.querySelector('tr[data-feedback-id="' + id + '"]');
+        if (!row) return;
+        var lang = typeof getLanguage === 'function' ? getLanguage() : 'fr';
+        var msg = (typeof translations !== 'undefined' && translations[lang] && translations[lang].feedback_delete_confirm) ? translations[lang].feedback_delete_confirm : 'Supprimer ce retour ?';
+        if (!confirm(msg)) return;
+        var formData = new FormData();
+        formData.append('id', id);
+        var tokenEl = document.querySelector('input[name="_csrf_token"]');
+        if (tokenEl) formData.append('_csrf_token', tokenEl.value);
+        var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
+        fetch(basePath + '/feedback/delete', { method: 'POST', body: formData })
+            .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+            .then(function (res) {
+                if (res.data.ok) {
+                    row.remove();
+                    var tbody = document.querySelector('#feedback-table tbody');
+                    if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                        var container = document.getElementById('feedback-list-container');
+                        if (container) {
+                            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-lightbulb"></i><p data-i18n="feedback_empty">Aucun retour pour le moment.</p></div>';
+                            if (typeof updateContent === 'function') updateContent();
+                        }
+                    }
+                } else {
+                    alert(res.data.error || 'Erreur lors de la suppression');
+                }
+            })
+            .catch(function () { alert('Une erreur est survenue.'); });
+    }
 });
 
 function openFeedbackDetailModal(data, row) {
@@ -557,7 +617,59 @@ function openFeedbackDetailModal(data, row) {
     document.getElementById('feedback-detail-status').value = data.status || 'new';
     document.getElementById('feedback-detail-internal-note').value = data.internal_note || '';
     window._feedbackDetailRow = row;
+    window._feedbackDetailData = data;
     openModal('feedback-detail');
+}
+
+function feedbackTransferToTask() {
+    var form = document.getElementById('feedback-detail-form');
+    if (!form) return;
+    var id = parseInt(document.getElementById('feedback-detail-id').value, 10);
+    var data = window._feedbackDetailData;
+    if (!id || !data) return;
+    var noteEl = document.getElementById('feedback-detail-internal-note');
+    var existingNote = (noteEl && noteEl.value) ? noteEl.value.trim() : '';
+    var newNote = (existingNote ? existingNote + '\n' : '') + 'Transformé en tâche';
+    var formData = new FormData();
+    formData.append('id', id);
+    formData.append('status', 'resolved');
+    formData.append('internal_note', newNote);
+    var tokenEl = document.querySelector('input[name="_csrf_token"]');
+    if (tokenEl) formData.append('_csrf_token', tokenEl.value);
+    var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
+    fetch(basePath + '/feedback/update', { method: 'POST', body: formData })
+        .then(function (r) { return r.json().then(function (res) { return { ok: r.ok, data: res }; }); })
+        .then(function (res) {
+            if (res.data.ok) {
+                var row = window._feedbackDetailRow;
+                if (row && row.dataset.feedbackData) {
+                    try {
+                        var d = JSON.parse(row.dataset.feedbackData);
+                        d.status = 'resolved';
+                        d.internal_note = newNote;
+                        row.dataset.feedbackData = JSON.stringify(d);
+                        var statusTd = row.querySelector('td.feedback-cell-status');
+                        if (statusTd) statusTd.innerHTML = '<span class="status-badge status-active">Réglé</span>';
+                    } catch (_) {}
+                }
+                if (noteEl) noteEl.value = newNote;
+                document.getElementById('feedback-detail-status').value = 'resolved';
+                closeModal('feedback-detail');
+                var msg = (data.message || '').trim();
+                var title = (data.type === 'idea' ? 'Idée: ' : 'Bug: ') + (msg.length > 80 ? msg.substring(0, 77) + '...' : msg);
+                var desc = msg + (data.source ? '\n\nSource: ' + (data.source === 'gestion' ? 'Gestion' : 'App') : '') + (data.user_name || data.user_email ? '\nUtilisateur: ' + (data.user_name || data.user_email) : '');
+                document.getElementById('dev-task-id').value = '';
+                document.getElementById('dev-task-title').value = title;
+                document.getElementById('dev-task-description').value = desc;
+                document.getElementById('dev-task-priority').value = '0';
+                document.getElementById('dev-task-modal-title').setAttribute('data-i18n', 'dev_task_add');
+                if (typeof updateContent === 'function') updateContent();
+                openModal('dev-task');
+            } else {
+                alert(res.data.error || 'Erreur');
+            }
+        })
+        .catch(function () { alert('Une erreur est survenue.'); });
 }
 
 function saveFeedbackDetail(e) {
@@ -581,8 +693,8 @@ function saveFeedbackDetail(e) {
                     row.dataset.feedbackData = JSON.stringify(d);
                     var statusLabels = { new: 'Nouveau', in_progress: 'En cours', resolved: 'Réglé' };
                     var st = d.status || 'new';
-                    var statusClass = st === 'resolved' ? 'status-active' : (st === 'in_progress' ? 'status-pending' : 'status-paused');
-                    var statusTd = row.querySelector('td:last-child');
+                    var statusClass = st === 'resolved' ? 'status-active' : (st === 'in_progress' ? 'status-pending' : 'feedback-status-new');
+                    var statusTd = row.querySelector('td.feedback-cell-status');
                     if (statusTd) statusTd.innerHTML = '<span class="status-badge ' + statusClass + '">' + escapeHtml(statusLabels[st] || 'Nouveau') + '</span>';
                 } catch (_) {}
             }
@@ -596,6 +708,204 @@ function saveFeedbackDetail(e) {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = (typeof translations !== 'undefined' && translations.fr ? translations.fr.btn_save : 'Enregistrer'); }
     });
 }
+
+/* ═══════════════════════════════════════════════
+   DÉVELOPPEMENT – Backlog / Kanban
+   ═══════════════════════════════════════════════ */
+var devTasks = [];
+var devTaskDragged = null;
+var devTaskDragColumn = null;
+
+function devTaskLoad() {
+    var el = document.getElementById('dev-tasks-data');
+    devTasks = el ? (JSON.parse(el.textContent || '[]')) : [];
+    devTaskRender();
+}
+
+function devTaskRender() {
+    var statuses = ['todo', 'in_progress', 'to_test', 'deployed', 'done'];
+    statuses.forEach(function (status) {
+        var container = document.getElementById('dev-col-' + status);
+        if (!container) return;
+        container.innerHTML = '';
+        var tasks = devTasks.filter(function (t) { return t.status === status; });
+        if (status === 'todo') {
+            tasks.sort(function (a, b) { return (a.priority || 0) - (b.priority || 0); });
+        }
+        tasks.forEach(function (task) {
+            container.appendChild(devTaskCardEl(task));
+        });
+    });
+}
+
+function devTaskCardEl(task) {
+    var card = document.createElement('div');
+    card.className = 'dev-kanban-card';
+    card.draggable = true;
+    card.dataset.taskId = String(task.id);
+    card.dataset.status = task.status || 'todo';
+    var desc = (task.description || '').trim();
+    card.innerHTML =
+        '<div class="dev-kanban-card-title">' + escapeHtml(task.title || 'Sans titre') + '</div>' +
+        (desc ? '<div class="dev-kanban-card-desc">' + escapeHtml(desc) + '</div>' : '') +
+        '<div class="dev-kanban-card-actions">' +
+        '<button type="button" class="btn-icon dev-task-edit-btn" title="Modifier" data-id="' + task.id + '"><i class="fa-solid fa-pen"></i></button>' +
+        '<button type="button" class="btn-icon dev-task-delete-btn" title="Supprimer" data-id="' + task.id + '"><i class="fa-solid fa-trash-can"></i></button>' +
+        '</div>';
+    card.addEventListener('dragstart', devTaskDragStart);
+    card.addEventListener('dragend', devTaskDragEnd);
+    card.querySelector('.dev-task-edit-btn').addEventListener('click', function (e) { e.stopPropagation(); devTaskOpenEdit(parseInt(this.getAttribute('data-id'), 10)); });
+    card.querySelector('.dev-task-delete-btn').addEventListener('click', function (e) { e.stopPropagation(); devTaskDelete(parseInt(this.getAttribute('data-id'), 10)); });
+    return card;
+}
+
+function devTaskDragStart(e) {
+    devTaskDragged = e.target;
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', e.target.dataset.taskId);
+}
+
+function devTaskDragEnd(e) {
+    e.target.classList.remove('dragging');
+    devTaskDragged = null;
+    document.querySelectorAll('.dev-kanban-column').forEach(function (col) { col.classList.remove('drag-over'); });
+}
+
+function devTaskColumnDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    var col = (e.currentTarget && e.currentTarget.closest('.dev-kanban-column')) || e.target.closest('.dev-kanban-column');
+    if (col) col.classList.add('drag-over');
+}
+
+function devTaskColumnDragLeave(e) {
+    var col = (e.currentTarget && e.currentTarget.closest('.dev-kanban-column')) || e.target.closest('.dev-kanban-column');
+    if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+}
+
+function devTaskColumnDrop(e) {
+    e.preventDefault();
+    var col = (e.currentTarget && e.currentTarget.closest('.dev-kanban-column')) || e.target.closest('.dev-kanban-column');
+    if (!col) return;
+    col.classList.remove('drag-over');
+    var id = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    var newStatus = col.dataset.status;
+    var task = devTasks.find(function (t) { return t.id === id; });
+    if (!task || task.status === newStatus) return;
+    devTaskUpdateStatus(id, newStatus);
+}
+
+function devTaskUpdateStatus(id, status) {
+    var formData = new FormData();
+    formData.append('id', id);
+    formData.append('status', status);
+    var tokenEl = document.querySelector('input[name="_csrf_token"]');
+    if (tokenEl) formData.append('_csrf_token', tokenEl.value);
+    var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
+    fetch(basePath + '/developpement/tasks/update', { method: 'POST', body: formData })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                var task = devTasks.find(function (t) { return t.id === id; });
+                if (task) task.status = status;
+                devTaskRender();
+            }
+        });
+}
+
+function devTaskOpenAdd() {
+    document.getElementById('dev-task-modal-title').setAttribute('data-i18n', 'dev_task_add');
+    document.getElementById('dev-task-id').value = '';
+    document.getElementById('dev-task-title').value = '';
+    document.getElementById('dev-task-description').value = '';
+    document.getElementById('dev-task-priority').value = '0';
+    if (typeof updateContent === 'function') updateContent();
+    openModal('dev-task');
+}
+
+function devTaskOpenEdit(id) {
+    var task = devTasks.find(function (t) { return t.id === id; });
+    if (!task) return;
+    document.getElementById('dev-task-modal-title').setAttribute('data-i18n', 'dev_task_edit');
+    document.getElementById('dev-task-id').value = task.id;
+    document.getElementById('dev-task-title').value = task.title || '';
+    document.getElementById('dev-task-description').value = task.description || '';
+    document.getElementById('dev-task-priority').value = task.priority || 0;
+    if (typeof updateContent === 'function') updateContent();
+    openModal('dev-task');
+}
+
+function devTaskSave(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var form = document.getElementById('dev-task-form');
+    if (!form) return false;
+    var idEl = document.getElementById('dev-task-id');
+    var id = idEl ? parseInt(idEl.value, 10) : 0;
+    var formData = new FormData(form);
+    var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
+    var url = id ? basePath + '/developpement/tasks/update' : basePath + '/developpement/tasks';
+    if (id) formData.set('id', id);
+    fetch(url, { method: 'POST', body: formData })
+        .then(function (r) {
+            return r.json().then(function (data) { return { ok: r.ok, status: r.status, data: data }; }).catch(function () { return { ok: false, status: r.status, data: { error: 'Réponse invalide' } }; });
+        })
+        .then(function (res) {
+            var data = res.data;
+            if (res.ok && data && data.ok) {
+                if (data.task) {
+                    devTasks.push(data.task);
+                } else {
+                    var task = devTasks.find(function (t) { return t.id === id; });
+                    if (task) {
+                        task.title = formData.get('title');
+                        task.description = formData.get('description') || null;
+                        task.priority = parseInt(formData.get('priority'), 10) || 0;
+                    }
+                }
+                devTaskRender();
+                closeModal('dev-task');
+            } else {
+                alert((data && data.error) ? data.error : 'Erreur ' + (res.status || ''));
+            }
+        })
+        .catch(function (err) { alert('Une erreur est survenue.'); console.error(err); });
+    return false;
+}
+
+function devTaskDelete(id) {
+    if (!confirm('Supprimer cette tâche ?')) return;
+    var formData = new FormData();
+    formData.append('id', id);
+    var tokenEl = document.querySelector('input[name="_csrf_token"]');
+    if (tokenEl) formData.append('_csrf_token', tokenEl.value);
+    var basePath = (typeof APP_DATA !== 'undefined' && APP_DATA.basePath) ? APP_DATA.basePath : '';
+    fetch(basePath + '/developpement/tasks/delete', { method: 'POST', body: formData })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                devTasks = devTasks.filter(function (t) { return t.id !== id; });
+                devTaskRender();
+            } else {
+                alert(data.error || 'Erreur');
+            }
+        });
+}
+
+document.getElementById('dev-task-add-btn') && document.getElementById('dev-task-add-btn').addEventListener('click', devTaskOpenAdd);
+document.querySelectorAll('.dev-kanban-column').forEach(function (col) {
+    var cardsEl = col.querySelector('.dev-kanban-cards');
+    if (cardsEl) {
+        cardsEl.addEventListener('dragover', devTaskColumnDragOver);
+        cardsEl.addEventListener('dragleave', devTaskColumnDragLeave);
+        cardsEl.addEventListener('drop', devTaskColumnDrop);
+    }
+});
+document.addEventListener('DOMContentLoaded', function () {
+    if (document.getElementById('dev-kanban')) devTaskLoad();
+    var devForm = document.getElementById('dev-task-form');
+    if (devForm) devForm.addEventListener('submit', function (e) { devTaskSave(e); return false; });
+});
 
 /* ═══════════════════════════════════════════════
    EMAIL TEMPLATE CRUD

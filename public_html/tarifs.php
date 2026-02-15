@@ -56,7 +56,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs et forfaits - CiaoCV</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css?v=1771048020">
+    <link rel="stylesheet" href="assets/css/design-system.css?v=1771127313">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
         .pricing-page-wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 5%; box-sizing: border-box; }
@@ -415,7 +415,7 @@ $formatPrice = function($price) { return number_format($price, 0, ',', ' '); };
             toggleAnnual.addEventListener('click', function () { setBilling('annual'); });
         })();
     </script>
-    <script src="assets/js/i18n.js?v=1771048020"></script>
+    <script src="assets/js/i18n.js?v=1771127313"></script>
     <script src="assets/js/cookie-consent.js"></script>
 </body>
 </html>

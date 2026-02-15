@@ -319,6 +319,12 @@ a {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.search-row-url-wrap a.search-row-url {
+    min-width: 0;
+    word-break: break-all;
 }
 
 .search-row-url {
@@ -333,6 +339,7 @@ a {
 .search-row-url-wrap a.search-row-url {
     text-decoration: none;
     cursor: pointer;
+    flex: 1 1 auto;
 }
 
 .search-row-url-wrap a.search-row-url:hover {
@@ -343,6 +350,7 @@ a {
     padding: 0.25rem;
     font-size: 0.8rem;
     color: var(--text-secondary);
+    flex-shrink: 0;
 }
 
 .search-row-url-wrap .btn-icon--copy:hover {
@@ -1605,6 +1613,114 @@ code {
     .grid-detail {
         grid-template-columns: 1fr;
     }
+
+    /* Éviter que le FAB masque le contenu */
+    .content-area {
+        padding-bottom: 5rem;
+    }
+
+    .feedback-fab {
+        bottom: 5rem;
+    }
+
+    .search-row--with-label {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-row-url-wrap {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .filters-bar {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .view-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-shrink: 0;
+        max-width: 100%;
+    }
+
+    .view-tab {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    .data-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table-wrapper .data-table {
+        min-width: 700px;
+    }
+
+    /* Postes : masquer Département pour éviter l'overlap et gagner de la place */
+    #postes-table th:nth-child(2),
+    #postes-table td:nth-child(2) {
+        display: none;
+    }
+
+    #postes-table {
+        min-width: 580px;
+    }
+
+    /* Affichage candidats / Candidats : afficher le nom en entier, priorité au nom */
+    #affichage-candidats-table .candidate-cell-info,
+    #candidats-table .candidate-cell-info {
+        overflow: visible;
+    }
+
+    #affichage-candidats-table .candidate-cell-info strong,
+    #candidats-table .candidate-cell-info strong {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
+
+    #affichage-candidats-table td:first-child,
+    #candidats-table td:first-child {
+        min-width: 140px;
+    }
+
+    .data-table .cell-muted {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .page-header--candidate {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .page-header--candidate-actions {
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+
+    .candidate-rating-block {
+        margin-top: 0.25rem;
+    }
+
+    .header-actions {
+        gap: 0.35rem;
+        flex-shrink: 0;
+    }
+
+    .lang-switcher {
+        flex-shrink: 0;
+    }
+
+    .lang-btn {
+        flex-shrink: 0;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8125rem;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -2348,6 +2464,7 @@ code {
     margin-bottom: 0.5rem;
     background: #FAFBFC;
     transition: all 0.15s;
+    min-width: 0;
 }
 
 .question-item:hover {
@@ -2371,9 +2488,13 @@ code {
 
 .question-item .question-text {
     flex: 1;
+    min-width: 0;
     font-size: 0.875rem;
     color: var(--text-primary);
     line-height: 1.4;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .question-item .question-edit-input {

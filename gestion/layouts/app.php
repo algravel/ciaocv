@@ -19,7 +19,12 @@
 </head>
 
 <body>
-
+<?php
+if (!isset($migrationPending)) {
+    require_once GESTION_BASE . '/migration_check.php';
+    $migrationPending = migration_pending();
+}
+?>
     <div class="app-container">
         <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
@@ -42,6 +47,16 @@
                     <span data-i18n="nav_ventes">Ventes</span>
                 </a>
 
+                <a href="<?= $base ?>/bugs-idees" class="nav-item" data-section="bugs-idees" data-path="/bugs-idees">
+                    <i class="fa-regular fa-lightbulb"></i>
+                    <span data-i18n="nav_bugs_idees">Bugs et idées</span>
+                </a>
+
+                <a href="<?= $base ?>/developpement" class="nav-item" data-section="developpement" data-path="/developpement">
+                    <i class="fa-solid fa-code"></i>
+                    <span data-i18n="nav_developpement">Développement</span>
+                </a>
+
                 <a href="<?= $base ?>/forfaits" class="nav-item" data-section="forfaits-crud" data-path="/forfaits">
                     <i class="fa-solid fa-gear"></i>
                     <span data-i18n="nav_forfaits">Forfaits</span>
@@ -57,24 +72,15 @@
                     <span data-i18n="nav_synchronisation">Synchronisation</span>
                 </a>
 
-                <a href="<?= $base ?>/configuration" class="nav-item" data-section="configuration" data-path="/configuration">
-                    <i class="fa-solid fa-sliders"></i>
-                    <span data-i18n="nav_configuration">Configuration</span>
-                </a>
-
-                <a href="<?= $base ?>/bugs-idees" class="nav-item" data-section="bugs-idees" data-path="/bugs-idees">
-                    <i class="fa-regular fa-lightbulb"></i>
-                    <span data-i18n="nav_bugs_idees">Bugs et idées</span>
+                <a href="<?= $base ?>/debug" class="nav-item <?= !empty($isDebugPage) ? 'active' : '' ?>" data-section="debug" data-path="/debug" style="<?= !empty($isDebugPage) ? 'background-color: #F5E6EA; color: var(--primary-color);' : '' ?>">
+                    <i class="fa-solid fa-database"></i>
+                    <span data-i18n="nav_database">Base de données</span>
                 </a>
 
                 <a href="<?= $base ?>/migrate" class="nav-item" data-section="migrate" data-path="/migrate">
-                    <i class="fa-solid fa-database"></i>
+                    <i class="fa-solid fa-code"></i>
                     <span data-i18n="nav_migrate">Migration SQL</span>
-                </a>
-
-                <a href="<?= GESTION_BASE_PATH ?>/debug" class="nav-item <?= !empty($isDebugPage) ? 'active' : '' ?>" style="<?= !empty($isDebugPage) ? 'background-color: #F5E6EA; color: var(--primary-color);' : '' ?>">
-                    <i class="fa-solid fa-bug"></i>
-                    <span>Debug</span>
+                    <?php if (!empty($migrationPending)): ?><span class="nav-update-badge" title="Mise à jour disponible" aria-hidden="true"></span><?php endif; ?>
                 </a>
             </nav>
         </aside>

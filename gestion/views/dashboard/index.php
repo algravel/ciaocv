@@ -1,6 +1,6 @@
 <!-- ═══════════════════════════════════════════════════════════════════════
      VUE : Tableau de bord ADMINISTRATION (gestion)
-     Sections : statistiques, ventes, forfaits, utilisateurs, config, bugs.
+     Sections : statistiques, ventes, forfaits, utilisateurs, config, bugs, développement.
      Pas de postes/affichages/candidats (réservés à l'app employeur).
      ═══════════════════════════════════════════════════════════════════════ -->
 
@@ -272,12 +272,20 @@
     </div>
 </div>
 
-<!-- ─── UTILISATEURS LISTE Section ─── -->
+<!-- ─── UTILISATEURS LISTE Section (Utilisateurs + Administrateurs) ─── -->
 <div id="utilisateurs-liste-section" class="content-section">
     <div class="page-header">
         <h1 class="page-title" data-i18n="nav_utilisateurs">Utilisateurs</h1>
-        <button type="button" class="btn btn-primary" onclick="openModal('utilisateur-add')"><i class="fa-solid fa-plus"></i> <span data-i18n="btn_new_user">Nouvel utilisateur</span></button>
+        <div class="page-header-actions">
+            <button type="button" class="btn btn-secondary" id="utilisateurs-btn-add-admin" onclick="openModal('config-add-admin')" style="display: none;"><i class="fa-solid fa-plus"></i> <span data-i18n="config_add_admin_btn">Ajouter un administrateur</span></button>
+            <button type="button" class="btn btn-primary" id="utilisateurs-btn-add-user" onclick="openModal('utilisateur-add')"><i class="fa-solid fa-plus"></i> <span data-i18n="btn_new_user">Nouvel utilisateur</span></button>
+        </div>
     </div>
+    <div class="view-tabs mb-4" id="utilisateurs-filter-tabs">
+        <button type="button" class="view-tab active" data-tab="users" data-i18n="utilisateurs_tab_users">Utilisateurs plateforme</button>
+        <button type="button" class="view-tab" data-tab="admins" data-i18n="config_admins_title">Administrateurs</button>
+    </div>
+    <div id="utilisateurs-pane-users">
     <div class="search-row">
         <div class="search-bar search-bar--full"><i class="fa-solid fa-magnifying-glass"></i><input type="text" data-i18n-placeholder="search" placeholder="Rechercher..."></div>
     </div>
@@ -319,6 +327,83 @@
             <?php endforeach; endif; ?>
         </tbody>
     </table>
+    </div>
+    <div id="utilisateurs-pane-admins" class="hidden">
+        <div class="card">
+            <p class="subtitle-muted mb-4" data-i18n="config_admins_desc">Comptes ayant accès à l'interface d'administration.</p>
+            <table class="data-table config-admins-table config-admins-desktop">
+                <thead><tr><th data-i18n="th_name">Nom</th><th data-i18n="th_email">Email</th><th data-i18n="th_created">Créé le</th><th data-i18n="th_actions">Actions</th></tr></thead>
+                <tbody>
+                    <?php
+                    $admins = $admins ?? [];
+                    $currentUserId = (int) ($currentUserId ?? 0);
+                    if (empty($admins)): ?>
+                    <tr><td colspan="4" class="cell-muted"><span data-i18n="config_no_admins">Aucun administrateur.</span></td></tr>
+                    <?php else:
+                    foreach ($admins as $a):
+                        $createdFormatted = date('Y-m-d', strtotime($a['created_at']));
+                        $canDelete = ($currentUserId > 0 && $a['id'] !== $currentUserId);
+                    ?>
+                    <tr>
+                        <td><strong><?= e($a['name']) ?></strong></td>
+                        <td><?= e($a['email']) ?></td>
+                        <td><?= e($createdFormatted) ?></td>
+                        <td>
+                            <button type="button" class="btn-icon config-edit-admin-btn" data-i18n-title="action_edit" title="Modifier"
+                                data-admin-id="<?= (int) $a['id'] ?>"
+                                data-admin-name="<?= e($a['name']) ?>"
+                                data-admin-email="<?= e($a['email']) ?>"
+                                data-admin-role="<?= e($a['role']) ?>"
+                                onclick="openConfigEditAdminModal(this); return false;"><i class="fa-solid fa-pen"></i></button>
+                            <?php if ($canDelete): ?>
+                            <form method="POST" action="<?= GESTION_BASE_PATH ?>/admin/supprimer" class="d-inline config-delete-form" data-admin-email="<?= e($a['email']) ?>" data-admin-name="<?= e($a['name']) ?>">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="id" value="<?= (int) $a['id'] ?>">
+                                <button type="button" class="btn-icon btn-icon--danger config-delete-btn" data-i18n-title="action_delete" title="Désactiver"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+            <div class="config-admins-mobile">
+                <?php
+                $admins = $admins ?? [];
+                $currentUserId = (int) ($currentUserId ?? 0);
+                if (empty($admins)): ?>
+                <p class="cell-muted" data-i18n="config_no_admins">Aucun administrateur.</p>
+                <?php else:
+                foreach ($admins as $a):
+                    $createdFormatted = date('Y-m-d', strtotime($a['created_at']));
+                    $canDelete = ($currentUserId > 0 && $a['id'] !== $currentUserId);
+                ?>
+                <div class="config-admin-card">
+                    <div class="config-admin-card-main">
+                        <strong><?= e($a['name']) ?></strong>
+                        <span class="config-admin-card-email"><?= e($a['email']) ?></span>
+                        <span class="config-admin-card-date"><?= e($createdFormatted) ?></span>
+                    </div>
+                    <div class="config-admin-card-actions">
+                        <button type="button" class="btn-icon config-edit-admin-btn" data-i18n-title="action_edit" title="Modifier"
+                            data-admin-id="<?= (int) $a['id'] ?>"
+                            data-admin-name="<?= e($a['name']) ?>"
+                            data-admin-email="<?= e($a['email']) ?>"
+                            data-admin-role="<?= e($a['role']) ?>"
+                            onclick="openConfigEditAdminModal(this); return false;"><i class="fa-solid fa-pen"></i></button>
+                        <?php if ($canDelete): ?>
+                        <form method="POST" action="<?= GESTION_BASE_PATH ?>/admin/supprimer" class="d-inline config-delete-form" data-admin-email="<?= e($a['email']) ?>" data-admin-name="<?= e($a['name']) ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="id" value="<?= (int) $a['id'] ?>">
+                            <button type="button" class="btn-icon btn-icon--danger config-delete-btn" data-i18n-title="action_delete" title="Désactiver"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; endif; ?>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Nouvel utilisateur -->
@@ -484,93 +569,6 @@
     </div>
 </div>
 
-<!-- ─── CONFIGURATION Section ─── -->
-<div id="configuration-section" class="content-section">
-    <div class="page-header">
-        <h1 class="page-title" data-i18n="nav_configuration">Configuration</h1>
-        <button type="button" class="btn btn-primary" onclick="openModal('config-add-admin')">
-            <i class="fa-solid fa-plus"></i> <span data-i18n="config_add_admin_btn">Ajouter un administrateur</span>
-        </button>
-    </div>
-    <div class="card">
-        <h3 class="card-subtitle mb-4" data-i18n="config_admins_title">Administrateurs</h3>
-        <p class="subtitle-muted mb-4" data-i18n="config_admins_desc">Comptes ayant accès à l'interface d'administration.</p>
-        <!-- Version desktop : tableau -->
-        <table class="data-table config-admins-table config-admins-desktop">
-            <thead><tr><th data-i18n="th_name">Nom</th><th data-i18n="th_email">Email</th><th data-i18n="th_created">Créé le</th><th data-i18n="th_actions">Actions</th></tr></thead>
-            <tbody>
-                <?php
-                $admins = $admins ?? [];
-                $currentUserId = (int) ($currentUserId ?? 0);
-                if (empty($admins)): ?>
-                <tr><td colspan="4" class="cell-muted"><span data-i18n="config_no_admins">Aucun administrateur.</span></td></tr>
-                <?php else:
-                foreach ($admins as $a):
-                    $createdFormatted = date('Y-m-d', strtotime($a['created_at']));
-                    $canDelete = ($currentUserId > 0 && $a['id'] !== $currentUserId);
-                ?>
-                <tr>
-                    <td><strong><?= e($a['name']) ?></strong></td>
-                    <td><?= e($a['email']) ?></td>
-                    <td><?= e($createdFormatted) ?></td>
-                    <td>
-                        <button type="button" class="btn-icon config-edit-admin-btn" data-i18n-title="action_edit" title="Modifier"
-                            data-admin-id="<?= (int) $a['id'] ?>"
-                            data-admin-name="<?= e($a['name']) ?>"
-                            data-admin-email="<?= e($a['email']) ?>"
-                            data-admin-role="<?= e($a['role']) ?>"
-                            onclick="openConfigEditAdminModal(this); return false;"><i class="fa-solid fa-pen"></i></button>
-                        <?php if ($canDelete): ?>
-                        <form method="POST" action="<?= GESTION_BASE_PATH ?>/admin/supprimer" class="d-inline config-delete-form" data-admin-email="<?= e($a['email']) ?>" data-admin-name="<?= e($a['name']) ?>">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="id" value="<?= (int) $a['id'] ?>">
-                            <button type="button" class="btn-icon btn-icon--danger config-delete-btn" data-i18n-title="action_delete" title="Désactiver"><i class="fa-solid fa-trash"></i></button>
-                        </form>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; endif; ?>
-            </tbody>
-        </table>
-        <!-- Version mobile : cartes -->
-        <div class="config-admins-mobile">
-            <?php
-            $admins = $admins ?? [];
-            $currentUserId = (int) ($currentUserId ?? 0);
-            if (empty($admins)): ?>
-            <p class="cell-muted" data-i18n="config_no_admins">Aucun administrateur.</p>
-            <?php else:
-            foreach ($admins as $a):
-                $createdFormatted = date('Y-m-d', strtotime($a['created_at']));
-                $canDelete = ($currentUserId > 0 && $a['id'] !== $currentUserId);
-            ?>
-            <div class="config-admin-card">
-                <div class="config-admin-card-main">
-                    <strong><?= e($a['name']) ?></strong>
-                    <span class="config-admin-card-email"><?= e($a['email']) ?></span>
-                    <span class="config-admin-card-date"><?= e($createdFormatted) ?></span>
-                </div>
-                <div class="config-admin-card-actions">
-                    <button type="button" class="btn-icon config-edit-admin-btn" data-i18n-title="action_edit" title="Modifier"
-                        data-admin-id="<?= (int) $a['id'] ?>"
-                        data-admin-name="<?= e($a['name']) ?>"
-                        data-admin-email="<?= e($a['email']) ?>"
-                        data-admin-role="<?= e($a['role']) ?>"
-                        onclick="openConfigEditAdminModal(this); return false;"><i class="fa-solid fa-pen"></i></button>
-                    <?php if ($canDelete): ?>
-                    <form method="POST" action="<?= GESTION_BASE_PATH ?>/admin/supprimer" class="d-inline config-delete-form" data-admin-email="<?= e($a['email']) ?>" data-admin-name="<?= e($a['name']) ?>">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="id" value="<?= (int) $a['id'] ?>">
-                        <button type="button" class="btn-icon btn-icon--danger config-delete-btn" data-i18n-title="action_delete" title="Désactiver"><i class="fa-solid fa-trash"></i></button>
-                    </form>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php endforeach; endif; ?>
-        </div>
-    </div>
-</div>
-
 <!-- ─── SYNCHRONISATION Section ─── -->
 <div id="synchronisation-section" class="content-section">
     <div class="page-header"><h1 class="page-title" data-i18n="nav_synchronisation">Synchronisation</h1></div>
@@ -588,6 +586,13 @@
     <div class="page-header"><h1 class="page-title" data-i18n="nav_bugs_idees">Bugs et idées</h1></div>
     <div class="card">
         <p class="subtitle-muted mb-4" data-i18n="page_bugs_idees_desc">Signaler un problème ou proposer une amélioration pour la plateforme.</p>
+        <?php if (!empty($feedback ?? [])): ?>
+        <div class="view-tabs mb-4" id="feedback-filter-tabs">
+            <button type="button" class="view-tab active" data-filter="all" data-i18n="filter_all">Tous</button>
+            <button type="button" class="view-tab" data-filter="problem" data-i18n="feedback_filter_bugs">Bugs</button>
+            <button type="button" class="view-tab" data-filter="idea" data-i18n="feedback_filter_ideas">Idées</button>
+        </div>
+        <?php endif; ?>
         <div id="feedback-list-container">
             <?php if (empty($feedback ?? [])): ?>
             <div class="empty-state">
@@ -599,12 +604,14 @@
                 <table class="data-table" id="feedback-table">
                     <thead>
                         <tr>
-                            <th data-i18n="th_date">Date</th>
+                            <th data-i18n="th_id">ID</th>
                             <th data-i18n="feedback_th_type">Type</th>
                             <th data-i18n="label_message">Message</th>
                             <th data-i18n="feedback_th_source">Source</th>
                             <th data-i18n="feedback_th_user">Utilisateur</th>
                             <th data-i18n="feedback_th_status">Statut</th>
+                            <th data-i18n="th_date">Date</th>
+                            <th data-i18n="feedback_th_actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -612,9 +619,9 @@
                         $statusLabels = ['new' => 'Nouveau', 'in_progress' => 'En cours', 'resolved' => 'Réglé'];
                         foreach ($feedback as $f):
                             $st = $f['status'] ?? 'new';
-                            $statusClass = $st === 'resolved' ? 'status-active' : ($st === 'in_progress' ? 'status-pending' : 'status-paused');
+                            $statusClass = $st === 'resolved' ? 'status-active' : ($st === 'in_progress' ? 'status-pending' : 'feedback-status-new');
                         ?>
-                        <tr data-feedback-id="<?= (int) $f['id'] ?>" data-feedback-data="<?= e(json_encode([
+                        <tr data-feedback-id="<?= (int) $f['id'] ?>" data-feedback-type="<?= e($f['type']) ?>" data-feedback-data="<?= e(json_encode([
                             'id' => $f['id'],
                             'type' => $f['type'],
                             'message' => $f['message'],
@@ -626,20 +633,25 @@
                             'status' => $st,
                             'internal_note' => $f['internal_note'] ?? null
                         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP)) ?>">
-                            <td class="cell-date cell-clickable" title="Cliquer pour ouvrir"><?php
-                                $dtFb = new DateTime($f['created_at'], new DateTimeZone('UTC'));
-                                $dtFb->setTimezone(new DateTimeZone('America/Montreal'));
-                                echo e($dtFb->format('d M Y, H:i'));
-                            ?></td>
+                            <td><?= (int) $f['id'] ?></td>
                             <td>
-                                <span class="status-badge <?= $f['type'] === 'idea' ? 'status-active' : 'status-paused' ?>">
+                                <span class="status-badge <?= $f['type'] === 'idea' ? 'feedback-type-idea' : 'feedback-type-bug' ?>">
                                     <?= $f['type'] === 'idea' ? 'Idée' : 'Bug' ?>
                                 </span>
                             </td>
                             <td><?= e($f['message']) ?></td>
                             <td><?= e($f['source'] === 'gestion' ? 'Gestion' : 'App') ?></td>
                             <td><?= e($f['user_name'] ?? $f['user_email'] ?? '—') ?></td>
-                            <td><span class="status-badge <?= $statusClass ?>"><?= e($statusLabels[$st] ?? 'Nouveau') ?></span></td>
+                            <td class="feedback-cell-status"><span class="status-badge <?= $statusClass ?>"><?= e($statusLabels[$st] ?? 'Nouveau') ?></span></td>
+                            <td><?php
+                                $dtFb = new DateTime($f['created_at'], new DateTimeZone('UTC'));
+                                $dtFb->setTimezone(new DateTimeZone('America/Montreal'));
+                                echo e($dtFb->format('d M Y, H:i'));
+                            ?></td>
+                            <td class="feedback-cell-actions">
+                                <button type="button" class="btn-icon btn-icon-sm feedback-edit-btn" title="Modifier" data-feedback-id="<?= (int) $f['id'] ?>"><i class="fa-solid fa-pen"></i></button>
+                                <button type="button" class="btn-icon btn-icon-sm feedback-delete-btn" title="Supprimer" data-feedback-id="<?= (int) $f['id'] ?>"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -649,6 +661,42 @@
         </div>
     </div>
 </div>
+
+<!-- ─── DÉVELOPPEMENT Section (Backlog + Kanban) ─── -->
+<div id="developpement-section" class="content-section">
+    <div class="page-header"><h1 class="page-title" data-i18n="nav_developpement">Développement</h1></div>
+    <div class="card">
+        <p class="subtitle-muted mb-4" data-i18n="page_developpement_desc">Outils et informations pour les développeurs.</p>
+        <div class="dev-toolbar mb-4">
+            <button type="button" class="btn btn-primary" id="dev-task-add-btn">
+                <i class="fa-solid fa-plus"></i> <span data-i18n="dev_task_add">Ajouter une tâche</span>
+            </button>
+        </div>
+        <div class="dev-kanban" id="dev-kanban">
+            <div class="dev-kanban-column" data-status="todo">
+                <div class="dev-kanban-column-header" data-i18n="dev_col_todo">À faire</div>
+                <div class="dev-kanban-cards" id="dev-col-todo"></div>
+            </div>
+            <div class="dev-kanban-column" data-status="in_progress">
+                <div class="dev-kanban-column-header" data-i18n="dev_col_in_progress">En cours</div>
+                <div class="dev-kanban-cards" id="dev-col-in_progress"></div>
+            </div>
+            <div class="dev-kanban-column" data-status="to_test">
+                <div class="dev-kanban-column-header" data-i18n="dev_col_to_test">À tester</div>
+                <div class="dev-kanban-cards" id="dev-col-to_test"></div>
+            </div>
+            <div class="dev-kanban-column" data-status="deployed">
+                <div class="dev-kanban-column-header" data-i18n="dev_col_deployed">Déployé</div>
+                <div class="dev-kanban-cards" id="dev-col-deployed"></div>
+            </div>
+            <div class="dev-kanban-column" data-status="done">
+                <div class="dev-kanban-column-header" data-i18n="dev_col_done">Terminé</div>
+                <div class="dev-kanban-cards" id="dev-col-done"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="application/json" id="dev-tasks-data"><?= json_encode($devTasks ?? []) ?></script>
 
 <!-- ─── PARAMÈTRES Section (ancien, conservé pour compatibilité) ─── -->
 <div id="parametres-section" class="content-section">
@@ -765,7 +813,39 @@
                 <label class="form-label" data-i18n="feedback_internal_note">Note interne</label>
                 <textarea name="internal_note" id="feedback-detail-internal-note" class="form-input" rows="4" style="resize: vertical;" placeholder="Note visible uniquement par les administrateurs..."></textarea>
             </div>
-            <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal('feedback-detail')" data-i18n="btn_cancel">Annuler</button><button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="feedback-transfer-to-task-btn" onclick="feedbackTransferToTask()" data-i18n="feedback_transfer_to_task">Transfert en tâche</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('feedback-detail')" data-i18n="btn_cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-overlay" id="dev-task-modal">
+    <div class="modal modal--narrow">
+        <div class="modal-header">
+            <h2 class="modal-title" id="dev-task-modal-title" data-i18n="dev_task_add">Ajouter une tâche</h2>
+            <button type="button" class="btn-icon" onclick="closeModal('dev-task')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="dev-task-form" method="post" action="#" onsubmit="return devTaskSave(event);">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="dev-task-id" value="">
+            <div class="form-group">
+                <label class="form-label" data-i18n="dev_task_title">Titre</label>
+                <input type="text" name="title" id="dev-task-title" class="form-input" required maxlength="255" placeholder="">
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="dev_task_description">Description</label>
+                <textarea name="description" id="dev-task-description" class="form-input" rows="3" style="resize: vertical;"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="dev_task_priority">Priorité (0 = plus prioritaire, 99 = moins prioritaire)</label>
+                <input type="number" name="priority" id="dev-task-priority" class="form-input" value="0" min="0" max="99" step="1">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('dev-task')" data-i18n="btn_cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
+            </div>
         </form>
     </div>
 </div>
